@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chapter 8: Internal Flow Visual Workflow</title>
-    
-    <!-- MathJax Configuration -->
+    <title>Definitive Workflow Dashboard: Internal Convection (Ch. 8)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- MathJax Integration for beautiful formulas -->
     <script>
         MathJax = {
           tex: {
-            inlineMath: [['$', '$'], ['\KATEX_INLINE_OPEN', '\KATEX_INLINE_CLOSE']],
-            displayMath: [['$$', '$$'], ['\```math
-', '\```']],
-            processEscapes: true
+            inlineMath: [['$', '$'], ['\KATEX_INLINE_OPEN', '\KATEX_INLINE_CLOSE']]
           },
           svg: {
             fontCache: 'global'
@@ -22,13 +19,6 @@
     <script type="text/javascript" id="MathJax-script" async
       src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
     </script>
-
-    <!-- Google Fonts -->
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
-    </style>
-    
-    <!-- Embedded CSS -->
     <style>
         :root {
             --bg-dark: #0d1117;
@@ -46,711 +36,290 @@
             --font-code: 'Share Tech Mono', monospace;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
+        html { scroll-behavior: smooth; }
+        body { font-family: var(--font-main); background-color: var(--bg-dark); color: var(--text-primary); line-height: 1.7; margin: 0; padding: 40px 20px; }
+        .dashboard-container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 50px; }
+        header h1 { font-size: 3em; font-weight: 700; }
+        header h1 span { background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        header p { font-size: 1.2em; color: var(--text-secondary); }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            font-family: var(--font-main);
-            margin: 0;
-            padding: 0;
-            line-height: 1.7;
-        }
+        /* --- Visual Workflow Diagram Styles --- */
+        .workflow-map { text-align: center; margin-bottom: 60px; }
+        .workflow-node { background: var(--bg-section); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px 25px; display: inline-block; margin: 0 auto; cursor: pointer; transition: all 0.3s ease; position: relative; }
+        .workflow-node:hover { transform: scale(1.05); border-color: var(--accent-blue); box-shadow: 0 0 20px rgba(88, 166, 255, 0.2); }
+        .workflow-node h3 { margin: 0; font-size: 1.2em; color: var(--text-primary); }
+        .workflow-node p { margin: 5px 0 0 0; font-size: 0.9em; color: var(--text-secondary); }
+        .decision-node { border-style: dashed; border-color: var(--accent-orange); }
+        .decision-node:hover { border-color: var(--accent-orange); box-shadow: 0 0 20px rgba(240, 136, 62, 0.3); }
+        .decision-node h3 { color: var(--accent-orange); }
+        .connector-arrow { font-size: 2em; color: var(--connector-color); margin: 15px 0; }
+        .branch-container { display: flex; justify-content: center; gap: 40px; margin-top: 30px; position: relative; }
+        .branch-container::before { content: ''; position: absolute; top: -20px; left: 50%; height: 20px; width: 2px; background: var(--connector-color); }
+        .branch-container::after { content: ''; position: absolute; top: 0; left: 25%; width: 50%; height: 2px; background: var(--connector-color); }
+        .branch { display: flex; flex-direction: column; align-items: center; position: relative; flex: 1; max-width: 300px; }
+        .branch::before { content: ''; position: absolute; top: 0; left: 50%; height: 20px; width: 2px; background: var(--connector-color); }
+        .branch .workflow-node { width: 100%; box-sizing: border-box; }
 
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 3rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1.5rem;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            font-weight: 500;
-            color: var(--accent-cyan);
-            letter-spacing: 1px;
-            margin-bottom: 0.5rem;
-        }
-
-        header p {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-        }
-
-        /* Visual Workflow Map Styles */
-        .workflow-map {
-            margin-bottom: 4rem;
-        }
-
-        .map-level {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 40px 0;
-            position: relative;
-        }
-
-        .workflow-node {
-            background-color: var(--bg-section);
-            border: 1px solid var(--border-color);
-            padding: 15px 25px;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px var(--shadow-color);
-            position: relative;
-            z-index: 10;
-        }
-
-        .workflow-node:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent-blue);
-            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.2);
-        }
+        /* --- Accordion Section Styles --- */
+        .section-title-divider { text-align: center; font-size: 1.5em; color: var(--text-secondary); margin: 80px 0 30px 0; font-weight: 300; }
+        .roadmap-section { background: var(--bg-section); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+        .summary-view { padding: 25px 30px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 20px; cursor: pointer; }
+        .summary-view h2 { margin: 0; font-size: 1.6em; font-weight: 500; }
+        .summary-view p { margin: 5px 0 0 0; color: var(--text-secondary); }
+        .detailed-view { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.7s ease-in-out, opacity 0.5s ease-in-out, padding 0.7s ease-in-out; padding: 0 30px; }
+        .roadmap-section.expanded .detailed-view { max-height: 3000px; opacity: 1; padding: 20px 30px 30px 30px; border-top: 1px solid var(--border-color); }
         
-        .node-start { background-color: #1a2c47; border-color: var(--accent-blue); }
-        .node-process { background-color: #2c2c2c; }
-        .node-decision { 
-            background-color: #472d1a; 
-            border-color: var(--accent-orange);
-            transform: skewX(-15deg);
-        }
-        .node-decision .node-content { transform: skewX(15deg); }
-        .node-branch { background-color: #1a4747; border-color: var(--accent-cyan); }
-        .node-end { background-color: #471a32; border-color: var(--accent-magenta); }
+        /* Node styles inside detailed view */
+        .detailed-view .node { background: rgba(0,0,0,0.2); border: 1px solid transparent; border-radius: 8px; margin-bottom: 20px; padding: 20px; }
+        .detailed-view .node-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .detailed-view .node-header h3 { font-size: 1.3em; margin: 0; }
+        .detailed-view .formula { background-color: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 6px; color: var(--accent-cyan); border-left: 2px solid var(--accent-cyan); margin-top: 10px; }
+        .detailed-view .insight { color: var(--text-secondary); font-style: italic; border-left: 2px solid var(--border-color); padding-left: 10px; margin-top: 10px; font-size: 0.9em; }
+        .detailed-view .rule { color: var(--accent-orange); font-weight: 600; }
+        .detailed-view .key-concept { color: var(--accent-blue); }
 
-        .node-title {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--text-primary);
-        }
-
-        .node-subtitle {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .map-connectors {
-            display: flex;
-            justify-content: center;
-            position: relative;
-            height: 40px;
-        }
-
-        .connector {
-            width: 2px;
-            background-color: var(--connector-color);
-            position: absolute;
-        }
-        .connector.down { top: -40px; height: 40px; }
-        .connector.up { bottom: -40px; height: 40px; }
-        
-        .branch-line {
-            position: absolute;
-            background-color: var(--connector-color);
-            z-index: 1;
-        }
-
-        /* Specific connector lines */
-        #c1 { top: 100%; height: 40px; left: 50%; width: 2px; }
-        #c2 { top: 100%; height: 40px; left: 50%; width: 2px; }
-        #c3 { top: 100%; height: 40px; left: 50%; width: 2px; }
-
-        .branch-container {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            width: 500px;
-            height: 80px;
-            transform: translateX(-50%);
-        }
-        .branch-line-down { position: absolute; top: 0; left: 50%; width: 2px; height: 40px; background: var(--connector-color); }
-        .branch-line-horiz { position: absolute; top: 40px; left: 0; width: 100%; height: 2px; background: var(--connector-color); }
-        .branch-line-up-left { position: absolute; top: 40px; left: 0; width: 2px; height: 40px; background: var(--connector-color); }
-        .branch-line-up-right { position: absolute; top: 40px; right: 0; width: 2px; height: 40px; background: var(--connector-color); }
-
-        .map-level.branch {
-            justify-content: space-around;
-            width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .arrow-down::after {
-            content: '▼';
-            color: var(--connector-color);
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1.2rem;
-        }
-
-
-        /* Accordion Section Styles */
-        #accordion-container {
-            margin-top: 2rem;
-        }
-
-        .roadmap-section {
-            background-color: var(--bg-section);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-        }
-
-        .roadmap-section details {
-            width: 100%;
-        }
-
-        .roadmap-section summary {
-            padding: 1.5rem;
-            cursor: pointer;
-            font-size: 1.5rem;
-            font-weight: 500;
-            color: var(--accent-blue);
-            list-style: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color 0.3s ease;
-        }
-        .roadmap-section summary::-webkit-details-marker { display: none; }
-
-        .roadmap-section summary:hover {
-            background-color: rgba(88, 166, 255, 0.1);
-        }
-
-        .roadmap-section summary::after {
-            content: '+';
-            font-size: 2rem;
-            color: var(--text-secondary);
-            transition: transform 0.3s ease;
-        }
-        
-        .roadmap-section details[open] summary::after {
-            transform: rotate(45deg);
-        }
-
-        .section-content {
-            padding: 0 1.5rem 1.5rem 1.5rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        h3 {
-            color: var(--accent-cyan);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
-            margin-top: 2rem;
-        }
-
-        .card {
-            background-color: var(--bg-dark);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-
-        .insight {
-            font-style: italic;
-            color: var(--text-secondary);
-            border-left: 3px solid var(--accent-cyan);
-            padding-left: 1rem;
-            margin: 1rem 0;
-        }
-
-        .rule-of-thumb {
-            background-color: rgba(240, 136, 62, 0.1);
-            border: 1px solid var(--accent-orange);
-            border-left-width: 5px;
-            padding: 1rem;
-            border-radius: 4px;
-            margin: 1rem 0;
-        }
-        
-        .rule-of-thumb strong {
-            color: var(--accent-orange);
-        }
-
-        mjx-container {
-            font-family: var(--font-code);
-            margin: 1.5rem 0;
-            overflow-x: auto;
-        }
-
-        code {
-            font-family: var(--font-code);
-            background-color: var(--bg-dark);
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            color: var(--accent-magenta);
-        }
-
-        ul {
-            list-style-type: '✓ ';
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 0.5rem;
+        @media (max-width: 768px) {
+            .branch-container { flex-direction: column; gap: 20px; }
+            .branch-container::after, .branch-container::before, .branch::before { display: none; }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <header>
-            <h1>Internal Flow: The Engineer's Visual Workflow</h1>
-            <p>An interactive dashboard for Chapter 8, transforming textbook concepts into a logical decision map.</p>
-        </header>
 
-        <!-- Part A: The Visual Workflow Map -->
-        <div class="workflow-map">
-            <div class="map-level">
-                <div class="workflow-node node-start arrow-down" data-target="sec-foundations">
-                    <div class="node-content">
-                        <div class="node-title">1. Foundations</div>
-                        <div class="node-subtitle">Core Concepts & Definitions</div>
-                    </div>
-                </div>
-            </div>
-            <div class="map-level">
-                <div class="workflow-node node-process arrow-down" data-target="sec-development">
-                    <div class="node-content">
-                        <div class="node-title">2. Flow Development</div>
-                        <div class="node-subtitle">The Entrance Region</div>
-                    </div>
-                </div>
-            </div>
-            <div class="map-level">
-                <div class="workflow-node node-process arrow-down" data-target="sec-thermal-analysis">
-                    <div class="node-content">
-                        <div class="node-title">3. General Thermal Analysis</div>
-                        <div class="node-subtitle">Energy Balance Models</div>
-                    </div>
-                </div>
-            </div>
-            <div class="map-level">
-                <div class="workflow-node node-decision" data-target="sec-foundations"> <!-- Links back to Re # -->
-                    <div class="node-content">
-                        <div class="node-title">4. Determine Flow Regime</div>
-                        <div class="node-subtitle">Calculate Reynolds Number (Re)</div>
-                    </div>
-                    <div class="branch-container">
-                        <div class="branch-line-down"></div>
-                        <div class="branch-line-horiz"></div>
-                        <div class="branch-line-up-left"></div>
-                        <div class="branch-line-up-right"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="map-level branch">
-                <div class="workflow-node node-branch arrow-down" data-target="sec-laminar">
-                    <div class="node-content">
-                        <div class="node-title">5A. Laminar Flow</div>
-                        <div class="node-subtitle">Re < 2300</div>
-                    </div>
-                </div>
-                <div class="workflow-node node-branch arrow-down" data-target="sec-turbulent">
-                    <div class="node-content">
-                        <div class="node-title">5B. Turbulent Flow</div>
-                        <div class="node-subtitle">Re > 4000</div>
-                    </div>
-                </div>
-            </div>
-            <div class="map-level">
-                <div class="workflow-node node-end" data-target="sec-advanced">
-                    <div class="node-content">
-                        <div class="node-title">6. Advanced Topics</div>
-                        <div class="node-subtitle">Non-Circular & Enhanced Tubes</div>
-                    </div>
-                </div>
-            </div>
+<div class="dashboard-container">
+    <header>
+        <h1>Visual Workflow: <span>Internal Convection</span></h1>
+        <p>A comprehensive, clickable map of Chapter 8. Click any node to jump to its complete, detailed analysis below.</p>
+    </header>
+
+    <!-- VISUAL WORKFLOW MAP -->
+    <div class="workflow-map">
+        <div class="workflow-node" data-target="sec-foundations">
+            <h3>1. Foundations & Toolkit</h3>
+            <p>Sec 8-1, 8-2</p>
         </div>
-
-        <!-- Part B: The Detailed Accordion Sections -->
-        <div id="accordion-container">
-
-            <!-- Section 1: Foundations -->
-            <section class="roadmap-section" id="sec-foundations">
-                <details>
-                    <summary>1. Foundations: Core Concepts & Definitions</summary>
-                    <div class="section-content">
-                        <p>Internal flow is the highway system of any chemical process. Everything moves inside a pipe or duct. As an engineer, your job is to understand how these fluids behave to design safe, efficient, and cost-effective systems.</p>
-
-                        <h3>Why Pipes Are Almost Always Round</h3>
-                        <div class="card">
-                            <strong>Strength:</strong> A circular shape distributes internal pressure stress perfectly evenly, making it the strongest shape to withstand large pressure differences without failing. Think of a soda can versus a square can.
-                        </div>
-                        <div class="card">
-                            <strong>Efficiency:</strong> For a given cross-sectional area, a circle has the smallest perimeter. In fluid flow, the perimeter (wall) is where friction occurs. Less perimeter means less friction, less pressure drop, and smaller, less-energy-hungry pumps.
-                        </div>
-
-                        <h3>The "No-Slip" Condition & Average Velocity</h3>
-                        <div class="card">
-                            <p>This is a fundamental concept: at the exact surface of the pipe wall, the fluid velocity is zero. Fluid molecules are "stuck" to the wall. Velocity increases as you move toward the center, reaching a maximum at the centerline.</p>
-                            <p class="insight">
-                                <strong>Physical Insight:</strong> This arises from the viscous nature of fluids. The fluid molecules immediately adjacent to the solid surface are held by intermolecular forces, effectively stopping them. This effect propagates layer by layer into the fluid, creating the velocity profile.
-                            </p>
-                            <p>Because the velocity is not constant, we use the <strong>Average Velocity ($V_{avg}$)</strong>, a single, practical value representing the entire flow. It's the hypothetical speed the fluid would have if it were moving uniformly across the pipe, delivering the same total mass flow rate.</p>
-                        </div>
-                        
-                        <h3>Friction's Real Consequence: Pressure Drop</h3>
-                        <div class="card">
-                            <p>Friction between fluid layers and the pipe wall does generate a tiny, almost always negligible, amount of heat. The real "cost" of friction is <strong>pressure drop ($\Delta P$)</strong>. It's a loss of mechanical energy. A pump puts energy in to create pressure, and friction "steals" that pressure along the pipe's length.</p>
-                        </div>
-
-                        <h3>Average Velocity ($V_{avg}$) and Mean Temperature ($T_m$)</h3>
-                        <div class="card">
-                            <p>Just as $V_{avg}$ simplifies a complex velocity profile into one number for mass flow, the <strong>Mean (or Bulk) Temperature ($T_m$)</strong> simplifies a complex temperature profile into one number for energy flow.</p>
-                            <p class="insight">
-                                <strong>Physical Insight:</strong> The mean temperature is an "energy-weighted" average. The faster-moving fluid at the center carries more thermal energy than the slower fluid near the wall. $T_m$ is the single temperature that represents the total thermal energy flowing past a point.
-                            </p>
-                            <ul>
-                                <li>$V_{avg}$ is constant along a pipe (for incompressible flow).</li>
-                                <li>$T_m$ changes as the fluid is heated or cooled.</li>
-                            </ul>
-                            $$ \dot{m} = \rho V_{avg} A_c $$
-                            $$ \dot{E}_{fluid} = \dot{m} c_p T_m $$
-                        </div>
-
-                        <h3>Laminar vs. Turbulent Flow: The Two Personalities of Fluid</h3>
-                        <div class="card">
-                            <p><strong>Laminar Flow:</strong> Smooth, orderly, predictable flow in layers ("laminae"). Occurs at low velocities or with high-viscosity fluids. Heat and momentum transfer between layers happens slowly via molecular diffusion.</p>
-                            <p><strong>Turbulent Flow:</strong> Chaotic, swirling flow with eddies and vortices. Occurs at high velocities. The violent mixing is excellent for heat transfer but costs much more in pressure drop. Most industrial flows are turbulent.</p>
-                        </div>
-                        
-                        <h3>The Reynolds Number (Re)</h3>
-                        <div class="card">
-                            <p>The Reynolds number is a dimensionless value that predicts the flow regime by comparing inertial forces (which promote turbulence) to viscous forces (which suppress it).</p>
-                            <div class="rule-of-thumb">
-                                <strong>Engineer's Rule of Thumb:</strong>
-                                <ul>
-                                    <li><strong>Laminar Flow:</strong> $Re < 2300$</li>
-                                    <li><strong>Transitional Flow:</strong> $2300 < Re < 4000$ (Unstable, avoid in design)</li>
-                                    <li><strong>Turbulent Flow:</strong> $Re > 4000$</li>
-                                </ul>
-                                 By calculating this single number, we can predict the fluid's "personality" and choose the correct set of equations.
-                            </div>
-                            <p>For a circular pipe:</p>
-                            $$ Re = \frac{\rho V_{avg} D}{\mu} = \frac{V_{avg} D}{\nu} $$
-                            <p>Where $D$ is diameter, $\rho$ is density, $\mu$ is dynamic viscosity, and $\nu$ is kinematic viscosity.</p>
-                            <p>In terms of mass flow rate $\dot{m}$:</p>
-                            $$ Re = \frac{4 \dot{m}}{\pi D \mu} $$
-                        </div>
-
-                        <h3>Hydraulic Diameter ($D_h$)</h3>
-                        <div class="card">
-                            <p>A tool to handle non-circular ducts (e.g., rectangular HVAC ducts). It's an "effective" diameter that allows us to use the same pipe-based equations (like Reynolds number) for other shapes.</p>
-                            $$ D_h = \frac{4 A_c}{p} $$
-                            <p>Where $A_c$ is the cross-sectional area and $p$ is the wetted perimeter.</p>
-                            <p class="insight">
-                                <strong>Physical Insight:</strong> The ratio of Area to Perimeter governs the balance between the bulk flow and the wall friction effects. The hydraulic diameter cleverly captures this ratio, allowing for a unified analysis framework. For a full circular pipe, $D_h = D$.
-                            </p>
-                        </div>
-                    </div>
-                </details>
-            </section>
-
-            <!-- Section 2: Flow Development -->
-            <section class="roadmap-section" id="sec-development">
-                <details>
-                    <summary>2. Flow Development: The Entrance Region</summary>
-                    <div class="section-content">
-                        <p>When fluid enters a pipe from a large reservoir, it undergoes an adjustment period in the <strong>entrance region</strong> before its characteristics stabilize. In this region, both the friction factor ($f$) and heat transfer coefficient ($h$) are much higher than in the rest of the pipe.</p>
-
-                        <h3>Hydrodynamic (Velocity) Development</h3>
-                        <div class="card">
-                            <p>The no-slip condition slows fluid at the wall, creating a <strong>velocity boundary layer</strong>. This layer grows thicker down the pipe. To maintain constant mass flow, the fluid in the central "irrotational core" must accelerate. Once the boundary layers from all sides meet at the center, the velocity profile becomes constant, and the flow is <strong>hydrodynamically fully developed</strong>.</p>
-                            <p class="insight">
-                                <strong>Physical Insight:</strong> Think of a crowd funneling into a hallway. People near the walls slow down, forcing those in the middle to speed up. The "settling down" process where everyone finds their stable walking speed is analogous to the flow developing.
-                            </p>
-                        </div>
-
-                        <h3>Thermal (Temperature) Development</h3>
-                        <div class="card">
-                            <p>When a fluid enters a pipe with a different wall temperature, a <strong>thermal boundary layer</strong> forms. This is the region where the fluid's temperature is affected by the wall. It grows until it reaches the pipe's center, at which point the flow is <strong>thermally fully developed</strong> and the dimensionless temperature profile becomes constant.</p>
-                        </div>
-
-                        <h3>Entry Lengths</h3>
-                        <div class="card">
-                            <p>The length of the pipe required for the flow to become fully developed.</p>
-                            <h4>Laminar Flow (Re < 2300)</h4>
-                            <p>Entry lengths can be very long and depend on flow conditions and fluid properties.</p>
-                            <p>Hydrodynamic Entry Length: $$ L_{h, laminar} \approx 0.05 \cdot Re \cdot D $$</p>
-                            <p>Thermal Entry Length: $$ L_{t, laminar} \approx 0.05 \cdot Re \cdot Pr \cdot D = Pr \cdot L_{h, laminar} $$</p>
-
-                            <h4>Turbulent Flow (Re > 4000)</h4>
-                            <div class="rule-of-thumb">
-                                <strong>Engineer's Rule of Thumb: The 10D Rule</strong>
-                                <p>For turbulent flow, intense mixing causes the profiles to develop very quickly. Both the hydrodynamic and thermal entry lengths are approximately equal to 10 times the pipe diameter.</p>
-                                $$ L_{h, turbulent} \approx L_{t, turbulent} \approx 10 D $$
-                                <p>This is a powerful and widely used simplification. For any pipe with a length much greater than 10D, you can safely assume the entire pipe is in the fully developed region, ignoring the small entrance effect.</p>
-                            </div>
-                        </div>
-                        
-                        <h3>The Prandtl Number (Pr)</h3>
-                        <div class="card">
-                            <p>The Prandtl number is a dimensionless fluid property that compares the rate of momentum diffusion (viscosity) to thermal diffusion (thermal conductivity). It tells us which profile develops faster.</p>
-                            $$ Pr = \frac{\text{Momentum Diffusivity}}{\text{Thermal Diffusivity}} = \frac{\nu}{\alpha} $$
-                            <ul>
-                                <li>$Pr \gg 1$ (Oils): Velocity profile develops much faster than temperature profile ($L_h < L_t$).</li>
-                                <li>$Pr \approx 1$ (Gases): Both develop at about the same rate ($L_h \approx L_t$).</li>
-                                <li>$Pr \ll 1$ (Liquid Metals): Temperature profile develops much faster than velocity profile ($L_t < L_h$).</li>
-                            </ul>
-                        </div>
-                    </div>
-                </details>
-            </section>
-            
-            <!-- Section 3: General Thermal Analysis -->
-            <section class="roadmap-section" id="sec-thermal-analysis">
-                <details>
-                    <summary>3. General Thermal Analysis: Energy Balance Models</summary>
-                    <div class="section-content">
-                        <p>This section provides the framework for calculating heat transfer in a pipe. We use two idealized boundary conditions to model how energy is added or removed.</p>
-
-                        <h3>Universal Energy Balance</h3>
-                        <div class="card">
-                            <p>Regardless of the heating method, the total heat absorbed by the fluid is always:</p>
-                            $$ \dot{Q} = \dot{m} c_p (T_e - T_i) $$
-                            <p>Where $T_i$ and $T_e$ are the mean fluid temperatures at the inlet and exit.</p>
-                        </div>
-
-                        <h3>Case 1: Constant Surface Heat Flux ($\dot{q}_s$ = constant)</h3>
-                        <div class="card">
-                            <p><strong>Scenario:</strong> Electrical resistance heating, uniform radiation. Every unit area of the pipe surface receives the same amount of power.</p>
-                            <p><strong>Consequence:</strong> The fluid's mean temperature ($T_m$) increases linearly along the pipe. In the fully developed region, the temperature difference between the surface and the fluid ($T_s - T_m$) is constant, so the surface temperature ($T_s$) also increases linearly.</p>
-                            <p>Total Heat Transfer: $$ \dot{Q} = \dot{q}_s A_s $$</p>
-                            <p>Outlet Temperature: $$ T_e = T_i + \frac{\dot{q}_s A_s}{\dot{m} c_p} $$</p>
-                        </div>
-
-                        <h3>Case 2: Constant Surface Temperature ($T_s$ = constant)</h3>
-                        <div class="card">
-                            <p><strong>Scenario:</strong> Condensing steam or boiling liquid on the outside of the pipe. Phase change provides a nearly constant temperature boundary.</p>
-                            <p><strong>Consequence:</strong> The temperature difference ($\Delta T = T_s - T_m$) is largest at the inlet, leading to a high initial heat transfer rate. As the fluid heats up, $\Delta T$ shrinks, and the rate of heat transfer decreases. This results in an exponential temperature profile for the fluid.</p>
-                            <p>Outlet Temperature: $$ T_e = T_s - (T_s - T_i) \exp\left(-\frac{h A_s}{\dot{m} c_p}\right) $$</p>
-                        </div>
-
-                        <h3>Log Mean Temperature Difference (LMTD)</h3>
-                        <div class="card">
-                            <p>For the constant surface temperature case, we cannot use a simple arithmetic average temperature difference. The correct average driving force for heat transfer is the Log Mean Temperature Difference ($\Delta T_{lm}$).</p>
-                            $$ \dot{Q} = h A_s \Delta T_{lm} $$
-                            $$ \Delta T_{lm} = \frac{\Delta T_e - \Delta T_i}{\ln(\Delta T_e / \Delta T_i)} $$
-                            <p>Where $\Delta T_i = T_s - T_i$ and $\Delta T_e = T_s - T_e$.</p>
-                            <div class="rule-of-thumb">
-                                <strong>Design Implication: Use LMTD!</strong>
-                                <p>Using a simple arithmetic average temperature difference will overestimate the heat transfer. This could lead to designing a heat exchanger that is too small and will fail to meet its performance requirements. Always use the LMTD for this boundary condition unless the inlet and outlet temperature differences are very close (the larger is no more than 40% greater than the smaller).</p>
-                            </div>
-                        </div>
-                    </div>
-                </details>
-            </section>
-            
-            <!-- Section 5A: Laminar Flow -->
-            <section class="roadmap-section" id="sec-laminar">
-                <details>
-                    <summary>5A. Laminar Flow Analysis (Re < 2300)</summary>
-                    <div class="section-content">
-                        <p>For smooth, orderly laminar flow, we can derive exact analytical solutions for velocity, pressure drop, and heat transfer from first principles.</p>
-
-                        <h3>Velocity Profile and Pressure Drop</h3>
-                        <div class="card">
-                            <p>By balancing pressure forces and viscous (shear) forces on a fluid element, we find the velocity profile is a parabola.</p>
-                            <p class="insight">
-                                <strong>Physical Insight:</strong> In fully developed flow, there's no acceleration. The pressure pushing the fluid forward is perfectly balanced by the internal friction (viscosity) resisting the flow. A parabolic profile is the natural shape that flow adopts to satisfy this force balance.
-                            </p>
-                            <p>Velocity Profile at radius $r$:
-                            $$ u(r) = 2 V_{avg} \left(1 - \frac{r^2}{R^2}\right) $$</p>
-                            <p>From this, we get an exact relationship between max and average velocity:</p>
-                            $$ u_{max} = 2 V_{avg} $$
-                        </div>
-
-                        <h3>Hagen-Poiseuille & Darcy-Weisbach Equations</h3>
-                        <div class="card">
-                            <h4>Pressure Loss ($\Delta P_L$)</h4>
-                            <p>The <strong>Hagen-Poiseuille Equation</strong> is the direct result of the laminar flow derivation. It gives the pressure loss for a given flow rate.</p>
-                            $$ \Delta P_L = \frac{32 \mu L V_{avg}}{D^2} = \frac{128 \mu L \dot{V}}{\pi D^4} $$
-                            <div class="rule-of-thumb">
-                                <strong>Design Implication: The Power of D⁴</strong>
-                                <p>Pressure drop is inversely proportional to the diameter to the fourth power ($\Delta P_L \propto 1/D^4$). This is a hugely important relationship. Doubling the pipe diameter reduces the pressure drop (and required pumping power) by a factor of $2^4 = 16$. This creates a critical economic trade-off between the higher upfront cost of a larger pipe and the massive long-term savings in electricity costs.</p>
-                            </div>
-                            <p>The <strong>Darcy-Weisbach Equation</strong> is a general formula for all flow regimes:</p>
-                            $$ \Delta P_L = f \frac{L}{D} \frac{\rho V_{avg}^2}{2} $$
-                            <p>By comparing these two equations, we can find the exact friction factor ($f$) for laminar flow:</p>
-                            $$ f = \frac{64}{Re} $$
-                            <p>Crucially, for laminar flow, friction depends only on the Reynolds number, not the pipe's surface roughness.</p>
-                        </div>
-                        
-                        <h3>Heat Transfer: The Nusselt Number (Nu)</h3>
-                        <div class="card">
-                            <p>For fully developed laminar flow, the Nusselt number ($Nu = hD/k$) becomes a constant, independent of Re and Pr. Its value depends only on the thermal boundary condition.</p>
-                             <p class="insight">
-                                <strong>Physical Insight:</strong> In the smooth, unchanging layers of laminar flow, heat transfers by pure conduction. Since the flow pattern is fixed, the efficiency of this heat transfer process becomes a constant, predictable value, represented by Nu. These values are a safe, conservative baseline for design.
-                            </p>
-                            <ul>
-                                <li>For <strong>Constant Surface Heat Flux</strong>: $Nu = 4.36$</li>
-                                <li>For <strong>Constant Surface Temperature</strong>: $Nu = 3.66$</li>
-                            </ul>
-                        </div>
-                        
-                        <h3>Developing Laminar Flow (Entrance Region)</h3>
-                        <div class="card">
-                             <p>For short tubes where the entrance effect is significant, we use empirical correlations to find the average Nusselt number, which will be higher than the fully developed values.</p>
-                             <p>The key dimensionless group is the <strong>Graetz Number ($Gz$)</strong>, which indicates how "developed" the flow is thermally:</p>
-                             $$ Gz = \frac{D}{L} Re \cdot Pr $$
-                             <h4>Sieder-Tate Equation (Very Common)</h4>
-                             <p>This correlation accounts for combined entry effects and adds a vital viscosity correction.</p>
-                             $$ Nu = 1.86 \left( \frac{D}{L} Re \cdot Pr \right)^{1/3} \left( \frac{\mu_b}{\mu_s} \right)^{0.14} $$
-                             <div class="rule-of-thumb">
-                                 <strong>Engineer's Rule of Thumb: Viscosity Correction</strong>
-                                 <p>The $(\mu_b / \mu_s)^{0.14}$ term is crucial when there are large temperature differences.
-                                    <li><strong>Heating:</strong> Fluid at the wall is thinner ($\mu_s < \mu_b$), enhancing heat transfer (term > 1).</li>
-                                    <li><strong>Cooling:</strong> Fluid at the wall is thicker ($\mu_s > \mu_b$), hindering heat transfer (term < 1).</li>
-                                 </p>
-                             </div>
-                        </div>
-                    </div>
-                </details>
-            </section>
-
-            <!-- Section 5B: Turbulent Flow -->
-            <section class="roadmap-section" id="sec-turbulent">
-                <details>
-                    <summary>5B. Turbulent Flow Analysis (Re > 4000)</summary>
-                    <div class="section-content">
-                        <p>Turbulent flow is chaotic, messy, and highly effective at transferring heat due to intense mixing. We rely on empirical correlations derived from experimental data for analysis.</p>
-
-                        <h3>The Chilton-Colburn Analogy</h3>
-                        <div class="card">
-                            <p>A powerful concept stating that the same mechanism—turbulent eddies—is responsible for both friction (momentum transfer) and heat transfer. This creates a direct link between the friction factor ($f$) and the Nusselt number ($Nu$).</p>
-                            <p class="insight">
-                                <strong>Physical Insight:</strong> The chaotic eddies that scrape against the wall causing drag are the very same eddies that effectively transport heat away from the wall. If you can measure one (like pressure drop to find f), you can predict the other (heat transfer via Nu).
-                            </p>
-                            $$ Nu = \frac{f}{8} Re \cdot Pr^{1/3} $$
-                        </div>
-
-                        <h3>Friction in Turbulent Flow & Rough Surfaces</h3>
-                        <div class="card">
-                            <p>Unlike laminar flow, the friction factor in turbulent flow is strongly affected by the pipe's <strong>relative roughness ($\epsilon/D$)</strong>. Roughness elements poke through the thin laminar sublayer at the wall, creating extra turbulence and drag.</p>
-                            <p>The <strong>Colebrook Equation</strong> is the accurate standard for finding $f$, but it is implicit and requires an iterative solver. The <strong>Moody Chart</strong> is its graphical representation and a cornerstone tool for engineers.</p>
-                            $$ \frac{1}{\sqrt{f}} = -2.0 \log\left( \frac{\epsilon/D}{3.7} + \frac{2.51}{Re\sqrt{f}} \right) $$
-                        </div>
-
-                        <h3>Heat Transfer Correlations (Nusselt Number)</h3>
-                        <div class="card">
-                            <h4>Dittus-Boelter Equation (Simple & Common)</h4>
-                            <p>A good first approximation for basic designs when temperature differences are not large. Can have errors up to 25%.</p>
-                            $$ Nu = 0.023 \cdot Re^{0.8} \cdot Pr^n $$
-                            <p>Where $n = 0.4$ for heating and $n = 0.3$ for cooling.</p>
-
-                            <h4>Sieder-Tate Equation (with Viscosity Correction)</h4>
-                            <p>An upgrade to Dittus-Boelter, essential for large temperature differences.</p>
-                            $$ Nu = 0.027 \cdot Re^{0.8} \cdot Pr^{1/3} \left( \frac{\mu_b}{\mu_s} \right)^{0.14} $$
-
-                            <h4>Gnielinski Equation (High Accuracy)</h4>
-                            <p>A more complex but highly accurate correlation (<10% error), used for final design and verification. It requires calculating the friction factor ($f$) first.</p>
-                            $$ Nu = \frac{(f/8)(Re - 1000)Pr}{1 + 12.7(f/8)^{1/2}(Pr^{2/3} - 1)} $$
-                        </div>
-
-                        <h3>Transitional Flow (2300 < Re < 4000)</h3>
-                        <div class="card">
-                            <p>This is an unstable, unpredictable "gray area." It is typically avoided in design. For analysis, engineers either use specialized curve-fit equations or, more commonly, perform a linear interpolation of the Nu or f values between the laminar result at Re=2300 and the turbulent result at Re=4000.</p>
-                        </div>
-                    </div>
-                </details>
-            </section>
-
-            <!-- Section 6: Advanced Topics -->
-            <section class="roadmap-section" id="sec-advanced">
-                <details>
-                    <summary>6. Advanced Topics & Enhancements</summary>
-                    <div class="section-content">
-                        <p>This section extends our analysis to more realistic and complex geometries and introduces methods for intentionally improving heat transfer performance.</p>
-
-                        <h3>Turbulent Flow in Noncircular Tubes</h3>
-                        <div class="card">
-                            <p>The hydraulic diameter ($D_h$) works remarkably well for turbulent flow in non-circular tubes.</p>
-                             <p class="insight">
-                                <strong>Physical Insight:</strong> In turbulent flow, the core is a well-mixed, flat-velocity region. All the important friction and heat transfer action happens in the very thin viscous sublayer at the wall. The hydraulic diameter effectively approximates the wall effects, allowing us to use our standard round-pipe correlations with good accuracy.
-                            </p>
-                            <p><strong>Method:</strong> Simply replace the diameter $D$ with the hydraulic diameter $D_h$ in both the Reynolds number and Nusselt number calculations.</p>
-                        </div>
-                        
-                        <h3>Flow Through a Tube Annulus</h3>
-                        <div class="card">
-                             <p>An annulus is the space between two concentric pipes, common in double-pipe heat exchangers. It is treated as a special case of a noncircular tube.</p>
-                             <p>Hydraulic Diameter: $$ D_h = D_o - D_i $$</p>
-                             <p>Where $D_o$ and $D_i$ are the outer and inner diameters of the annular space, respectively. For turbulent flow, use $D_h$ in standard correlations. The heat transfer coefficients on the inner and outer surfaces are approximately equal.</p>
-                        </div>
-
-                        <h3>Heat Transfer Enhancement</h3>
-                        <div class="card">
-                            <p>Sometimes, the standard heat transfer from a smooth tube is insufficient. Enhancement techniques aim to increase the heat transfer coefficient ($h$), typically by disrupting the insulating viscous sublayer to promote more turbulence at the surface.</p>
-                            <p><strong>Common Methods:</strong></p>
-                            <ul>
-                                <li><strong>Rough Surfaces/Fins:</strong> Adding ribs, fins, or corrugations increases surface area and turbulence.</li>
-                                <li><strong>Twisted Tape Inserts:</strong> Forces the fluid into a swirling "helical" path, which constantly brings fluid from the core to the wall, boosting heat transfer.</li>
-                            </ul>
-                            <div class="rule-of-thumb">
-                                <strong>The Engineer's Trade-Off: No Free Lunch</strong>
-                                <p>Every method that enhances heat transfer will also increase the friction factor ($f$) and thus the pressure drop ($\Delta P_L$). The engineering challenge is to decide if the benefit of a smaller, more effective heat exchanger is worth the cost of a more powerful, energy-hungry pump.</p>
-                            </div>
-                        </div>
-                    </div>
-                </details>
-            </section>
-
+        <div class="connector-arrow">↓</div>
+        <div class="workflow-node" data-target="sec-entrance">
+            <h3>2. Flow Development & Thermal Models</h3>
+            <p>Sec 8-3, 8-4</p>
+        </div>
+        <div class="connector-arrow">↓</div>
+        <div class="workflow-node decision-node" data-target="sec-decision">
+            <h3>3. CRITICAL DECISION: Flow Regime</h3>
+            <p>Calculate Reynolds Number</p>
+        </div>
+        <div class="branch-container">
+            <div class="branch">
+                <div class="workflow-node" data-target="sec-laminar">
+                    <h3>Laminar Analysis</h3>
+                    <p>Sec 8-5 (Re < 2300)</p>
+                </div>
+            </div>
+            <div class="branch">
+                <div class="workflow-node" data-target="sec-turbulent">
+                    <h3>Turbulent Analysis</h3>
+                    <p>Sec 8-6+ (Re > 4000)</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Embedded JavaScript -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const workflowMap = document.querySelector('.workflow-map');
-            const sections = document.querySelectorAll('.roadmap-section details');
+    <!-- DETAILED ACCORDION SECTIONS -->
+    <div class="section-title-divider">Detailed Analysis Sections</div>
+    
+    <div id="accordion-container">
+        <!-- Section 1: Foundations -->
+        <section class="roadmap-section" id="sec-foundations">
+            <div class="summary-view">
+                <div>
+                    <h2>1. Foundations: Core Concepts & Toolkit (Sec 8-1, 8-2)</h2>
+                    <p>Essential principles, definitions, and tools for all internal flow problems.</p>
+                </div>
+            </div>
+            <div class="detailed-view">
+                <div class="node">
+                    <div class="node-header"><h3>Why Pipes are Round</h3></div>
+                    <ul>
+                        <li><b class="key-concept">Strength:</b> A circular shape perfectly distributes internal pressure stress, making it the strongest and safest option for containing pressurized fluids. (Analogy: Soda Can)</li>
+                        <li><b class="key-concept">Efficiency:</b> For a given area, a circle has the smallest perimeter. Less perimeter means less wall friction, less pressure drop, and lower pumping energy costs.</li>
+                    </ul>
+                </div>
+                <div class="node">
+                    <div class="node-header"><h3>Fundamental Flow Concepts</h3></div>
+                    <ul>
+                        <li><b>No-Slip Condition:</b> Fluid velocity is precisely zero at the pipe wall. Velocity is maximum at the centerline.</li>
+                        <li><b>Average Velocity ($V_{avg}$):</b> The single, practical velocity used in calculations that represents the entire flow, as if it were moving at a uniform speed.
+                            <div class="formula">$\dot{m} = \rho V_{avg} A_c$</div>
+                        </li>
+                        <li><b>Mean Temperature ($T_m$):</b> The "energy-weighted" average temperature representing the total thermal energy of the fluid.
+                             <div class="formula">$\dot{E}_{fluid} = \dot{m} c_p T_m$</div>
+                        </li>
+                        <li><b class="rule">Key Difference:</b> $V_{avg}$ is constant for incompressible flow, but $T_m$ changes as heat is transferred.</li>
+                    </ul>
+                </div>
+                <div class="node">
+                    <div class="node-header"><h3>Hydraulic Diameter ($D_h$)</h3></div>
+                    <p>An "effective" diameter that allows the use of standard circular pipe equations for non-circular conduits (ducts, annuli).</p>
+                    <div class="formula">$$ D_h = \frac{4 A_c}{p} $$
+                    Where $A_c$ is the cross-sectional area and $p$ is the wetted perimeter.
+                    </div>
+                </div>
+            </div>
+        </section>
 
-            workflowMap.addEventListener('click', (e) => {
-                const node = e.target.closest('.workflow-node');
-                if (!node) return;
+        <!-- Section 2: Entrance Region -->
+        <section class="roadmap-section" id="sec-entrance">
+            <div class="summary-view">
+                 <div>
+                    <h2>2. Flow Development & Thermal Models (Sec 8-3, 8-4)</h2>
+                    <p>How fluid behavior evolves from the inlet and how to model heat transfer.</p>
+                </div>
+            </div>
+            <div class="detailed-view">
+                <div class="node">
+                    <div class="node-header"><h3>The Entrance Region (Sec 8-3)</h3></div>
+                    <p>The region from the inlet where velocity and thermal boundary layers are developing. The flow is not yet stable.</p>
+                    <p class="rule">Key Consequence: The friction factor ($f$) and heat transfer coefficient ($h$) are HIGHEST at the pipe inlet ($x=0$) and decrease to constant values in the fully developed region.</p>
+                    <p class="insight">This "entrance effect" is critical for short tubes (e.g., in compact heat exchangers), where the higher average 'h' allows for a smaller, cheaper design.</p>
+                    <div class="formula">
+                        <b>Turbulent Flow:</b> $L_{h, turbulent} \approx L_{t, turbulent} \approx 10D$ <br>
+                        <b>Laminar Flow:</b> $L_{h, laminar} \approx 0.05 \cdot Re \cdot D$ <br>
+                        <b>Laminar Flow:</b> $L_{t, laminar} \approx 0.05 \cdot Re \cdot Pr \cdot D = Pr \cdot L_{h, laminar}$
+                    </div>
+                </div>
+                <div class="node">
+                    <div class="node-header"><h3>General Thermal Analysis Models (Sec 8-4)</h3></div>
+                    <ul>
+                        <li><b>Case 1: Constant Heat Flux ($q''_s$):</b> Fluid temperature $T_m$ increases linearly. Common for electric heaters.
+                            <div class="formula">$\dot{Q} = q''_s A_s \quad \rightarrow \quad T_e = T_i + \frac{q''_s A_s}{\dot{m} c_p}$</div>
+                        </li>
+                        <li><b>Case 2: Constant Surface Temp ($T_s$):</b> Fluid temperature $T_m$ increases exponentially. Common for phase change (e.g., steam condensers). Requires the use of the <b class="key-concept">Log Mean Temperature Difference (LMTD)</b>.
+                            <div class="formula">$\dot{Q} = h A_s \Delta T_{lm} \quad \text{where} \quad \Delta T_{lm} = \frac{\Delta T_e - \Delta T_i}{\ln(\Delta T_e / \Delta T_i)}$</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-                const targetId = node.dataset.target;
-                const targetElement = document.getElementById(targetId);
+        <!-- Section 3: The Critical Decision -->
+        <section class="roadmap-section" id="sec-decision">
+            <div class="summary-view">
+                <div>
+                    <h2 style="color: var(--accent-orange)">3. CRITICAL DECISION: Determine The Flow Regime</h2>
+                    <p>The Reynolds Number dictates the entire analysis path.</p>
+                </div>
+            </div>
+            <div class="detailed-view">
+                 <div class="node">
+                    <div class="node-header"><h3>The Reynolds Number (Re)</h3></div>
+                    <p>The dimensionless ratio of inertial forces to viscous forces. This is the engineer's "crystal ball" for predicting fluid behavior.</p>
+                    <div class="formula">$$ Re = \frac{\text{Inertial Forces}}{\text{Viscous Forces}} = \frac{\rho V_{avg} D}{\mu} $$</div>
+                    <ul>
+                        <li>$Re < 2300$: Path -> <b class="key-concept">Laminar Analysis</b> (smooth, predictable)</li>
+                        <li>$2300 < Re < 4000$: Path -> <b class="key-concept">Transitional</b> (unstable, avoid if possible by interpolation)</li>
+                        <li>$Re > 4000$: Path -> <b class="key-concept">Turbulent Analysis</b> (chaotic, high mixing)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-                if (targetElement) {
-                    // Collapse all other sections
-                    sections.forEach(section => {
-                        if (section.parentElement.id !== targetId) {
-                            section.removeAttribute('open');
-                        }
-                    });
+        <!-- Section 4: Laminar Flow -->
+        <section class="roadmap-section" id="sec-laminar">
+            <div class="summary-view">
+                 <div>
+                    <h2>Laminar Flow Analysis (Sec 8-5, Re < 2300)</h2>
+                    <p>Analysis based on analytical solutions for orderly flow.</p>
+                </div>
+            </div>
+            <div class="detailed-view">
+                <div class="node">
+                    <div class="node-header"><h3>Pressure Drop</h3></div>
+                    <p>Results from a perfect balance of pressure and viscous forces, leading to a parabolic velocity profile where $u_{max} = 2 V_{avg}$.</p>
+                    <div class="formula">$$ f = \frac{64}{Re} $$
+                    $$ \Delta P_L = f \frac{L}{D} \frac{\rho V_{avg}^2}{2} = \frac{32 \mu L V_{avg}}{D^2} $$</div>
+                    <p class="rule">Design Implication: The $D^4$ relationship ($\Delta P_L \propto 1/D^4$) means a small increase in pipe diameter causes a massive drop in required pumping power.</p>
+                </div>
+                <div class="node">
+                    <div class="node-header"><h3>Heat Transfer</h3></div>
+                    <p>For <b class="key-concept">fully developed flow</b>, Nu is a constant, independent of Re and Pr.</p>
+                    <div class="formula">$$ \text{Constant } T_s: Nu = 3.66 $$
+                                      $$ \text{Constant } q''_s: Nu = 4.36 $$</div>
+                    <p>For <b class="key-concept">developing flow</b>, Nu is higher. Use correlations like Sieder-Tate, which includes the Graetz Number (Gz) and a viscosity correction.</p>
+                    <div class="formula">$$ Nu = 1.86 \left( \frac{Re \cdot Pr \cdot D}{L} \right)^{1/3} \left( \frac{\mu_b}{\mu_s} \right)^{0.14} $$</div>
+                </div>
+            </div>
+        </section>
 
-                    // Expand the target section
-                    const targetDetails = targetElement.querySelector('details');
-                    if (targetDetails && !targetDetails.hasAttribute('open')) {
-                        targetDetails.setAttribute('open', '');
-                    }
+        <!-- Section 5: Turbulent Flow -->
+        <section class="roadmap-section" id="sec-turbulent">
+            <div class="summary-view">
+                 <div>
+                    <h2>Turbulent Flow Analysis (Sec 8-6+, Re > 4000)</h2>
+                    <p>Analysis based on empirical correlations for chaotic, well-mixed flow.</p>
+                </div>
+            </div>
+            <div class="detailed-view">
+                 <div class="node">
+                    <div class="node-header"><h3>Pressure Drop</h3></div>
+                    <p>Friction is now a strong function of surface roughness ($\epsilon$).</p>
+                    <p class="rule">The <b class="key-concept">Moody Chart</b> or the implicit <b class="key-concept">Colebrook Equation</b> are the essential tools for finding $f$.</p>
+                    <div class="formula">$$ \frac{1}{\sqrt{f}} = -2.0 \log \left( \frac{\epsilon/D}{3.7} + \frac{2.51}{Re\sqrt{f}} \right) $$</div>
+                </div>
+                <div class="node">
+                    <div class="node-header"><h3>Heat Transfer</h3></div>
+                    <p>Chaotic eddies dramatically enhance heat transfer. Analysis relies on empirical correlations.</p>
+                    <ul>
+                        <li><b>For Quick Analysis (Dittus-Boelter):</b>
+                            <div class="formula">$$ Nu = 0.023 Re^{0.8} Pr^n $$
+                            $n=0.4$ for heating, $n=0.3$ for cooling.</div></li>
+                        <li><b>For High Accuracy (Gnielinski):</b>
+                            <div class="formula">$$ Nu = \frac{(f/8)(Re-1000)Pr}{1 + 12.7(f/8)^{0.5}(Pr^{2/3}-1)} $$</div></li>
+                    </ul>
+                </div>
+                <div class="node">
+                    <div class="node-header"><h3>Advanced Topics</h3></div>
+                    <ul>
+                        <li><b>Non-Circular Tubes & Annuli:</b> Use the <b class="rule">hydraulic diameter ($D_h$)</b> in all Re, $f$, and Nu calculations.</li>
+                        <li><b>Heat Enhancement:</b> Intentionally using fins, inserts, or surface roughening to increase turbulence and boost $h$.</li>
+                    </ul>
+                    <p class="insight">The Engineer's Trade-Off: Enhanced heat transfer is ALWAYS accompanied by an increased pressure drop ($\Delta P_L$).</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
 
-                    // Smooth scroll to the target section
-                    // A slight delay ensures the expansion is registered before scrolling
-                    setTimeout(() => {
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }, 100);
-                }
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const accordionContainer = document.getElementById('accordion-container');
+        const workflowNodes = document.querySelectorAll('.workflow-node');
+
+        function expandSection(section) {
+            if (!section) return;
+            accordionContainer.querySelectorAll('.roadmap-section').forEach(s => {
+                if (s !== section) s.classList.remove('expanded');
+            });
+            section.classList.add('expanded');
+        }
+
+        workflowNodes.forEach(node => {
+            node.addEventListener('click', () => {
+                const targetId = node.getAttribute('data-target');
+                const targetSection = document.getElementById(targetId);
+                expandSection(targetSection);
+                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
         });
-    </script>
+
+        accordionContainer.querySelectorAll('.summary-view').forEach(summary => {
+            summary.addEventListener('click', () => {
+                const section = summary.closest('.roadmap-section');
+                section.classList.toggle('expanded');
+            });
+        });
+    });
+</script>
+
 </body>
 </html>
