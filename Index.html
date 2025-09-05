@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Dashboard: Internal Convection (Ch. 8)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .roadmap-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        header h1 {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        header h1 span {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .roadmap-section {
+            background: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .roadmap-section:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .summary-view {
+            padding: 25px 30px;
+            cursor: pointer;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .summary-view h2 {
+            margin: 0;
+            font-size: 1.6em;
+            font-weight: 500;
+            color: var(--text-primary);
+            grid-column: 1 / 3;
+        }
+        
+        .summary-view .section-tag {
+            font-family: var(--font-code);
+            font-size: 1.1em;
+            color: var(--accent-orange);
+            grid-column: 1 / 1;
+            grid-row: 1 / 1;
+            margin-top: -35px; /* Position it nicely */
+        }
+
+        .summary-view p {
+            margin: 5px 0 0 0;
+            color: var(--text-secondary);
+            grid-column: 1 / 3;
+        }
+        
+        .key-formulas {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            font-family: var(--font-code);
+            font-size: 1em;
+            color: var(--accent-cyan);
+            border-left: 3px solid var(--accent-cyan);
+            grid-column: 1 / 3;
+        }
+
+        .toggle-button {
+            grid-column: 3 / 4;
+            grid-row: 1 / 5; /* Span all rows of summary */
+            justify-self: end;
+            background: none;
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-button:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            transform: scale(1.1);
+        }
+
+        .detailed-view {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.7s ease-in-out, opacity 0.5s ease-in-out, padding 0.7s ease-in-out;
+            padding: 0 30px;
+        }
+        
+        .roadmap-section.expanded .detailed-view {
+            max-height: 2000px; /* Large enough for content */
+            opacity: 1;
+            padding: 20px 30px 30px 30px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .roadmap-section.expanded .toggle-button {
+            transform: rotate(45deg);
+            border-color: var(--accent-magenta);
+            color: var(--accent-magenta);
+        }
+
+        /* Styles for nodes inside detailed-view (from previous version) */
+        .detailed-view .node {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid transparent;
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .detailed-view .node-header {
+            display: flex; align-items: center; gap: 15px;
+            margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;
+        }
+        .detailed-view .node-header svg { width: 24px; height: 24px; }
+        .detailed-view .node-header h3 { font-size: 1.3em; margin: 0; }
+        .detailed-view .formula {
+            background-color: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 6px;
+            font-family: var(--font-code); color: var(--accent-cyan); border-left: 2px solid var(--accent-cyan); margin-top: 10px;
+        }
+        .detailed-view .insight { color: var(--text-secondary); font-style: italic; border-left: 2px solid var(--border-color); padding-left: 10px; margin-top: 10px; font-size: 0.9em; }
+        .detailed-view .rule { color: var(--accent-orange); font-weight: 600; }
+        
+        .critical-decision-node {
+            border: 1px solid var(--accent-orange);
+            border-style: dashed;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="roadmap-container">
+    <header>
+        <h1>Interactive Roadmap: <span>Internal Convection</span></h1>
+        <p>A high-level overview of Chapter 8. Click on any section to expand and explore the detailed engineering analysis.</p>
+    </header>
+
+    <!-- Section 1: Foundations -->
+    <section class="roadmap-section" id="sec-1">
+        <div class="summary-view">
+            <span class="section-tag">8-1 & 8-2</span>
+            <h2>Foundational Concepts & The Engineer's Toolkit</h2>
+            <p>The core principles and tools required for any internal flow problem, from physical properties to dimensionless numbers.</p>
+            <div class="key-formulas">Re = (ρVD)/μ  |  D_h = 4A_c/p</div>
+            <button class="toggle-button" aria-expanded="false" aria-controls="details-1">+</button>
+        </div>
+        <div class="detailed-view" id="details-1">
+            <div class="node">
+                <div class="node-header"><h3>Average Velocity (V<sub>avg</sub>) & Mean Temperature (T<sub>m</sub>)</h3></div>
+                <p>Because velocity and temperature vary across the pipe's cross-section (zero velocity at the wall, max at the center), we need single, practical values for calculations.</p>
+                <p class="insight">These are "bulk" properties that represent the total momentum and energy being transported, allowing us to use simple 1D equations for complex 3D profiles.</p>
+            </div>
+            <div class="node">
+                <div class="node-header"><h3>Hydraulic Diameter (D<sub>h</sub>)</h3></div>
+                <p>A clever way to apply equations developed for circular pipes to non-circular conduits (e.g., square ducts, rectangular channels, or an annulus).</p>
+                <div class="formula">D_h = 4 * (Cross-Sectional Area) / (Wetted Perimeter)</div>
+                <p class="rule">For a circular pipe, D_h = D. This concept is essential for analyzing heat exchangers and HVAC systems.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Entrance Region -->
+    <section class="roadmap-section" id="sec-2">
+        <div class="summary-view">
+            <span class="section-tag">8-3</span>
+            <h2>Flow Development & The Entrance Region</h2>
+            <p>Analyzing how fluid behavior evolves from the pipe inlet until it becomes stable or "fully developed".</p>
+            <div class="key-formulas">Turbulent: L_entry ≈ 10D | Laminar: L_entry ≈ 0.05*Re*D</div>
+            <button class="toggle-button" aria-expanded="false" aria-controls="details-2">+</button>
+        </div>
+        <div class="detailed-view" id="details-2">
+            <div class="node">
+                <div class="node-header"><h3>Hydrodynamic & Thermal Boundary Layers</h3></div>
+                <p>As fluid enters a pipe, layers near the wall slow down (velocity BL) and change temperature (thermal BL). These layers grow until they meet at the center.</p>
+                <p class="rule">The friction factor (f) and heat transfer coefficient (h) are HIGHEST at the inlet (x=0) and decrease to constant values in the fully developed region.</p>
+                <p class="insight">This "entrance effect" is critical for short tubes (like in compact heat exchangers), where the flow might never become fully developed, leading to higher-than-expected performance.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: The Critical Decision -->
+    <section class="roadmap-section critical-decision-node" id="sec-3">
+        <div class="summary-view">
+            <span class="section-tag">CRITICAL STEP</span>
+            <h2>Determine The Flow Regime</h2>
+            <p>This is the most important step. The Reynolds Number dictates which set of physical laws and equations govern the system.</p>
+            <div class="key-formulas">Re < 2300 (Laminar)  |  Re > 4000 (Turbulent)</div>
+            <button class="toggle-button" aria-expanded="false" aria-controls="details-3">+</button>
+        </div>
+        <div class="detailed-view" id="details-3">
+            <div class="node">
+                <div class="node-header"><h3>Laminar Flow Path (Re < 2300)</h3></div>
+                <p>Characterized by smooth, orderly layers (laminae). Viscous forces dominate. Behavior is predictable with analytical equations.</p>
+                <p class="insight">Friction is independent of surface roughness. Heat transfer is highly dependent on thermal boundary conditions.</p>
+                <div class="formula">f = 64/Re  |  Nu_fd = 3.66 or 4.36</div>
+            </div>
+             <div class="node">
+                <div class="node-header"><h3>Turbulent Flow Path (Re > 4000)</h3></div>
+                <p>Characterized by chaotic, swirling eddies and intense mixing. Inertial forces dominate. Analysis relies on empirical correlations.</p>
+                <p class="insight">Friction is a strong function of surface roughness. Heat transfer is significantly enhanced due to turbulent mixing.</p>
+                <div class="formula">f = func(Re, ε/D)  |  Nu = 0.023*Re^0.8*Pr^n</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Advanced Topics -->
+    <section class="roadmap-section" id="sec-4">
+        <div class="summary-view">
+            <span class="section-tag">8-6+</span>
+            <h2>Real-World Applications & Enhancement</h2>
+            <p>Applying the core principles to complex geometries and methods for actively improving heat transfer performance.</p>
+            <div class="key-formulas">The Trade-Off: Enhanced 'h' ⇔ Increased 'ΔP'</div>
+            <button class="toggle-button" aria-expanded="false" aria-controls="details-4">+</button>
+        </div>
+        <div class="detailed-view" id="details-4">
+            <div class="node">
+                <div class="node-header"><h3>Heat Transfer Enhancement</h3></div>
+                <p>Techniques used to increase the heat transfer coefficient (h) to design smaller, more efficient equipment.</p>
+                <ul>
+                    <li><b>Methods:</b> Internal fins, spiral ribs, twisted tape inserts (to induce swirl).</li>
+                    <li><b>Mechanism:</b> All methods work by disrupting the insulating laminar sublayer near the wall.</li>
+                </ul>
+                <p class="rule">The Engineer's Compromise: Enhanced heat transfer is ALWAYS accompanied by a significant increase in the friction factor and pumping power required.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sections = document.querySelectorAll('.roadmap-section');
+
+        sections.forEach(section => {
+            const trigger = section.querySelector('.summary-view');
+
+            trigger.addEventListener('click', () => {
+                const isExpanded = section.classList.contains('expanded');
+                
+                // Optional: close other sections when one is opened
+                // sections.forEach(s => s.classList.remove('expanded'));
+                
+                if (!isExpanded) {
+                    section.classList.add('expanded');
+                } else {
+                    section.classList.remove('expanded');
+                }
+                
+                // Update ARIA attribute for accessibility
+                const button = section.querySelector('.toggle-button');
+                button.setAttribute('aria-expanded', !isExpanded);
+            });
+        });
+    
