@@ -3,22 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visual Workflow Dashboard: Internal Flow Analysis</title>
+    <title>Chapter 8: Internal Flow - Visual Workflow Dashboard</title>
+    
     <script>
-        MathJax = {
-          tex: {
-            inlineMath: [['$', '$'], ['\KATEX_INLINE_OPEN', '\KATEX_INLINE_CLOSE']],
-            displayMath: [['$$', '$$'], ['\```math
-', '\```']]
-          },
-          svg: {
-            fontCache: 'global'
-          }
-        };
+    MathJax = {
+      tex: {
+        inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+        displayMath: [['```math', '```']]
+      }
+    };
     </script>
-    <script type="text/javascript" id="MathJax-script" async
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
 
@@ -81,14 +77,13 @@
             padding-bottom: 0.5rem;
             margin-top: 1.5rem;
         }
-        
+
         h3 {
             font-size: 1.4rem;
             color: var(--accent-orange);
             margin-top: 2rem;
         }
 
-        /* Part A: Workflow Map */
         .workflow-map {
             position: relative;
             display: flex;
@@ -127,11 +122,11 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .workflow-node.decision span {
             transform: rotate(-45deg);
         }
-        
+
         .workflow-node.decision:hover {
              transform: rotate(45deg) translateY(-5px);
         }
@@ -143,7 +138,7 @@
             gap: 20px;
             position: relative;
         }
-        
+
         .branch-container {
             display: flex;
             flex-direction: column;
@@ -152,14 +147,13 @@
             width: 45%;
             position: relative;
         }
-        
+
         .branch-container h3 {
             color: var(--text-primary);
             font-weight: 700;
             margin-top:0;
         }
-        
-        /* Connectors */
+
         .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
         .branch-container h3::before {
             content: '↓';
@@ -183,7 +177,7 @@
             width: 2px;
             background-color: var(--connector-color);
         }
-        
+
         .flow-branch::before { 
             content: '';
             position: absolute;
@@ -193,7 +187,7 @@
             height: 2px;
             background-color: var(--connector-color);
         }
-        
+
         .branch-container::before { 
             content: '';
             position: absolute;
@@ -234,13 +228,12 @@
             z-index: 1;
         }
 
-        /* Part B: Accordion */
         #accordion-container {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
         }
-        
+
         .roadmap-section {
             background-color: var(--bg-section);
             border: 1px solid var(--border-color);
@@ -248,7 +241,7 @@
             overflow: hidden;
             transition: border-color 0.3s ease;
         }
-        
+
         .roadmap-section.expanded {
             border-color: var(--accent-blue);
         }
@@ -261,12 +254,12 @@
             align-items: center;
             background-color: rgba(13, 17, 23, 0.5);
         }
-        
+
         .section-header::after {
             content: '▼';
             transition: transform 0.3s ease;
         }
-        
+
         .roadmap-section.expanded .section-header::after {
             transform: rotate(180deg);
         }
@@ -300,7 +293,7 @@
             border-radius: 4px;
             color: var(--text-primary);
         }
-        
+
         .rule-of-thumb {
             background-color: rgba(240, 136, 62, 0.1);
             border: 1px solid var(--accent-orange);
@@ -309,7 +302,7 @@
             border-radius: 4px;
             box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
         }
-        
+
         .rule-of-thumb b {
             color: var(--accent-orange);
         }
@@ -318,11 +311,11 @@
             list-style-position: inside;
             padding-left: 1rem;
         }
-        
+
         li {
             margin-bottom: 0.5rem;
         }
-        
+
         mjx-container {
             margin: 1rem auto;
             font-family: var(--font-code);
@@ -332,510 +325,504 @@
 </head>
 <body>
 
-    <div class="dashboard-container">
-        <h1>Internal Flow: A Visual Workflow</h1>
+<div class="dashboard-container">
+    <h1>Chapter 8: Internal Flow Analysis Workflow</h1>
 
-        <!-- Part A: The Visual Workflow Map -->
-        <div class="workflow-map">
-            <div class="workflow-node" data-target="sec-intro"><span>1. Intro to Internal Flow (8-1)</span></div>
-            <div class="workflow-node" data-target="sec-tools"><span>2. Analytical Tools & Flow Regimes (8-2)</span></div>
-            <div class="workflow-node" data-target="sec-entrance"><span>3. Entrance Region & Entry Length (8-3)</span></div>
-            <div class="workflow-node" data-target="sec-thermal-analysis"><span>4. General Thermal Analysis (8-4)</span></div>
-            <div class="workflow-node decision" data-target="sec-tools"><span>5. Decision:<br>Laminar or Turbulent?</span></div>
-            
-            <div class="flow-branch">
-                <div class="branch-container">
-                    <h3>Laminar Flow Path (Re < 2300)</h3>
-                    <div class="workflow-node no-connector" data-target="sec-laminar"><span>6A. Laminar Flow Analysis (8-5)</span></div>
+    <!-- Part A: The Visual Workflow Map -->
+    <div class="workflow-map">
+        <div class="workflow-node" data-target="sec-foundations">
+            Step 1: Core Concepts & Properties
+        </div>
+        <div class="workflow-node" data-target="sec-entry-regions">
+            Step 2: Entrance Region Analysis
+        </div>
+        <div class="workflow-node" data-target="sec-thermal-analysis">
+            Step 3: General Thermal Analysis Methods
+        </div>
+        <div class="workflow-node decision" data-target="sec-decision-point">
+            <span>Step 4: Decision<br>Determine Flow Regime<br>(Calculate Re)</span>
+        </div>
+        
+        <div class="flow-branch">
+            <div class="branch-container">
+                <h3>Laminar Path (Re < 2300)</h3>
+                <div class="workflow-node" data-target="sec-laminar-flow">
+                    Laminar Flow: Theory & Equations
                 </div>
-                <div class="branch-container">
-                    <h3>Turbulent Flow Path (Re > 4000)</h3>
-                    <div class="workflow-node no-connector" data-target="sec-turbulent"><span>6B. Turbulent Flow Analysis (8-6)</span></div>
+                 <div class="workflow-node no-connector" data-target="sec-laminar-dev-flow">
+                    Developing Laminar Flow
                 </div>
             </div>
-            
-            <div class="rejoin-connector"></div>
-            
-            <div class="workflow-node" data-target="sec-special-cases"><span>7. Special Cases & Enhancement</span></div>
+            <div class="branch-container">
+                <h3>Turbulent Path (Re > 4000)</h3>
+                <div class="workflow-node" data-target="sec-turbulent-flow">
+                    Turbulent Flow: Correlations
+                </div>
+                <div class="workflow-node no-connector" data-target="sec-turbulent-real-world">
+                    Real World Effects: Roughness
+                </div>
+            </div>
         </div>
 
-        <!-- Part B: The Detailed Accordion Sections -->
-        <div id="accordion-container">
-            
-            <!-- Section 1: 8-1 Intro -->
-            <section id="sec-intro" class="roadmap-section">
-                <div class="section-header"><h2>1. Intro to Internal Flow (8-1)</h2></div>
-                <div class="section-content">
-                    <h3>The Core Concept Breakdown</h3>
-                    <p>Welcome to internal flow. Think of this as the highway system of any chemical process. 🏭 Everything—reactants, products, steam, cooling water, compressed air—moves from point A to point B inside a pipe or duct. Your job as an engineer is to be the "traffic engineer" for these fluids. You need to know how they behave to design a system that is safe, efficient, and cost-effective.</p>
+        <div class="rejoin-connector"></div>
 
-                    <h3>Why Are Pipes Almost Always Round?</h3>
-                    <p>The textbook gives two great reasons, but let's make them more tangible.</p>
-                    <ul>
-                        <li><strong>Strength:</strong> Imagine a soda can. It's a thin piece of aluminum, but it can hold pressurized liquid without bulging or bursting. Its circular shape distributes that internal pressure stress perfectly evenly. Now, imagine a square or rectangular can. The pressure would push hardest on the center of the flat sides, causing them to bulge and potentially fail. In a plant, we're not dealing with soda; we're dealing with high-pressure steam, flammable liquids, or valuable products. Safety and reliability are non-negotiable, so we use the strongest shape: the circle.</li>
-                        <li><strong>Efficiency:</strong> As the text mentions, for a given cross-sectional area, a circle has the smallest perimeter. In fluid flow, the perimeter (the pipe wall) is where friction happens. Less perimeter means less friction, which means less pressure drop. Less pressure drop means you can use a smaller, less-energy-hungry pump to move your fluid. Over the life of a plant, that translates to millions of dollars in saved electricity costs.</li>
-                    </ul>
-
-                    <h3>The "No-Slip" Condition & Average Velocity ⚙️</h3>
-                    <p>This is a fundamental concept. At the exact surface of the pipe wall, the fluid molecules are essentially "stuck" to it, so their velocity is zero. As you move toward the center of thepipe, the fluid layers move faster and faster, with the maximum speed right in the middle.</p>
-                    <div class="insight">
-                        <em><b>Physical Insight (Analogy):</b> Think of a multi-lane highway during light traffic. The cars in the far-right "slow lane" (near the wall/shoulder) are moving slower, while the cars in the far-left "fast lane" (at the center) are moving the fastest.</em>
-                    </div>
-                    <p><b>Why it Matters:</b> We can't design a pump or calculate a flow rate based on the maximum velocity, because most of the fluid isn't moving that fast. We need a single, practical value that represents the entire flow. That's the average velocity ($V_{avg}$). It's the hypothetical speed the fluid would have if it were moving at a uniform velocity across the entire pipe, delivering the same total amount of fluid. It's the number we use in nearly all industrial calculations.</p>
-
-                    <h3>Friction's Real Consequence: Pressure Drop, Not Heat</h3>
-                    <p>Friction between fluid layers and the pipe wall does generate a tiny bit of heat. But in 99% of cases, this is completely insignificant. The real "cost" of friction is pressure drop. It's a loss of mechanical energy. You put energy in with a pump to create pressure, and friction "steals" that pressure along the length of the pipe. Your main job is to predict and manage this pressure drop to ensure the fluid gets where it needs to go at the required pressure, and to size your pumps correctly.</p>
-
-                    <div class="card">
-                        <h3>Key Takeaways & Formulas</h3>
-                        <p>This section is all about setting the stage. Here are the must-know points.</p>
-                        <h4>Terminology</h4>
-                        <ul>
-                            <li><strong>Pipe:</strong> Typically a circular conduit, especially for liquids. The workhorse of the process industry.</li>
-                            <li><strong>Duct:</strong> Typically a non-circular (e.g., rectangular) conduit, common for gases in low-pressure applications like HVAC systems.</li>
-                            <li><strong>Tube:</strong> A term for small-diameter pipes.</li>
-                        </ul>
-                        <h4>Dominance of Circular Pipes</h4>
-                        <ul>
-                            <li><strong>Structural Integrity:</strong> A circular cross-section is the most effective shape for withstanding large pressure differences between the inside and outside.</li>
-                            <li><strong>Thermo-Fluid Efficiency:</strong> For a given surface area, a circular pipe offers the most heat transfer for the least pressure drop, making it ideal for heat exchangers and general fluid transport.</li>
-                        </ul>
-                        <h4>Flow Characteristics</h4>
-                        <ul>
-                            <li><strong>No-Slip Condition:</strong> The fluid velocity at the pipe wall ($r = R$) is zero.</li>
-                            <li><strong>Velocity Profile:</strong> Velocity is zero at the walls and maximum at the centerline.</li>
-                            <li><strong>Average Velocity ($V_{avg}$):</strong> A single, calculated velocity that represents the bulk movement of the fluid. It's used to determine the volumetric flow rate.</li>
-                        </ul>
-                        <h4>Important Practical Considerations</h4>
-                        <ul>
-                            <li><strong>Reliance on Empirical Data:</strong> Exact theoretical solutions are rare. Most real-world calculations rely on experimental results and correlations. Expect a degree of error (~10% is common) in these calculations.</li>
-                            <li><strong>Frictional Heating:</strong> This effect converts some mechanical energy to thermal energy, but it is almost always negligible compared to the primary mode of heat transfer or the effect of pressure drop. Friction's main consequence is pressure drop ($\Delta P$).</li>
-                        </ul>
-                        <h4>Key (Introductory) Formula</h4>
-                        <p>For fully developed laminar flow, there is a simple relationship between average and maximum velocity:</p>
-                        $$V_{avg} = \frac{V_{max}}{2}$$
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 2: 8-2 Average Velocity and Temperature -->
-            <section id="sec-tools" class="roadmap-section">
-                <div class="section-header"><h2>2. Analytical Tools & Flow Regimes (8-2)</h2></div>
-                <div class="section-content">
-                    <h3>The Core Concept Breakdown</h3>
-                    <p>This section is about creating practical, usable numbers from complex profiles. Nature gives us elegant curves for velocity and temperature across a pipe, but as engineers, we need single values to plug into our design equations for pumps, heat exchangers, and reactors.</p>
-
-                    <h3>Average Velocity ($V_{avg}$) & Mean Temperature ($T_m$): The Great Simplifiers</h3>
-                    <p>As we discussed, fluid doesn't move at one speed inside a pipe. But for mass balance ($\dot{m} = \rho V_{avg} A_c$), we need a single velocity. $V_{avg}$ is the mathematical trick that lets us do this. It's the "equivalent" uniform velocity that would give the same mass flow rate as the actual parabolic (or other shaped) profile.</p>
-                    <p>The same logic applies to temperature. When you're cooling a hot fluid, the center is hotter than the fluid near the walls. So, what is "the" temperature of the fluid at that point in the pipe? That's the mean temperature ($T_m$), also called the bulk temperature. It's the "energy-weighted" average.</p>
-                    <div class="insight">
-                        <em><b>Physical Insight (Analogy):</b> Imagine you're paying a group of workers. Some are highly paid experts (the fast-moving fluid at the center, carrying more energy) and some are interns (the slow-moving fluid at the wall, carrying less). To find the average wage, you can't just average their pay rates. You have to consider how many people are at each pay level. $T_m$ is like that—it's the single temperature that represents the total thermal energy flowing past that point. 📈</em>
-                    </div>
-                    <p><b>Key Difference:</b> $V_{avg}$ is constant along a pipe (for incompressible flow), but $T_m$ changes as the fluid is heated or cooled. This is critical for heat exchanger design.</p>
-                    
-                    <h3>Laminar vs. Turbulent Flow: The Two Personalities of Fluid</h3>
-                    <p>This is one of the most important distinctions in all of fluid mechanics. It dictates everything from pressure drop to heat transfer efficiency.</p>
-                    <ul>
-                        <li><strong>Laminar Flow (Low Reynolds Number):</strong> Think of a disciplined marching band. Everyone stays in their own lane (a "lamina"), and the flow is smooth, orderly, and predictable. The only way momentum or heat moves between layers is by slow molecular diffusion. This happens with slow-moving or very viscous fluids (like pumping honey or thick oil).</li>
-                        <li><strong>Turbulent Flow (High Reynolds Number):</strong> This is a chaotic mosh pit. The fluid swirls in eddies and vortices, mixing violently. Particles from the center are thrown to the walls and vice-versa. This chaotic mixing is fantastic for heat transfer but it "costs" a lot more in terms of friction and pressure drop. Most flows in a chemical plant (water, steam, light hydrocarbons) are turbulent.</li>
-                    </ul>
-                    <p><b>Why does this matter?</b> A process engineer's life revolves around the Reynolds number ($Re$). It's our crystal ball. By calculating this single dimensionless number, we can predict the fluid's "personality" and then choose the correct set of equations to calculate pressure drop and heat transfer. Using a laminar equation for a turbulent flow (or vice-versa) will give you a completely wrong answer, which could lead to an undersized pump or a heat exchanger that doesn't work.</p>
-                    
-                    <h3>Hydraulic Diameter ($D_h$): The "One Size Fits All" Tool ⚙️</h3>
-                    <p>We know pipes are best, but sometimes we have to use rectangular ducts (like in an air conditioning system) or other odd shapes (like the shell-side of a shell-and-tube heat exchanger). How do we use our pipe-based equations for these shapes? The hydraulic diameter is the clever solution. It's an "effective" diameter for a non-circular shape that allows us to use the same Reynolds number and friction factor equations developed for circular pipes. It's a brilliant way to generalize our calculations.</p>
-                    
-                    <div class="card">
-                        <h3>Key Takeaways & Formulas</h3>
-                        <h4>Average Velocity ($V_{avg}$)</h4>
-                        <ul>
-                            <li><strong>Definition:</strong> The uniform velocity that would produce the same mass flow rate ($\dot{m}$) through a given cross-sectional area ($A_c$).</li>
-                            <li><strong>Formula:</strong> $\dot{m} = \rho V_{avg} A_c$</li>
-                        </ul>
-                        <h4>Mean Temperature ($T_m$)</h4>
-                        <ul>
-                            <li><strong>Definition:</strong> The uniform temperature that would transport the same amount of thermal energy ($\dot{E}_{fluid}$) as the actual temperature profile.</li>
-                            <li><strong>Formula:</strong> $\dot{E}_{fluid} = \dot{m} c_p T_m$</li>
-                            <li><strong>Bulk Mean Temperature ($T_b$):</strong> Used for property evaluation. It's the simple arithmetic average of the inlet and outlet mean temperatures: $T_b = (T_{inlet} + T_{outlet}) / 2$.</li>
-                        </ul>
-                        <h4>The Reynolds Number ($Re$)</h4>
-                        <ul>
-                            <li><strong>Concept:</strong> The ratio of inertial forces to viscous forces. It predicts the flow regime.</li>
-                            <li><strong>Formula (for a circular pipe):</strong> $$Re = \frac{\rho V_{avg} D}{\mu} = \frac{V_{avg} D}{\nu}$$</li>
-                            <li><strong>Can also be written with mass flow rate:</strong> $$Re = \frac{4 \dot{m}}{\pi D \mu}$$</li>
-                        </ul>
-                        <div class="rule-of-thumb">
-                            <b>Flow Regimes (Practical Rules of Thumb):</b>
-                            <ul>
-                                <li><strong>Laminar:</strong> $Re < 2300$</li>
-                                <li><strong>Transitional:</strong> $2300 < Re < 4000$ (An unstable region, often avoided in design)</li>
-                                <li><strong>Turbulent:</strong> $Re > 4000$ (For conservative design, assume turbulent if Re is over 4000)</li>
-                            </ul>
-                        </div>
-                        <h4>Hydraulic Diameter ($D_h$)</h4>
-                        <ul>
-                            <li><strong>Concept:</strong> An effective diameter for non-circular conduits.</li>
-                            <li><strong>Formula:</strong> $$D_h = \frac{4 A_c}{p}$$</li>
-                            <li>$A_c$ = cross-sectional area of the flow.</li>
-                            <li>$p$ = wetted perimeter (the portion of the perimeter in contact with the fluid).</li>
-                            <li><strong>Important Note:</strong> For a full circular pipe, $D_h = D$. For a square duct of side $a$, $D_h = a$.</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 3: 8-3 The Entrance Length -->
-            <section id="sec-entrance" class="roadmap-section">
-                <div class="section-header"><h2>3. Entrance Region & Entry Length (8-3)</h2></div>
-                <div class="section-content">
-                    <h3>The Core Concept Breakdown</h3>
-                    <p>Imagine a fluid flowing from a large tank into a narrow pipe. In the tank, the fluid is moving slowly, and all the molecules are pretty much at the same velocity and temperature. The moment it enters the pipe, it has to adjust to a brand new environment. This adjustment period happens in the entrance region.</p>
-                    
-                    <h3>The Hydrodynamic (Velocity) Adjustment 🏁</h3>
-                    <div class="insight">
-                        <em><b>Physical Insight (Analogy):</b> Think of a crowd of people walking at the same speed across an open plaza and then funneling into a long, narrow hallway. The people right next to the walls will get slowed down by brushing against them (the no-slip condition). To keep the same number of people moving through the hallway per minute (constant mass flow), the people in the center must speed up. This process of the "wall effect" spreading inwards and the center flow speeding up continues until a stable, final velocity profile is established.</em>
-                    </div>
-                    <p><b>What's Happening:</b> This is the hydrodynamic entrance region. The "slowed down" area near the wall is the velocity boundary layer, and it grows thicker as the fluid moves down the pipe. The area in the middle that hasn't been affected yet is the irrotational core. Once the boundary layers from all sides meet at the center, the adjustment is complete, and the flow is now hydrodynamically fully developed.</p>
-                    
-                    <h3>The Thermal (Temperature) Adjustment 🌡️</h3>
-                    <div class="insight">
-                        <em><b>Physical Insight (Analogy):</b> You're walking into a walk-in freezer on a hot day. The moment you step in, the air right at your skin cools down instantly. But you don't feel cold to your core right away. It takes time for that cold to penetrate through your clothes and into your body.</em>
-                    </div>
-                    <p><b>What's Happening:</b> This is the thermal entrance region. When a fluid at one temperature enters a pipe with a different wall temperature, a thermal boundary layer begins to form at the wall. This is the region where the fluid's temperature has been affected by the wall. This layer grows thicker until it reaches the center of the pipe. Once it does, the flow is thermally fully developed.</p>
-                    
-                    <h3>Why This Matters to a Practicing Engineer:</h3>
-                    <p>The most important takeaway is that both the friction factor ($f$) and the heat transfer coefficient ($h$) are HIGHEST at the pipe inlet and decrease until they reach a constant value in the fully developed region.</p>
-                    <ul>
-                        <li><strong>Heat Exchangers:</strong> In a compact heat exchanger (like a car radiator or an oil cooler), the tubes might be very short. This means the fluid could spend its entire journey in the entrance region! As a designer, you can take advantage of that sky-high initial heat transfer coefficient ($h$). It means you can get the job done with a much smaller and cheaper unit. Ignoring this effect and using the lower "fully developed" $h$ value would lead you to over-design the equipment, wasting material and money.</li>
-                        <li><strong>Pumping & Pressure Drop:</strong> The higher friction factor ($f$) at the entrance means there is a disproportionately high pressure drop in this initial section. For a long pipeline (kilometers), this entrance effect is a negligible part of the total pressure drop. But for a short pipe run between two pieces of equipment, ignoring the higher entrance friction could lead you to undersize your pump, which then wouldn't be able to deliver the required flow rate.</li>
-                    </ul>
-                    
-                    <div class="card">
-                        <h3>Key Takeaways & Formulas (Concepts)</h3>
-                        <h4>Regions of Flow</h4>
-                        <ul>
-                            <li><strong>Hydrodynamic Entrance Region:</strong> The region from the pipe inlet where the velocity profile is developing. The friction factor ($f_x$) is high and decreasing.</li>
-                            <li><strong>Hydrodynamically Fully Developed Region:</strong> The region where the velocity profile is constant. The friction factor ($f$) is constant. $(\partial u / \partial x = 0)$</li>
-                            <li><strong>Thermal Entrance Region:</strong> The region where the temperature profile is developing. The heat transfer coefficient ($h_x$) is high and decreasing.</li>
-                            <li><strong>Thermally Fully Developed Region:</strong> The region where the dimensionless temperature profile is constant. The local heat transfer coefficient ($h$) is constant. $(\partial[ (T_s - T) / (T_s - T_m) ] / \partial x = 0)$</li>
-                        </ul>
-                        <h4>The Prandtl Number ($Pr$)</h4>
-                        <ul>
-                            <li><strong>Concept:</strong> A dimensionless property of the fluid itself ($Pr = \nu / \alpha$) that compares the rate of momentum diffusion to thermal diffusion.</li>
-                            <li><strong>Its Role Here:</strong>
-                                <ul>
-                                    <li>$Pr >> 1$ (Oils, viscous fluids): $L_h < L_t$</li>
-                                    <li>$Pr << 1$ (Liquid metals): $L_t < L_h$</li>
-                                    <li>$Pr \approx 1$ (Gases): $L_h \approx L_t$</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="rule-of-thumb">
-                        <h3>The Engineer's Judgment Call 💡 (Entry Lengths)</h3>
-                        <p>When you're analyzing a pipe, the first thing you do is calculate the Reynolds Number.</p>
-                        <p><strong>If $Re > 4000$ (Turbulent):</strong> You ask, "Is my pipe length ($L$) much greater than 10 times the diameter ($10D$)?"</p>
-                        <ul>
-                            <li>If YES (e.g., a 50m long pipe), you can confidently assume the entire pipe is in fully developed flow. This simplifies your life immensely.</li>
-                            <li>If NO (e.g., a 0.5m long tube in a heat exchanger), you know the entrance effects are dominant, and you must account for the higher heat transfer and friction in that region.</li>
-                        </ul>
-                        <p><strong>If $Re < 2300$ (Laminar):</strong> You must assume you are in the entrance region unless your pipe is exceptionally long. You have to use the more complex correlations that account for the changing $h$ and $f$.</p>
-
-                        <h4>Laminar Flow Entry Lengths ($Re < 2300$)</h4>
-                        <ul>
-                            <li>Hydrodynamic Entry Length: $L_{h, \text{laminar}} \approx 0.05 \ Re \ D$</li>
-                            <li>Thermal Entry Length: $L_{t, \text{laminar}} \approx 0.05 \ Re \ Pr \ D = Pr \ L_{h, \text{laminar}}$</li>
-                        </ul>
-                        <h4>Turbulent Flow Entry Lengths ($Re > 4000$)</h4>
-                        <ul>
-                            <li>Hydrodynamic & Thermal: $L_{h, \text{turbulent}} \approx L_{t, \text{turbulent}} \approx 10 D$</li>
-                            <li><b>This is a powerful and widely used rule of thumb.</b></li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Section 4: 8-4 General Thermal Analysis -->
-            <section id="sec-thermal-analysis" class="roadmap-section">
-                <div class="section-header"><h2>4. General Thermal Analysis (8-4)</h2></div>
-                <div class="section-content">
-                    <h3>The Core Concept Breakdown</h3>
-                    <p>When we heat or cool a fluid in a tube, we need a way to describe how that energy is being added or removed. The two models discussed here are the fundamental building blocks for that analysis.</p>
-
-                    <h3>Case 1: Constant Surface Heat Flux ($\dot{q}_s = \text{constant}$)</h3>
-                    <p><b>The Scenario:</b> Imagine wrapping a pipe with an electric heating coil, like the element on an electric stove. Every square inch of the pipe surface is getting the same, constant amount of energy (Watts) pumped into it. Another example is a pipe receiving uniform radiation from a furnace.</p>
-                    <p><b>The Consequence:</b> Since you're adding energy at a steady rate, the fluid's temperature ($T_m$) increases in a perfectly straight line as it flows down the pipe. Because the heat transfer coefficient ($h$) is also constant (in the developed region), the temperature difference ($T_s - T_m$) stays constant. This means the pipe wall temperature ($T_s$) must also increase in a straight line, parallel to the fluid temperature.</p>
-                    <div class="insight">
-                        <em><b>Physical Insight (Analogy):</b> You're on a moving walkway ($T_m$) and your friend is on another one right next to you ($T_s$), moving at the same speed. The distance between you ($T_s - T_m$) remains constant.</em>
-                    </div>
-                    
-                    <h3>Case 2: Constant Surface Temperature ($T_s = \text{constant}$)</h3>
-                    <p><b>The Scenario:</b> This is far more common in chemical plants. Think of a pipe with steam condensing on the outside (the steam will stay at its saturation temperature, say 120°C, all along the pipe). Or, a tube submerged in a large, well-agitated tank of boiling water (the water will stay at 100°C). Any phase change on the outside of the tube creates a nearly constant temperature wall.</p>
-                    <p><b>The Consequence:</b> When the cold fluid enters, the temperature difference ($\Delta T = T_s - T_m$) is huge. This is the "driving force" for heat transfer, so the heat transfer rate is very high at the beginning. As the fluid heats up and $T_m$ gets closer to $T_s$, the driving force ($\Delta T$) shrinks. With a smaller $\Delta T$, the heat transfer rate drops off. This results in an exponential temperature curve, where the fluid heats up quickly at first and then the rate of heating slows down as it approaches the wall temperature.</p>
-                    <div class="insight">
-                        <em><b>Physical Insight (Analogy):</b> You're trying to fill a leaky bucket from a hose. At first, when the bucket is empty, the water level rises very quickly. But as the bucket gets fuller, the pressure at the leak increases, and more water flows out. The net rate at which the bucket fills slows down, and it becomes harder and harder to reach the very top. The fluid temperature ($T_m$) is like the water level, and the wall temperature ($T_s$) is the top of the bucket.</em>
-                    </div>
-
-                    <h3>The LMTD: The "Correct" Average Driving Force</h3>
-                    <p>For the constant temperature case, we can't just use a simple average of the $\Delta T$ at the inlet and outlet because the change is exponential, not linear. The Log Mean Temperature Difference (LMTD or $\Delta T_{lm}$) is the mathematically correct average driving force for heat transfer in this situation. Using the simple arithmetic average will overestimate the heat transfer, leading you to design a heat exchanger that is too small and won't perform as needed. This is a critical distinction for any design engineer. ⚙️</p>
-                    
-                    <div class="card">
-                        <h3>Key Takeaways & Formulas</h3>
-                        <h4>Universal Energy Balance</h4>
-                        <p>The total heat transferred to a fluid is always given by:</p>
-                        $$\dot{Q} = \dot{m} c_p (T_e - T_i)$$
-                        <h4>Newton's Law of Cooling (General Form)</h4>
-                        <p>The rate of heat transfer is also defined by the convection process:</p>
-                        $$\dot{Q} = h A_s \Delta T_{avg}$$
-                        <h4>Analysis for Constant Heat Flux ($\dot{q}_s = \text{constant}$):</h4>
-                        <ul>
-                            <li><strong>Total Heat Transfer:</strong> $\dot{Q} = \dot{q}_s A_s$</li>
-                            <li><strong>Outlet Temperature:</strong> $T_e = T_i + (\dot{q}_s A_s) / (\dot{m} c_p)$</li>
-                            <li><strong>Key Behavior:</strong> $T_m$ and $T_s$ increase linearly with distance x.</li>
-                        </ul>
-                        <h4>Analysis for Constant Surface Temperature ($T_s = \text{constant}$):</h4>
-                        <ul>
-                            <li><strong>Outlet Temperature:</strong> $T_e = T_s - (T_s - T_i) \exp(-hA_s / (\dot{m}c_p))$</li>
-                            <li><strong>Average Temperature Difference:</strong> Use the Log Mean Temperature Difference (LMTD).</li>
-                            $$\Delta T_{lm} = \frac{\Delta T_e - \Delta T_i}{\ln(\Delta T_e / \Delta T_i)}$$
-                            <li>Where $\Delta T_e = T_s - T_e$ and $\Delta T_i = T_s - T_i$.</li>
-                            <li><strong>Total Heat Transfer:</strong> $\dot{Q} = h A_s \Delta T_{lm}$</li>
-                            <li><strong>Key Behavior:</strong> $T_m$ increases exponentially with x.</li>
-                        </ul>
-                        <div class="rule-of-thumb">
-                            <b>When can you "cheat" and use the Arithmetic Mean?</b>
-                            <p>The arithmetic mean $\Delta T_{am} = (\Delta T_i + \Delta T_e) / 2$ can be used if $\Delta T_i$ and $\Delta T_e$ are close. <b>Rule of Thumb:</b> If the larger $\Delta T$ is no more than 40% greater than the smaller $\Delta T$, the error is less than 1%. Outside this range, always use LMTD.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 6A: 8-5 Laminar Flow -->
-            <section id="sec-laminar" class="roadmap-section">
-                <div class="section-header"><h2>6A. Laminar Flow Analysis (8-5)</h2></div>
-                <div class="section-content">
-                    <h3>The Core Concept Breakdown</h3>
-                    <p>This section answers the fundamental question: "For a smooth, orderly (laminar) flow, what is the exact relationship between the pressure I apply with my pump and the flow rate I get out of the pipe?" The key is understanding the balance of forces.</p>
-                    
-                    <h4>The Big Idea: A Tug-of-War Between Pressure and Friction</h4>
-                    <p>In fully developed flow, the fluid isn't speeding up or slowing down (no acceleration). This means all the forces acting on any little piece of fluid must be perfectly balanced.</p>
-                    <ul>
-                        <li><strong>Driving Force:</strong> The pressure from the pump pushes the fluid forward. This is the pressure force.</li>
-                        <li><strong>Resisting Force:</strong> The viscosity of the fluid creates "drag" or friction between adjacent layers. This is the viscous force (or shear force).</li>
-                    </ul>
-                    <p>The entire derivation in this section is just a mathematical description of this tug-of-war. The final result, the famous parabolic velocity profile, is the natural shape that flow takes to satisfy this perfect balance of forces.</p>
-
-                    <h4>Why This Matters to an Engineer 🏭</h4>
-                    <p>This derivation is one of the few cases in fluid dynamics where we can get an exact analytical solution. It leads directly to the Hagen-Poiseuille equation for pressure drop in laminar flow. <b>Practical Use:</b> When you're pumping a very viscous fluid like a polymer melt, heavy oil, or a food product like molasses, the flow will almost certainly be laminar. The equations derived here allow you to calculate that pressure drop precisely to size the pump correctly.</p>
-
-                    <div class="card">
-                        <h3>Velocity Profile and Pressure Drop Formulas</h3>
-                        <h4>Governing Principle</h4>
-                        <p>In fully developed laminar flow, the pressure force is perfectly balanced by the viscous (shear) force.</p>
-                        <h4>Velocity Profile ($u(r)$)</h4>
-                        <p>The velocity at any radial position r is given by a parabola:</p>
-                        $$u(r) = 2 V_{avg} \left(1 - \frac{r^2}{R^2}\right)$$
-                        <h4>Key Velocity Relationships</h4>
-                        <ul>
-                            <li>Velocity is zero at the wall (no-slip): $u(R) = 0$.</li>
-                            <li>Velocity is maximum at the centerline: $u(0) = u_{max}$.</li>
-                            <li>The relationship between average and maximum velocity is exact: $u_{max} = 2 V_{avg}$</li>
-                        </ul>
-                        <h4>Pressure Gradient ($dP/dx$)</h4>
-                        <p>The average velocity is directly related to the pressure gradient:</p>
-                        $$V_{avg} = - \frac{R^2}{8\mu} \left(\frac{dP}{dx}\right)$$
-                        <h4>Pressure Loss ($\Delta P_L$) - Hagen-Poiseuille Equation</h4>
-                        $$\Delta P_L = \frac{32 \mu L V_{avg}}{D^2}$$
-                        <p>In terms of volumetric flow rate ($\dot{V}$):</p>
-                        $$\Delta P_L = \frac{128 \mu L \dot{V}}{\pi D^4}$$
-                        <div class="rule-of-thumb">
-                            <b>Design Implication: The Power of D⁴.</b> This relationship is one of the most impactful in fluid mechanics. It tells you that the pressure drop is inversely proportional to the diameter to the fourth power. Doubling the pipe diameter reduces the required pumping power by a factor of $2^4 = 16$. This creates a critical trade-off between the upfront cost of larger pipes and the tremendous long-term savings in electricity.
-                        </div>
-                        <h4>Darcy-Weisbach Equation (General) and Laminar Friction Factor</h4>
-                        <p>The general equation for pressure loss is:</p>
-                        $$\Delta P_L = f \frac{L}{D} \frac{\rho V_{avg}^2}{2}$$
-                        <p>By equating this with Hagen-Poiseuille, we find the exact friction factor for laminar flow:</p>
-                        $$f = \frac{64}{Re}$$
-                        <p><em>Crucial Insight: For laminar flow, friction factor depends only on the Reynolds number, not pipe roughness.</em></p>
-                        <h4>Pumping Power ($\dot{W}_{pump}$)</h4>
-                        <p>The power required to overcome the frictional pressure loss:</p>
-                        $$\dot{W}_{pump} = \dot{V} \Delta P_L$$
-                    </div>
-
-                    <div class="card">
-                        <h3>Temperature Profile and Nusselt Number Formulas</h3>
-                        <p>Just as we did a force balance to find the velocity profile, we now do an energy balance to find the heat transfer coefficient ($h$), which we package into the dimensionless Nusselt number ($Nu = hD/k$).</p>
-                        <h4>The Big Idea: A Stable Heat Transfer Process</h4>
-                        <p>The key finding here is astonishingly simple: for fully developed laminar flow, the Nusselt number is a constant. It doesn't depend on the fluid's velocity ($Re$) or its properties ($Pr$).</p>
-                        <h4>Boundary Conditions Matter (A Lot!)</h4>
-                        <ul>
-                            <li><strong>Constant Heat Flux ($\dot{q}_s = \text{const}$) → $Nu = 4.36$:</strong> You are constantly pushing the same amount of heat energy into the pipe everywhere.</li>
-                            <li><strong>Constant Surface Temperature ($T_s = \text{const}$) → $Nu = 3.66$:</strong> The wall temperature is fixed. As the fluid heats up, the driving force shrinks.</li>
-                        </ul>
-                        <div class="rule-of-thumb">
-                            <b>Engineer's Rule of Thumb:</b> These Nusselt numbers represent the theoretical minimum for heat transfer in a pipe. They are an incredibly useful safe, conservative baseline for design. If you design a heat exchanger for a viscous fluid using $Nu = 3.66$ and it meets the spec on paper, you can be very confident it will work in the plant.
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3>Developing Laminar Flow in the Entrance Region</h3>
-                        <p>For shorter tubes, heat transfer is higher than the fully developed values. We use empirical correlations that account for this. The key dimensionless group is the <b>Graetz Number ($Gz$)</b>:</p>
-                        $$Gz = \frac{D}{L} Re Pr$$
-                        <h4>Correlations for Average Nusselt Number</h4>
-                        <ul>
-                            <li><strong>Thermally Developing Flow (Eq. 8-62):</strong> Assumes velocity profile is already developed. Good for high Pr fluids.
-                                $$Nu = 3.66 + \frac{0.065 \ Gz}{1 + 0.04 \ Gz^{2/3}}$$
-                            </li>
-                            <li><strong>Sieder-Tate Equation (Eq. 8-63):</strong> Very common, accounts for combined velocity and thermal entry regions and includes a viscosity correction.
-                                $$Nu = 1.86 (Gz)^{1/3} \left( \frac{\mu_b}{\mu_s} \right)^{0.14}$$
-                            </li>
-                        </ul>
-                        <div class="rule-of-thumb">
-                            <b>The Viscosity Correction $(\mu_b / \mu_s)^{0.14}$: The Practical Touch ⚙️</b>
-                            <p>Viscosity is highly dependent on temperature. This term is vital for getting accurate results.</p>
-                            <ul>
-                                <li><strong>When Heating:</strong> Fluid at the wall is thinner (lower $\mu_s$). The ratio is > 1, which increases Nu.</li>
-                                <li><strong>When Cooling:</strong> Fluid at the wall is thicker (higher $\mu_s$). The ratio is < 1, which reduces Nu.</li>
-                            </ul>
-                            <p>All fluid properties are evaluated at the bulk mean fluid temperature, $T_b = (T_{inlet} + T_{exit}) / 2$, except for $\mu_s$, which is evaluated at the surface temperature $T_s$.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Section 6B: 8-6 Turbulent Flow -->
-            <section id="sec-turbulent" class="roadmap-section">
-                <div class="section-header"><h2>6B. Turbulent Flow Analysis (8-6)</h2></div>
-                <div class="section-content">
-                    <h3>The Core Concept Breakdown</h3>
-                    <p>Welcome to the chaotic, messy, but highly effective world of turbulent flow. If laminar flow was a disciplined marching band, turbulent flow is a chaotic mosh pit. This chaos is a double-edged sword: it costs you a lot in pressure drop, but it pays you back handsomely in heat transfer.</p>
-                    
-                    <h4>The "Why": Intense Mixing is a Game Changer</h4>
-                    <div class="insight">
-                        <em><b>Physical Insight (Analogy):</b> Imagine trying to cool a cup of hot coffee.
-                        <br><b>Laminar:</b> You let it sit on the counter. Heat slowly moves to the surface and dissipates. It takes a long time.
-                        <br><b>Turbulent:</b> You stir it vigorously with a spoon. You are creating eddies that rapidly bring the hot core liquid to the cooler surface, and the coffee cools down much, much faster. That stirring is turbulent mixing.</em>
-                    </div>
-                    
-                    <h4>The Chilton-Colburn Analogy: Friction and Heat are Two Sides of the Same Coin ⚙️</h4>
-                    <p>This is one of the most powerful ideas in transport phenomena. It states that the same physical mechanism that causes friction (momentum transfer) is also responsible for heat transfer. Because the underlying mechanism (chaotic eddy mixing) is the same, there's a direct, predictable relationship between the friction factor ($f$) and the Nusselt number ($Nu$). This is brilliant because if you can measure the pressure drop (which is relatively easy), you can accurately predict the heat transfer rate (which is harder to measure).</p>
-                    
-                    <div class="card">
-                        <h3>Friction and Pressure Drop in Turbulent Flow</h3>
-                        <p>We use the general Darcy-Weisbach equation, but finding the friction factor $f$ is more complex as it depends on both Reynolds Number ($Re$) and the pipe's <b>relative roughness ($\epsilon/D$)</b>.</p>
-                        <h4>The Moody Chart & Colebrook Equation</h4>
-                        <p>This is the master tool for any practicing engineer dealing with pipe flow. It's a complete map of friction factor ($f$).</p>
-                        <p><b>The Colebrook Equation (Eq. 8-76)</b> is the implicit, highly accurate standard for finding $f$. It requires an iterative solver.</p>
-                        $$\frac{1}{\sqrt{f}} = -2.0 \log \left( \frac{\epsilon/D}{3.7} + \frac{2.51}{Re \sqrt{f}} \right)$$
-                        <p><b>Haaland Equation:</b> An explicit, slightly less accurate approximation of Colebrook, perfect for quick calculations without a solver.</p>
-                    </div>
-
-                    <div class="card">
-                        <h3>Heat Transfer in Turbulent Flow</h3>
-                        <h4>A "Toolkit" of Equations for the Engineer</h4>
-                        <p>Since we can't derive a single perfect equation for turbulent flow, engineers have developed a set of reliable empirical correlations based on countless experiments. Your job is to know which tool to pull out of the toolbox for a given situation.</p>
-                        <ul>
-                            <li><strong>Dittus-Boelter Equation:</strong> Your trusty, simple, "go-to" equation. It's the first one you learn and the one you use for quick checks and basic designs when the temperature differences aren't huge.
-                                $$Nu = 0.023 Re^{0.8} Pr^n$$
-                                (Use $n = 0.4$ for heating, $n = 0.3$ for cooling. Valid for $Re > 10,000$.)
-                            </li>
-                            <li><strong>Sieder-Tate Equation:</strong> This is the Dittus-Boelter equation with a crucial upgrade: the viscosity correction factor $(\mu_b / \mu_s)^{0.14}$. You use this when you're heating or cooling viscous fluids (like oil) where the temperature change is large.
-                                $$Nu = 0.027 Re^{0.8} Pr^{1/3} \left( \frac{\mu_b}{\mu_s} \right)^{0.14}$$
-                            </li>
-                            <li><strong>Gnielinski/Petukhov Equations:</strong> These are your high-precision instruments. They are more complex and require you to calculate the friction factor first, but they are much more accurate. You use these for final design verification or when high accuracy is critical.
-                                $$Nu = \frac{(f/8)(Re - 1000)Pr}{1 + 12.7(f/8)^{0.5}(Pr^{2/3} - 1)}$$
-                                (where $f$ can be found from the Petukhov equation: $f = (0.790 \ln(Re) - 1.64)^{-2}$).
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Section 7: Special Cases -->
-            <section id="sec-special-cases" class="roadmap-section">
-                <div class="section-header"><h2>7. Special Cases & Enhancement</h2></div>
-                <div class="section-content">
-                    <h3>Developing Turbulent Flow in the Entrance Region</h3>
-                    <p>The entrance region is short ($L \approx 10D$). For long tubes, it's acceptable to use the fully developed flow equations for the entire length as a good approximation. This is a common and practical simplification.</p>
-                    
-                    <h3>Turbulent Flow in Noncircular Tubes</h3>
-                    <div class="insight">
-                        <em><b>Physical Insight:</b> In turbulent flow, the core region is a chaotic, well-mixed mess with a relatively flat velocity profile. All the important action—the steep velocity gradient that causes friction and the steep temperature gradient that drives heat transfer—happens in the paper-thin viscous sublayer right next to the wall. This is why the hydraulic diameter ($D_h$) works so well for turbulent flow. It's a clever way to approximate the wall-effects of a non-circular shape as if it were a round pipe.</em>
-                    </div>
-                    <p><b>Method:</b> Use the standard turbulent flow correlations (e.g., Dittus-Boelter, Gnielinski). <b>Modification:</b> Replace the pipe diameter $D$ with the hydraulic diameter $D_h = 4A_c / p$ in both the Reynolds number ($Re$) and Nusselt number ($Nu$) calculations.</p>
-                    
-                    <h3>Flow Through Tube Annulus</h3>
-                    <p>This is our first look at a real heat exchanger geometry. An annulus is the space between two concentric pipes.</p>
-                    <ul>
-                        <li><strong>Hydraulic Diameter:</strong> $D_h = D_o - D_i$ (where $D_o$ is the outer diameter of the annulus and $D_i$ is the inner).</li>
-                        <li><strong>Turbulent Flow:</strong> Treat as a noncircular tube using $D_h$. The heat transfer coefficients on the inner ($h_i$) and outer ($h_o$) surfaces are approximately equal.</li>
-                        <li><strong>Laminar Flow:</strong> More complex; requires specific tabulated solutions.</li>
-                    </ul>
-                    
-                    <h3>Heat Transfer Enhancement: The "More is More" Philosophy 📈</h3>
-                    <p>Sometimes, the standard heat transfer from a smooth tube just isn't good enough, especially if you're tight on space. This is where enhancement comes in.</p>
-                    <p><b>The Goal:</b> The whole point is to increase the heat transfer coefficient ($h$). The primary way to do this is to disrupt the viscous sublayer and promote even more turbulence right at the heat transfer surface.</p>
-                    <h4>Methods:</h4>
-                    <ul>
-                        <li><strong>Passive Methods:</strong> Roughened surfaces, internal fins, corrugated tubes, or twisted-tape inserts that induce swirl flow.</li>
-                        <li><strong>Active Methods:</strong> Requiring external power, like mechanical stirring or surface vibration.</li>
-                    </ul>
-                    <div class="rule-of-thumb">
-                        <b>The Trade-off: There's no free lunch in engineering.</b> Every single method that enhances heat transfer will also increase the pressure drop. More turbulence means more friction. Your job as an engineer is to decide if the benefit of a smaller, more effective heat exchanger is worth the cost of a larger, more energy-intensive pump.
-                    </div>
-                </div>
-            </section>
-
+        <div class="workflow-node" data-target="sec-special-cases">
+            Final Step: Special Cases & Enhancements
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const workflowNodes = document.querySelectorAll('.workflow-node');
-            const sections = document.querySelectorAll('.roadmap-section');
-            const sectionHeaders = document.querySelectorAll('.section-header');
+    <!-- Part B: The Detailed Accordion Sections -->
+    <div id="accordion-container">
+        
+        <section class="roadmap-section" id="sec-foundations">
+            <div class="section-header">
+                <h2>Step 1: Core Concepts, Properties & Flow Regimes</h2>
+            </div>
+            <div class="section-content">
+                <p>Welcome to internal flow. Think of this as the highway system of any chemical process. Everything—reactants, products, steam, cooling water, compressed air—moves from point A to point B inside a pipe or duct. Your job as an engineer is to be the "traffic engineer" for these fluids. You need to know how they behave to design a system that is safe, efficient, and cost-effective.</p>
 
-            const collapseAllSections = () => {
-                sections.forEach(section => {
-                    section.classList.remove('expanded');
-                });
-            };
+                <h3>Why Are Pipes Almost Always Round?</h3>
+                <ul>
+                    <li><strong>Strength:</strong> A circular shape distributes internal pressure stress perfectly evenly. A square or rectangular shape would concentrate stress on the flat sides, causing them to bulge and potentially fail. For high-pressure steam, flammable liquids, or valuable products, safety and reliability are non-negotiable.</li>
+                    <li><strong>Efficiency:</strong> For a given cross-sectional area, a circle has the smallest perimeter. In fluid flow, the perimeter (the pipe wall) is where friction happens. Less perimeter means less friction, which means less pressure drop. Less pressure drop means you can use a smaller, less-energy-hungry pump to move your fluid.</li>
+                </ul>
 
-            workflowNodes.forEach(node => {
-                node.addEventListener('click', function () {
-                    const targetId = this.getAttribute('data-target');
-                    const targetSection = document.getElementById(targetId);
+                <h3>The "No-Slip" Condition & Average Velocity</h3>
+                <p>At the exact surface of the pipe wall, the fluid molecules are essentially "stuck" to it, so their velocity is zero. As you move toward the center of the pipe, the fluid layers move faster and faster, with the maximum speed right in the middle.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> We can't design a pump or calculate a flow rate based on the maximum velocity, because most of the fluid isn't moving that fast. We need a single, practical value that represents the entire flow. That's the average velocity (\KATEX_INLINE_OPEN V_{\text{avg}} \KATEX_INLINE_CLOSE). It's the hypothetical speed the fluid would have if it were moving at a uniform velocity across the entire pipe, delivering the same total amount of fluid. It's the number we use in nearly all industrial calculations.</i>
+                </div>
 
-                    if (targetSection) {
-                        const isExpanded = targetSection.classList.contains('expanded');
-                        
-                        // If clicking a new node, collapse whatever was open
-                        if (!isExpanded) {
-                            collapseAllSections();
-                        }
+                <h3>Friction's Real Consequence: Pressure Drop</h3>
+                <p>Friction between fluid layers and the pipe wall does generate a tiny bit of heat. But in 99% of cases, this is completely insignificant. The real "cost" of friction is pressure drop. It's a loss of mechanical energy. You put energy in with a pump to create pressure, and friction "steals" that pressure along the length of the pipe.</p>
+                
+                <h2>Average Velocity, Temperature, and the Reynolds Number</h2>
+                <p>This section is about creating practical, usable numbers from complex profiles. Nature gives us elegant curves for velocity and temperature across a pipe, but as engineers, we need single values to plug into our design equations for pumps, heat exchangers, and reactors.</p>
 
-                        // Toggle the target section and scroll to it
-                        targetSection.classList.toggle('expanded');
-                        
-                        // A small delay allows the collapse animation to start before scrolling
-                        setTimeout(() => {
-                           targetSection.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'start'
-                            });
-                        }, 100);
-                    }
-                });
+                <h3>Average Velocity (\KATEX_INLINE_OPEN V_{\text{avg}} \KATEX_INLINE_CLOSE) & Mean Temperature (\KATEX_INLINE_OPEN T_m \KATEX_INLINE_CLOSE)</h3>
+                <p>For mass balance (\KATEX_INLINE_OPEN \dot{m} = \rho \cdot V_{\text{avg}} \cdot A_c \KATEX_INLINE_CLOSE), we need a single velocity. \KATEX_INLINE_OPEN V_{\text{avg}} \KATEX_INLINE_CLOSE is the "equivalent" uniform velocity that would give the same mass flow rate as the actual velocity profile.</p>
+                <p>The same logic applies to temperature. When you're cooling a hot fluid, the center is hotter than the fluid near the walls. The mean temperature (\KATEX_INLINE_OPEN T_m \KATEX_INLINE_CLOSE), also called the bulk temperature, is the "energy-weighted" average. It's the single temperature that represents the total thermal energy flowing past that point.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> A key difference is that \KATEX_INLINE_OPEN V_{\text{avg}} \KATEX_INLINE_CLOSE is constant along a pipe (for incompressible flow), but \KATEX_INLINE_OPEN T_m \KATEX_INLINE_CLOSE changes as the fluid is heated or cooled. This is critical for heat exchanger design.</i>
+                </div>
+                
+                <h3>Laminar vs. Turbulent Flow: The Two Personalities of Fluid</h3>
+                <p>This is one of the most important distinctions in all of fluid mechanics. It dictates everything from pressure drop to heat transfer efficiency.</p>
+                <ul>
+                    <li><strong>Laminar Flow (Low Reynolds Number):</strong> Think of a disciplined marching band. Flow is smooth, orderly, and predictable. The only way momentum or heat moves between layers is by slow molecular diffusion. This happens with slow-moving or very viscous fluids.</li>
+                    <li><strong>Turbulent Flow (High Reynolds Number):</strong> This is a chaotic mosh pit. The fluid swirls in eddies and vortices, mixing violently. This chaotic mixing is fantastic for heat transfer but it "costs" a lot more in terms of friction and pressure drop. Most flows in a chemical plant are turbulent.</li>
+                </ul>
+
+                <h3>The Reynolds Number (Re)</h3>
+                <p>The ratio of inertial forces to viscous forces. It predicts the flow regime.</p>
+                <div class="rule-of-thumb">
+                    <b>Engineer's Rule of Thumb:</b> The Reynolds number is our crystal ball. By calculating this single dimensionless number, we can predict the fluid's "personality" and then choose the correct set of equations to calculate pressure drop and heat transfer. Using a laminar equation for a turbulent flow (or vice-versa) will give you a completely wrong answer.
+                </div>
+                ```math
+                \text{Re} = \frac{\rho V_{\text{avg}} D}{\mu} = \frac{V_{\text{avg}} D}{\nu}
+                ```
+                ```math
+                \text{Re} = \frac{4 \dot{m}}{\pi D \mu}
+                ```
+                <p><b>Flow Regimes:</b></p>
+                <ul>
+                    <li>Laminar: \KATEX_INLINE_OPEN \text{Re} < 2300 \KATEX_INLINE_CLOSE</li>
+                    <li>Transitional: \KATEX_INLINE_OPEN 2300 < \text{Re} < 4000 \KATEX_INLINE_CLOSE (An unstable region, often avoided in design)</li>
+                    <li>Turbulent: \KATEX_INLINE_OPEN \text{Re} > 4000 \KATEX_INLINE_CLOSE</li>
+                </ul>
+                
+                <h3>Hydraulic Diameter (\KATEX_INLINE_OPEN D_h \KATEX_INLINE_CLOSE)</h3>
+                <p>An "effective" diameter for a non-circular shape that allows us to use the same Reynolds number and friction factor equations developed for circular pipes. It's a brilliant way to generalize our calculations for shapes like rectangular ducts.</p>
+                ```math
+                D_h = \frac{4 A_c}{p}
+                ```
+                <p>Where \KATEX_INLINE_OPEN A_c \KATEX_INLINE_CLOSE is the cross-sectional area and \KATEX_INLINE_OPEN p \KATEX_INLINE_CLOSE is the wetted perimeter.</p>
+
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-entry-regions">
+            <div class="section-header">
+                <h2>Step 2: Entrance Region Analysis</h2>
+            </div>
+            <div class="section-content">
+                <p>When fluid enters a pipe from a large reservoir, it undergoes an adjustment period in the "entrance region" before the flow becomes stable or "fully developed". This applies to both the velocity profile (hydrodynamic) and the temperature profile (thermal).</p>
+                
+                <h3>Hydrodynamic (Velocity) Adjustment</h3>
+                <p>Due to the no-slip condition, fluid at the wall slows down, forming a velocity boundary layer. This layer grows until it reaches the center of the pipe. The region where this growth occurs is the hydrodynamic entrance region. In this region, the friction factor is higher than in the fully developed region.</p>
+
+                <h3>Thermal (Temperature) Adjustment</h3>
+                <p>When a fluid at one temperature enters a pipe with a different wall temperature, a thermal boundary layer forms. This layer grows until it reaches the pipe centerline. The region of growth is the thermal entrance region. In this region, the heat transfer coefficient is higher than in the fully developed region.</p>
+
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> Both the friction factor (\KATEX_INLINE_OPEN f \KATEX_INLINE_CLOSE) and the heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) are highest at the pipe inlet and decrease until they reach a constant value in the fully developed region. For short tubes (e.g., in a compact heat exchanger), the entire flow may be in the high-performance entrance region. Ignoring this can lead to over-designing equipment. For long pipelines, the entrance effect is often negligible.
+                </div>
+
+                <h3>The Prandtl Number (Pr)</h3>
+                <p>A dimensionless property of the fluid that compares the rate of momentum diffusion to thermal diffusion. It tells us how the hydrodynamic and thermal entry lengths relate.</p>
+                ```math
+                \text{Pr} = \frac{\nu}{\alpha} = \frac{\text{Momentum Diffusion}}{\text{Thermal Diffusion}}
+                ```
+                <ul>
+                    <li>\KATEX_INLINE_OPEN \text{Pr} \gg 1 \KATEX_INLINE_CLOSE (Oils): Velocity profile develops much faster (\KATEX_INLINE_OPEN L_h < L_t \KATEX_INLINE_CLOSE).</li>
+                    <li>\KATEX_INLINE_OPEN \text{Pr} \ll 1 \KATEX_INLINE_CLOSE (Liquid metals): Temperature profile develops much faster (\KATEX_INLINE_OPEN L_t < L_h \KATEX_INLINE_CLOSE).</li>
+                    <li>\KATEX_INLINE_OPEN \text{Pr} \approx 1 \KATEX_INLINE_CLOSE (Gases): They develop at about the same rate (\KATEX_INLINE_OPEN L_h \approx L_t \KATEX_INLINE_CLOSE).</li>
+                </ul>
+
+                <h3>Entry Length Calculations</h3>
+                <p>These are the practical rules of thumb engineers use to determine if entrance effects can be ignored.</p>
+                <h4>Laminar Flow Entry Lengths (\KATEX_INLINE_OPEN \text{Re} < 2300 \KATEX_INLINE_CLOSE)</h4>
+                <p>Hydrodynamic Entry Length:</p>
+                ```math
+                L_{h, \text{laminar}} \approx 0.05 \cdot \text{Re} \cdot D
+                ```
+                <p>Thermal Entry Length:</p>
+                ```math
+                L_{t, \text{laminar}} \approx 0.05 \cdot \text{Re} \cdot \text{Pr} \cdot D = \text{Pr} \cdot L_{h, \text{laminar}}
+                ```
+                <div class="insight">
+                    <i><b>Physical Insight:</b> The entry length for laminar flow can be very long, often over 100 pipe diameters. For many applications involving viscous fluids, the entire pipe length is in the entrance region.</i>
+                </div>
+
+                <h4>Turbulent Flow Entry Lengths (\KATEX_INLINE_OPEN \text{Re} > 4000 \KATEX_INLINE_CLOSE)</h4>
+                <p>Hydrodynamic & Thermal Entry Lengths:</p>
+                <div class="rule-of-thumb">
+                    <b>Engineer's Rule of Thumb (The 10D Rule):</b> For turbulent flow, intense mixing causes the profiles to develop very quickly. Both the hydrodynamic and thermal entrance lengths are approximated as:
+                    ```math
+                    L_{h, \text{turbulent}} \approx L_{t, \text{turbulent}} \approx 10 D
+                    ```
+                    This is a powerful and widely used simplification. If a pipe's length \KATEX_INLINE_OPEN L \gg 10D \KATEX_INLINE_CLOSE, you can confidently assume fully developed flow for the entire pipe.
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-thermal-analysis">
+            <div class="section-header">
+                <h2>Step 3: General Thermal Analysis Methods</h2>
+            </div>
+            <div class="section-content">
+                <p>To analyze heat transfer, we use two idealized boundary conditions that represent common industrial scenarios. The choice of model affects the calculation method.</p>
+                
+                <h3>Universal Energy Balance</h3>
+                <p>Regardless of the heating method, the total heat absorbed by the fluid is always:</p>
+                ```math
+                \dot{Q} = \dot{m} c_p (T_e - T_i)
+                ```
+                <p>And the heat transfer from the surface is governed by Newton's Law of Cooling:</p>
+                ```math
+                \dot{Q} = h A_s \Delta T_{\text{avg}}
+                ```
+                <p>Our goal is to find the correct average temperature difference, \KATEX_INLINE_OPEN \Delta T_{\text{avg}} \KATEX_INLINE_CLOSE.</p>
+
+                <h3>Case 1: Constant Surface Heat Flux (\KATEX_INLINE_OPEN \dot{q}_s = \text{constant} \KATEX_INLINE_CLOSE)</h3>
+                <p><strong>The Scenario:</strong> This occurs with electric resistance heating, or when a pipe receives uniform radiation. Every unit area of the pipe surface receives the same amount of energy.</p>
+                <p><strong>The Consequence:</strong> The fluid's mean temperature (\KATEX_INLINE_OPEN T_m \KATEX_INLINE_CLOSE) increases linearly down the pipe. In the fully developed region, the pipe wall temperature (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE) also increases linearly, parallel to the fluid temperature.</p>
+                <p>Total Heat Transfer:</p>
+                ```math
+                \dot{Q} = \dot{q}_s A_s
+                ```
+                <p>Outlet Temperature:</p>
+                ```math
+                T_e = T_i + \frac{\dot{q}_s A_s}{\dot{m} c_p}
+                ```
+                
+                <h3>Case 2: Constant Surface Temperature (\KATEX_INLINE_OPEN T_s = \text{constant} \KATEX_INLINE_CLOSE)</h3>
+                <p><strong>The Scenario:</strong> Much more common. This occurs when a fluid is condensing on the outside of the tube (e.g., steam) or during boiling. Any phase change process provides a nearly constant surface temperature.</p>
+                <p><strong>The Consequence:</strong> The temperature difference (\KATEX_INLINE_OPEN \Delta T = T_s - T_m \KATEX_INLINE_CLOSE) is large at the inlet and shrinks as the fluid heats up. This results in an exponential temperature curve for the fluid.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> Since the temperature driving force changes non-linearly, a simple arithmetic average is incorrect. We must use the Log Mean Temperature Difference (LMTD) to find the correct average driving force.</i>
+                </div>
+                <p>Outlet Temperature:</p>
+                ```math
+                T_e = T_s - (T_s - T_i) \exp\left(\frac{-h A_s}{\dot{m} c_p}\right)
+                ```
+                <p>Log Mean Temperature Difference (\KATEX_INLINE_OPEN \Delta T_{\text{lm}} \KATEX_INLINE_CLOSE):</p>
+                ```math
+                \Delta T_{\text{lm}} = \frac{\Delta T_e - \Delta T_i}{\ln(\Delta T_e / \Delta T_i)}
+                ```
+                <p>where \KATEX_INLINE_OPEN \Delta T_e = T_s - T_e \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \Delta T_i = T_s - T_i \KATEX_INLINE_CLOSE.</p>
+                <p>Total Heat Transfer:</p>
+                ```math
+                \dot{Q} = h A_s \Delta T_{\text{lm}}
+                ```
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> Using a simple arithmetic average temperature difference instead of the LMTD will overestimate heat transfer, leading to an undersized heat exchanger that will not meet performance requirements. The LMTD is the correct tool for this common scenario. You can use the arithmetic mean if the larger \KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE is no more than 40% greater than the smaller \KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE for less than 1% error.
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-decision-point">
+            <div class="section-header">
+                <h2>Step 4: Decision - Determine Flow Regime</h2>
+            </div>
+            <div class="section-content">
+                <p>At this stage, the engineer's path splits. All subsequent calculations for pressure drop and heat transfer depend entirely on whether the flow is laminar or turbulent. The decision is made by calculating the dimensionless Reynolds Number (Re).</p>
+                <div class="card">
+                    <ol>
+                        <li>Gather fluid properties (\KATEX_INLINE_OPEN \rho, \mu \KATEX_INLINE_CLOSE) at the bulk mean temperature.</li>
+                        <li>Determine pipe inside diameter (\KATEX_INLINE_OPEN D \KATEX_INLINE_CLOSE) and average fluid velocity (\KATEX_INLINE_OPEN V_{\text{avg}} \KATEX_INLINE_CLOSE).</li>
+                        <li>Calculate the Reynolds Number: \KATEX_INLINE_OPEN \text{Re} = (\rho V_{\text{avg}} D) / \mu \KATEX_INLINE_CLOSE.</li>
+                        <li><strong>Compare and Decide:</strong>
+                            <ul>
+                                <li>If \KATEX_INLINE_OPEN \text{Re} < 2300 \KATEX_INLINE_CLOSE, proceed down the <strong>Laminar Flow Path</strong>.</li>
+                                <li>If \KATEX_INLINE_OPEN \text{Re} > 4000 \KATEX_INLINE_CLOSE, proceed down the <strong>Turbulent Flow Path</strong>.</li>
+                                <li>If \KATEX_INLINE_OPEN 2300 < \text{Re} < 4000 \KATEX_INLINE_CLOSE, the flow is transitional and special methods are required (see Turbulent Flow section).</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+                <p>This single calculation dictates the entire set of physical models and equations that will be used for the rest of the analysis.</p>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-laminar-flow">
+            <div class="section-header">
+                <h2>Laminar Path: Theory for Fully Developed Flow (\KATEX_INLINE_OPEN \text{Re} < 2300 \KATEX_INLINE_CLOSE)</h2>
+            </div>
+            <div class="section-content">
+                <p>For smooth, orderly laminar flow, we can derive exact analytical solutions for velocity, pressure drop, and heat transfer from first principles.</p>
+
+                <h3>Velocity Profile & Pressure Drop</h3>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> In fully developed laminar flow, the fluid is not accelerating. This means the forward-pushing pressure force is perfectly balanced by the internal resistive viscous (shear) force. The mathematical solution that satisfies this force balance is a parabolic velocity profile.</i>
+                </div>
+                <p>The velocity at any radial position \KATEX_INLINE_OPEN r \KATEX_INLINE_CLOSE is given by:</p>
+                ```math
+                u(r) = 2 V_{\text{avg}} \left(1 - \frac{r^2}{R^2}\right)
+                ```
+                <p>From this profile, we get an exact relationship between average and maximum velocity:</p>
+                ```math
+                V_{\text{avg}} = \frac{u_{\text{max}}}{2}
+                ```
+                <p>This theoretical derivation leads to two crucial equations for calculating pressure loss (\KATEX_INLINE_OPEN \Delta P_L \KATEX_INLINE_CLOSE).</p>
+                <p><strong>Hagen-Poiseuille Equation:</strong></p>
+                ```math
+                \Delta P_L = \frac{32 \mu L V_{\text{avg}}}{D^2} = \frac{128 \mu L \dot{V}}{\pi D^4}
+                ```
+                <div class="rule-of-thumb">
+                    <b>Design Implication (The Power of D⁴):</b> The Hagen-Poiseuille equation shows that pressure drop is inversely proportional to diameter to the fourth power (\KATEX_INLINE_OPEN \Delta P_L \propto 1/D^4 \KATEX_INLINE_CLOSE). Doubling the pipe diameter reduces the pressure drop (and required pumping power) by a factor of 16 for the same flow rate. This has enormous economic consequences, balancing higher initial pipe cost against massive long-term energy savings.
+                </div>
+                
+                <p><strong>Darcy-Weisbach Equation (General Form):</strong></p>
+                ```math
+                \Delta P_L = f \frac{L}{D} \frac{\rho V_{\text{avg}}^2}{2}
+                ```
+                <p>By equating these two formulas, we can derive the exact friction factor, \KATEX_INLINE_OPEN f \KATEX_INLINE_CLOSE, for laminar flow:</p>
+                ```math
+                f = \frac{64}{\text{Re}}
+                ```
+                <p>This is a critical result: for laminar flow, friction depends only on the Reynolds number and is independent of pipe roughness.</p>
+                
+                <h3>Temperature Profile and the Nusselt Number</h3>
+                 <div class="insight">
+                    <i><b>Physical Insight:</b> In fully developed laminar flow, the fluid moves in stable, unchanging layers. Heat transfers through these layers by pure conduction. Because this process is so orderly, the efficiency of heat transfer becomes a constant value, represented by the Nusselt number (\KATEX_INLINE_OPEN \text{Nu} \KATEX_INLINE_CLOSE).</i>
+                </div>
+                <p>For fully developed laminar flow, the Nusselt number is constant and independent of Re and Pr. However, it is sensitive to the thermal boundary condition.</p>
+                 <div class="rule-of-thumb">
+                    <b>Design Implication:</b> These Nusselt numbers represent the theoretical minimum for heat transfer in a pipe, making them a safe, conservative baseline for design. If a design works using these values, it will certainly work in reality where entrance effects will likely improve performance.
+                </div>
+                <p><strong>For Constant Surface Heat Flux (\KATEX_INLINE_OPEN \dot{q}_s = \text{const} \KATEX_INLINE_CLOSE):</strong></p>
+                ```math
+                \text{Nu} = \frac{hD}{k} = 4.36
+                ```
+                <p><strong>For Constant Surface Temperature (\KATEX_INLINE_OPEN T_s = \text{const} \KATEX_INLINE_CLOSE):</strong></p>
+                ```math
+                \text{Nu} = \frac{hD}{k} = 3.66
+                ```
+            </div>
+        </section>
+        
+        <section class="roadmap-section" id="sec-laminar-dev-flow">
+            <div class="section-header">
+                <h2>Laminar Path: Developing Flow in the Entrance Region</h2>
+            </div>
+            <div class="section-content">
+                <p>The constant Nusselt numbers (3.66, 4.36) are for the ideal "fully developed" case. For shorter tubes, where the high-performance entrance region is significant, we need correlations that provide an average Nusselt number over the entire tube length.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> The Graetz Number (\KATEX_INLINE_OPEN \text{Gz} = (D/L)\text{RePr} \KATEX_INLINE_CLOSE) is a dimensionless group that acts as a "development meter". A high Gz means the flow is still developing (short tube, high velocity), while a low Gz indicates fully developed flow (long tube, low velocity). The equations use Gz to apply an entrance correction factor.</i>
+                </div>
+
+                <h3>Correlation for Thermally Developing Flow</h3>
+                <p>This correlation assumes the velocity profile is already developed, which is a good assumption for high Pr fluids like oils.</p>
+                ```math
+                \text{Nu} = 3.66 + \frac{0.065 (D/L)\text{RePr}}{1 + 0.04 [(D/L)\text{RePr}]^{2/3}}
+                ```
+
+                <h3>Sieder-Tate Equation (with Viscosity Correction)</h3>
+                <p>This is a very common correlation that accounts for combined velocity and thermal entry regions and, crucially, includes a correction for the large change in viscosity with temperature.</p>
+                ```math
+                \text{Nu} = 1.86 \left( \frac{\text{RePr}}{L/D} \right)^{1/3} \left( \frac{\mu_b}{\mu_s} \right)^{0.14}
+                ```
+                <div class="rule-of-thumb">
+                    <b>Design Implication (Viscosity Correction):</b> The \KATEX_INLINE_OPEN (\mu_b / \mu_s)^{0.14} \KATEX_INLINE_CLOSE term is vital for accuracy with viscous fluids.
+                    <ul>
+                        <li><b>When Heating:</b> Fluid at the wall is thinner (\KATEX_INLINE_OPEN \mu_s < \mu_b \KATEX_INLINE_CLOSE), enhancing heat transfer. The term is > 1.</li>
+                        <li><b>When Cooling:</b> Fluid at the wall is thicker (\KATEX_INLINE_OPEN \mu_s > \mu_b \KATEX_INLINE_CLOSE), hindering heat transfer. The term is < 1.</li>
+                    </ul>
+                    \KATEX_INLINE_OPEN \mu_b \KATEX_INLINE_CLOSE is the viscosity at the bulk mean fluid temperature, and \KATEX_INLINE_OPEN \mu_s \KATEX_INLINE_CLOSE is the viscosity at the surface temperature.
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-turbulent-flow">
+            <div class="section-header">
+                <h2>Turbulent Path: Correlations for Fully Developed Flow (\KATEX_INLINE_OPEN \text{Re} > 4000 \KATEX_INLINE_CLOSE)</h2>
+            </div>
+            <div class="section-content">
+                <p>Turbulent flow is chaotic and cannot be solved from first principles. Instead, we rely on a toolkit of robust empirical correlations based on experimental data. The key mechanism is intense mixing from eddies, which leads to much higher heat transfer coefficients than in laminar flow.</p>
+                
+                <div class="insight">
+                    <i><b>Physical Insight (Chilton-Colburn Analogy):</b> The same physical mechanism—chaotic turbulent eddies—is responsible for both wall friction (momentum transfer) and heat transfer. This means there is a direct, predictable relationship between the friction factor (\KATEX_INLINE_OPEN f \KATEX_INLINE_CLOSE) and the Nusselt number (\KATEX_INLINE_OPEN \text{Nu} \KATEX_INLINE_CLOSE). If you can measure pressure drop, you can predict heat transfer.</i>
+                    ```math
+                    \text{Nu} = 0.125 f \text{Re} \text{Pr}^{1/3}
+                    ```
+                </div>
+                
+                <h3>Key Nusselt Number Correlations</h3>
+                <p>Unlike laminar flow, turbulent heat transfer is largely insensitive to the thermal boundary condition (\KATEX_INLINE_OPEN T_s=\text{const} \KATEX_INLINE_CLOSE vs. \KATEX_INLINE_OPEN \dot{q}_s=\text{const} \KATEX_INLINE_CLOSE).</p>
+                
+                <h4>Dittus-Boelter Equation (Simple & Common)</h4>
+                <p>Your "go-to" equation for quick checks and basic designs with moderate temperature differences. Valid for \KATEX_INLINE_OPEN \text{Re} > 10,000 \KATEX_INLINE_CLOSE.</p>
+                ```math
+                \text{Nu} = 0.023 \text{Re}^{0.8} \text{Pr}^n
+                ```
+                <p>Use exponent \KATEX_INLINE_OPEN n = 0.4 \KATEX_INLINE_CLOSE for heating the fluid (\KATEX_INLINE_OPEN T_s > T_m \KATEX_INLINE_CLOSE) and \KATEX_INLINE_OPEN n = 0.3 \KATEX_INLINE_CLOSE for cooling the fluid (\KATEX_INLINE_OPEN T_s < T_m \KATEX_INLINE_CLOSE).</p>
+                
+                <h4>Sieder-Tate Equation (Includes Viscosity Correction)</h4>
+                <p>An upgrade to Dittus-Boelter for cases with large temperature differences, particularly with viscous fluids like oil.</p>
+                ```math
+                \text{Nu} = 0.027 \text{Re}^{0.8} \text{Pr}^{1/3} \left( \frac{\mu_b}{\mu_s} \right)^{0.14}
+                ```
+                
+                <h4>Gnielinski Equation (High Accuracy)</h4>
+                <p>A more complex but more accurate (\KATEX_INLINE_OPEN <10\% \KATEX_INLINE_CLOSE error) correlation, suitable for final design verification. It requires calculating the friction factor, \KATEX_INLINE_OPEN f \KATEX_INLINE_CLOSE, first.</p>
+                ```math
+                \text{Nu} = \frac{ (f/8) (\text{Re} - 1000) \text{Pr} }{ 1 + 12.7 (f/8)^{0.5} (\text{Pr}^{2/3} - 1) }
+                ```
+                <p>The friction factor \KATEX_INLINE_OPEN f \KATEX_INLINE_CLOSE can be calculated using the Petukhov equation for smooth pipes:</p>
+                ```math
+                f = (0.790 \ln(\text{Re}) - 1.64)^{-2}
+                ```
+                <div class="rule-of-thumb">
+                    <b>Property Evaluation Rule:</b> For all turbulent flow correlations, evaluate all fluid properties (\KATEX_INLINE_OPEN k, \rho, c_p, \mu_b \KATEX_INLINE_CLOSE) at the bulk mean temperature, \KATEX_INLINE_OPEN T_b = (T_{\text{inlet}} + T_{\text{exit}})/2 \KATEX_INLINE_CLOSE. The only exception is \KATEX_INLINE_OPEN \mu_s \KATEX_INLINE_CLOSE, which is evaluated at the surface temperature, \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE.
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-turbulent-real-world">
+            <div class="section-header">
+                <h2>Turbulent Path: Real World Effects - Transitional Flow & Rough Surfaces</h2>
+            </div>
+            <div class="section-content">
+                <p>This section covers the non-ideal cases encountered in real industrial settings: the unstable transitional flow regime and the universal reality of pipe roughness.</p>
+
+                <h3>Transitional Flow (\KATEX_INLINE_OPEN 2300 < \text{Re} < 4000 \KATEX_INLINE_CLOSE)</h3>
+                <p>This is an unstable "gray area" where flow fluctuates between laminar and turbulent characteristics. It's difficult to model precisely. The recommended engineering approach is linear interpolation:</p>
+                <ol>
+                    <li>Calculate the Nusselt number for laminar flow at \KATEX_INLINE_OPEN \text{Re}=2300 \KATEX_INLINE_CLOSE.</li>
+                    <li>Calculate the Nusselt number for turbulent flow at \KATEX_INLINE_OPEN \text{Re}=4000 \KATEX_INLINE_CLOSE using an appropriate correlation (e.g., Gnielinski).</li>
+                    <li>Linearly interpolate between these two values to find the Nusselt number at your specific Reynolds number within the transitional range.</li>
+                </ol>
+
+                <h3>The Impact of Rough Surfaces</h3>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> In turbulent flow, a very thin, smooth "laminar sublayer" exists at the pipe wall. If the pipe's roughness elements (pits, bumps) are taller than this sublayer, they poke through and create extra turbulence. This dramatically increases both the friction factor (\KATEX_INLINE_OPEN f \KATEX_INLINE_CLOSE) and the heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE).</i>
+                </div>
+                <p>The key parameter is the <strong>Relative Roughness</strong>, \KATEX_INLINE_OPEN \epsilon/D \KATEX_INLINE_CLOSE, where \KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE is the mean roughness height.</p>
+                
+                <p><strong>The Colebrook Equation:</strong> The highly accurate, industry-standard equation for finding the friction factor \KATEX_INLINE_OPEN f \KATEX_INLINE_CLOSE in all turbulent regimes (smooth, transitional, and fully rough). It is implicit and requires an iterative solver.</p>
+                ```math
+                \frac{1}{\sqrt{f}} = -2.0 \log\left( \frac{\epsilon/D}{3.7} + \frac{2.51}{\text{Re}\sqrt{f}} \right)
+                ```
+                <div class="rule-of-thumb">
+                    <b>Engineer's Toolkit:</b> The <strong>Moody Chart</strong> is the graphical representation of the Colebrook equation and is one of the most important tools in fluid mechanics. For calculations without a solver, the explicit <strong>Haaland Equation</strong> provides a good approximation. Roughness increases both friction and heat transfer; the friction factor from the Moody chart can be used in the Gnielinski equation to provide a reasonable estimate of this enhancement.
+                </div>
+                
+                <div class="rule-of-thumb">
+                    <b>Mentor's Advice:</b> Always use the pipe's actual <strong>inside diameter</strong> in calculations, not its nominal size (e.g., "2-inch pipe"). The inside diameter is determined by the pipe schedule (wall thickness) and must be looked up in tables. Also, remember that roughness \KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE increases over the life of a pipe due to corrosion and scaling.
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-special-cases">
+            <div class="section-header">
+                <h2>Final Step: Special Cases & Enhancements</h2>
+            </div>
+            <div class="section-content">
+                <p>This section extends our core knowledge to more complex, real-world geometries and introduces the concept of intentionally improving heat transfer.</p>
+                
+                <h3>Turbulent Flow in Noncircular Tubes</h3>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> In turbulent flow, the core is a well-mixed region with a flat velocity profile. The critical action (friction and heat transfer) happens in the thin viscous sublayer at the wall. Because the physics are dominated by this wall effect, the core's specific shape is less important.</i>
+                </div>
+                <p><strong>Method:</strong> The hydraulic diameter (\KATEX_INLINE_OPEN D_h = 4A_c / p \KATEX_INLINE_CLOSE) works very well as a tool to adapt our round-pipe correlations for non-circular ducts. Simply replace the diameter \KATEX_INLINE_OPEN D \KATEX_INLINE_CLOSE with \KATEX_INLINE_OPEN D_h \KATEX_INLINE_CLOSE in both the Reynolds number and Nusselt number calculations.</p>
+
+                <h3>Flow Through a Tube Annulus</h3>
+                <p>An annulus is the space between two concentric pipes, a common geometry in double-pipe heat exchangers. It is treated as a special case of a noncircular tube.</p>
+                <p><strong>Hydraulic Diameter:</strong> For an annulus, the hydraulic diameter simplifies to \KATEX_INLINE_OPEN D_h = D_o - D_i \KATEX_INLINE_CLOSE, where \KATEX_INLINE_OPEN D_o \KATEX_INLINE_CLOSE is the outer diameter and \KATEX_INLINE_OPEN D_i \KATEX_INLINE_CLOSE is the inner diameter of the annular space.</p>
+                <p><strong>Turbulent Flow:</strong> Use the standard turbulent correlations with \KATEX_INLINE_OPEN D_h \KATEX_INLINE_CLOSE. The heat transfer coefficients on the inner (\KATEX_INLINE_OPEN h_i \KATEX_INLINE_CLOSE) and outer (\KATEX_INLINE_OPEN h_o \KATEX_INLINE_CLOSE) surfaces are approximately equal.</p>
+                <p><strong>Laminar Flow:</strong> Analysis is more complex and requires specific solutions or correction factors, often found in tables.</p>
+
+                <h3>Heat Transfer Enhancement</h3>
+                <p>Sometimes, the heat transfer from a standard smooth tube is insufficient. We can intentionally enhance it by disrupting the insulating viscous sublayer to promote more turbulence right at the heat transfer surface.</p>
+                <p><strong>Common Techniques:</strong></p>
+                <ul>
+                    <li><strong>Roughened Surfaces/Fins:</strong> Adding ribs, fins, or corrugations to the tube wall.</li>
+                    <li><strong>Twisted Tapes/Inserts:</strong> Placing a twisted metal strip inside the tube to induce a swirling, helical flow path that constantly pushes fluid from the core to the wall.</li>
+                </ul>
+                <div class="rule-of-thumb">
+                    <b>The Engineer's Trade-off:</b> There is no free lunch. Every method that enhances heat transfer does so by creating more turbulence, which inevitably increases the friction factor and pressure drop. The engineer must decide if the benefit of a smaller, more effective heat exchanger is worth the cost of a larger, more energy-intensive pump.
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const workflowNodes = document.querySelectorAll('.workflow-node');
+        const sections = document.querySelectorAll('.roadmap-section');
+        const sectionHeaders = document.querySelectorAll('.section-header');
+
+        const collapseAllSections = () => {
+            sections.forEach(section => {
+                section.classList.remove('expanded');
             });
+        };
 
-            sectionHeaders.forEach(header => {
-                header.addEventListener('click', function () {
-                    const parentSection = this.parentElement;
-                    parentSection.classList.toggle('expanded');
-                });
+        workflowNodes.forEach(node => {
+            node.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const targetSection = document.getElementById(targetId);
+
+                if (targetSection) {
+                    const isExpanded = targetSection.classList.contains('expanded');
+                    
+                    if (!isExpanded) {
+                        collapseAllSections();
+                    }
+
+                    targetSection.classList.toggle('expanded');
+                    
+                    setTimeout(() => {
+                       targetSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 100);
+                }
             });
         });
-    </script>
+
+        sectionHeaders.forEach(header => {
+            header.addEventListener('click', function () {
+                const parentSection = this.parentElement;
+                parentSection.classList.toggle('expanded');
+            });
+        });
+    });
+</script>
 
 </body>
 </html>
