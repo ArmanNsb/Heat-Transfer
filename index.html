@@ -426,7 +426,7 @@
                     <p>This section is about creating practical, usable numbers from complex profiles. Nature gives us elegant curves for velocity and temperature across a pipe, but as engineers, we need single values to plug into our design equations for pumps, heat exchangers, and reactors.</p>
 
                     <h3>Average Velocity ($V_{avg}$) & Mean Temperature ($T_m$): The Great Simplifiers</h3>
-                    <p>As we discussed, fluid doesn't move at one speed inside a pipe. But for mass balance ($\dot{m} = \rho \cdot V_{avg} \cdot A_c$), we need a single velocity. $V_{avg}$ is the mathematical trick that lets us do this. It's the "equivalent" uniform velocity that would give the same mass flow rate as the actual parabolic (or other shaped) profile.</p>
+                    <p>As we discussed, fluid doesn't move at one speed inside a pipe. But for mass balance ($\dot{m} = \rho V_{avg} A_c$), we need a single velocity. $V_{avg}$ is the mathematical trick that lets us do this. It's the "equivalent" uniform velocity that would give the same mass flow rate as the actual parabolic (or other shaped) profile.</p>
                     <p>The same logic applies to temperature. When you're cooling a hot fluid, the center is hotter than the fluid near the walls. So, what is "the" temperature of the fluid at that point in the pipe? That's the mean temperature ($T_m$), also called the bulk temperature. It's the "energy-weighted" average.</p>
                     <div class="insight">
                         <em><b>Physical Insight (Analogy):</b> Imagine you're paying a group of workers. Some are highly paid experts (the fast-moving fluid at the center, carrying more energy) and some are interns (the slow-moving fluid at the wall, carrying less). To find the average wage, you can't just average their pay rates. You have to consider how many people are at each pay level. $T_m$ is like that—it's the single temperature that represents the total thermal energy flowing past that point. 📈</em>
@@ -449,12 +449,12 @@
                         <h4>Average Velocity ($V_{avg}$)</h4>
                         <ul>
                             <li><strong>Definition:</strong> The uniform velocity that would produce the same mass flow rate ($\dot{m}$) through a given cross-sectional area ($A_c$).</li>
-                            <li><strong>Formula:</strong> $\dot{m} = \rho \cdot V_{avg} \cdot A_c$</li>
+                            <li><strong>Formula:</strong> $\dot{m} = \rho V_{avg} A_c$</li>
                         </ul>
                         <h4>Mean Temperature ($T_m$)</h4>
                         <ul>
                             <li><strong>Definition:</strong> The uniform temperature that would transport the same amount of thermal energy ($\dot{E}_{fluid}$) as the actual temperature profile.</li>
-                            <li><strong>Formula:</strong> $\dot{E}_{fluid} = \dot{m} \cdot c_p \cdot T_m$</li>
+                            <li><strong>Formula:</strong> $\dot{E}_{fluid} = \dot{m} c_p T_m$</li>
                             <li><strong>Bulk Mean Temperature ($T_b$):</strong> Used for property evaluation. It's the simple arithmetic average of the inlet and outlet mean temperatures: $T_b = (T_{inlet} + T_{outlet}) / 2$.</li>
                         </ul>
                         <h4>The Reynolds Number ($Re$)</h4>
@@ -543,12 +543,12 @@
 
                         <h4>Laminar Flow Entry Lengths ($Re < 2300$)</h4>
                         <ul>
-                            <li>Hydrodynamic: $L_{h, laminar} \approx 0.05 \cdot Re \cdot D$</li>
-                            <li>Thermal: $L_{t, laminar} \approx 0.05 \cdot Re \cdot Pr \cdot D = Pr \cdot L_{h, laminar}$</li>
+                            <li>Hydrodynamic Entry Length: $L_{h, \text{laminar}} \approx 0.05 \ Re \ D$</li>
+                            <li>Thermal Entry Length: $L_{t, \text{laminar}} \approx 0.05 \ Re \ Pr \ D = Pr \ L_{h, \text{laminar}}$</li>
                         </ul>
                         <h4>Turbulent Flow Entry Lengths ($Re > 4000$)</h4>
                         <ul>
-                            <li>Hydrodynamic & Thermal: $L_{h, turbulent} \approx L_{t, turbulent} \approx 10 \cdot D$</li>
+                            <li>Hydrodynamic & Thermal: $L_{h, \text{turbulent}} \approx L_{t, \text{turbulent}} \approx 10 D$</li>
                             <li><b>This is a powerful and widely used rule of thumb.</b></li>
                         </ul>
                     </div>
@@ -589,7 +589,7 @@
                         $$\dot{Q} = h A_s \Delta T_{avg}$$
                         <h4>Analysis for Constant Heat Flux ($\dot{q}_s = \text{constant}$):</h4>
                         <ul>
-                            <li><strong>Total Heat Transfer:</strong> $\dot{Q} = \dot{q}_s \cdot A_s$</li>
+                            <li><strong>Total Heat Transfer:</strong> $\dot{Q} = \dot{q}_s A_s$</li>
                             <li><strong>Outlet Temperature:</strong> $T_e = T_i + (\dot{q}_s A_s) / (\dot{m} c_p)$</li>
                             <li><strong>Key Behavior:</strong> $T_m$ and $T_s$ increase linearly with distance x.</li>
                         </ul>
@@ -680,14 +680,14 @@
                     <div class="card">
                         <h3>Developing Laminar Flow in the Entrance Region</h3>
                         <p>For shorter tubes, heat transfer is higher than the fully developed values. We use empirical correlations that account for this. The key dimensionless group is the <b>Graetz Number ($Gz$)</b>:</p>
-                        $$Gz = \frac{D}{L} Re \cdot Pr$$
+                        $$Gz = \frac{D}{L} Re Pr$$
                         <h4>Correlations for Average Nusselt Number</h4>
                         <ul>
                             <li><strong>Thermally Developing Flow (Eq. 8-62):</strong> Assumes velocity profile is already developed. Good for high Pr fluids.
-                                $$Nu = 3.66 + \frac{0.065 \cdot Gz}{1 + 0.04 \cdot Gz^{2/3}}$$
+                                $$Nu = 3.66 + \frac{0.065 \ Gz}{1 + 0.04 \ Gz^{2/3}}$$
                             </li>
                             <li><strong>Sieder-Tate Equation (Eq. 8-63):</strong> Very common, accounts for combined velocity and thermal entry regions and includes a viscosity correction.
-                                $$Nu = 1.86 \cdot (Gz)^{1/3} \left( \frac{\mu_b}{\mu_s} \right)^{0.14}$$
+                                $$Nu = 1.86 (Gz)^{1/3} \left( \frac{\mu_b}{\mu_s} \right)^{0.14}$$
                             </li>
                         </ul>
                         <div class="rule-of-thumb">
@@ -777,11 +777,11 @@
                     <p><b>The Goal:</b> The whole point is to increase the heat transfer coefficient ($h$). The primary way to do this is to disrupt the viscous sublayer and promote even more turbulence right at the heat transfer surface.</p>
                     <h4>Methods:</h4>
                     <ul>
-                        <li><strong>Rough Surfaces/Fins:</strong> This is the most common method. Adding fins, ribs, or corrugations to the inside of a tube breaks up that insulating sublayer and dramatically increases $h$ (and the surface area).</li>
-                        <li><strong>Twisted Tapes/Inserts:</strong> Putting a twisted metal strip inside the tube forces the fluid into a swirling, helical path. This "swirl flow" creates secondary motion that constantly scrapes fluid from the core to the wall, significantly boosting the heat transfer coefficient.</li>
+                        <li><strong>Passive Methods:</strong> Roughened surfaces, internal fins, corrugated tubes, or twisted-tape inserts that induce swirl flow.</li>
+                        <li><strong>Active Methods:</strong> Requiring external power, like mechanical stirring or surface vibration.</li>
                     </ul>
                     <div class="rule-of-thumb">
-                        <b>The Trade-off: There's no free lunch in engineering.</b> Every single method that enhances heat transfer will also increase the pressure drop. More turbulence means more friction. Your job as an engineer is to decide if the benefit of a smaller, more effective heat exchanger is worth the cost of a more powerful, energy-hungry pump.
+                        <b>The Trade-off: There's no free lunch in engineering.</b> Every single method that enhances heat transfer will also increase the pressure drop. More turbulence means more friction. Your job as an engineer is to decide if the benefit of a smaller, more effective heat exchanger is worth the cost of a larger, more energy-intensive pump.
                     </div>
                 </div>
             </section>
