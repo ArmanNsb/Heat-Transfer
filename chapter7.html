@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Workflow: External Forced Convection</title>
+    
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+        displayMath: [['```math', '```']]
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+             transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 45%;
+            position: relative;
+        }
+
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+        
+        .decision::after { 
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+        
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+        
+        .rejoin-connector::after {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+
+        .section-header::after {
+            content: '▼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <h1>Visual Workflow: External Forced Convection</h1>
+
+        <!-- Part A: The Visual Workflow Map -->
+        <div class="workflow-map">
+            <div class="workflow-node" data-target="sec-foundations">1. Foundations of External Flow</div>
+            <div class="workflow-node" data-target="sec-heat-transfer-framework">2. Practical Heat Transfer Framework</div>
+            <div class="workflow-node decision" data-target="none"><span>Select Flow Geometry</span></div>
+            
+            <div class="flow-branch">
+                <div class="branch-container">
+                    <h3>A. Parallel Flow</h3>
+                    <div class="workflow-node" data-target="sec-flat-plate-concepts">3A. Flat Plates: Core Concepts</div>
+                    <div class="workflow-node" data-target="sec-flat-plate-friction">4A. Flat Plates: Friction & Drag</div>
+                    <div class="workflow-node" data-target="sec-flat-plate-heat">5A. Flat Plates: Heat Transfer</div>
+                    <div class="workflow-node no-connector" data-target="sec-flat-plate-special">6A. Flat Plates: Special Cases</div>
+                </div>
+                <div class="branch-container">
+                    <h3>B. Flow Across Bodies</h3>
+                    <div class="workflow-node" data-target="sec-blunt-body-concepts">3B. Cylinders/Spheres: Core Concepts</div>
+                    <div class="workflow-node" data-target="sec-blunt-body-roughness">4B. Cylinders/Spheres: Roughness Effects</div>
+                    <div class="workflow-node no-connector" data-target="sec-blunt-body-heat">5B. Cylinders/Spheres: Heat Transfer</div>
+                </div>
+            </div>
+
+            <div class="rejoin-connector"></div>
+            
+            <div class="workflow-node" data-target="sec-tube-banks-concepts">7. Advanced Application: Tube Banks</div>
+            <div class="workflow-node" data-target="sec-tube-banks-heat">8. Tube Banks: Heat Transfer Calculation</div>
+            <div class="workflow-node no-connector" data-target="sec-tube-banks-pressure">9. Tube Banks: Pressure Drop Calculation</div>
+        </div>
+
+        <!-- Part B: The Detailed Accordion Sections -->
+        <div id="accordion-container">
+
+            <!-- Section 1: Foundations of External Flow -->
+            <section id="sec-foundations" class="roadmap-section">
+                <div class="section-header"><h2>1. Foundations of External Flow: Drag Forces</h2></div>
+                <div class="section-content">
+                    <p>When a fluid flows over any object, it pushes on it. The total force pushing in the direction of the flow is called <strong>Drag</strong>. This section explains that drag is not a single phenomenon; it's the sum of two distinct effects: Friction Drag and Pressure Drag.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: The "Walking into a Strong Wind 💨" Analogy</b>
+                        <br>Imagine you're trying to walk directly into a very strong wind. You feel a powerful force pushing you backward. Where does this force come from?
+                        <ul>
+                            <li><b>Friction Drag (or Skin Friction Drag):</b> This is like the wind rubbing against your clothes and skin. It's the "stickiness" of the air trying to pull your surfaces along with it.</li>
+                            <li><b>Pressure Drag (or Form Drag):</b> This is the force you feel on your chest. The high-speed wind slams into your front, creating a high-pressure zone. As the wind goes around you, it becomes chaotic and separates, creating a turbulent, low-pressure "wake" region behind you. The high pressure in front pushes you back more than the low pressure in the back pushes you forward.</li>
+                        </ul>
+                        The total drag you feel is the sum of the "rubbing" force and the "pushing" force.</i>
+                    </div>
+
+                    <h3>Friction Drag (Skin Friction Drag)</h3>
+                    <ul>
+                        <li><b>Cause:</b> It's caused by the wall shear stress (\KATEX_INLINE_OPEN \tau_w \KATEX_INLINE_CLOSE) due to the no-slip condition.</li>
+                        <li><b>Dominant for:</b> Long, thin, streamlined bodies where the fluid flows smoothly along the surface without being blocked. Think of a modern airplane wing, a javelin, or a thin flat plate aligned with the wind. The drag on these objects is almost entirely due to the friction of the fluid "rubbing" along their large surface area.</li>
+                    </ul>
+
+                    <h3>Pressure Drag (Form Drag)</h3>
+                    <ul>
+                        <li><b>Cause:</b> It's caused by the pressure difference between the front and the back of the body.</li>
+                        <li><b>Dominant for:</b> Blunt bodies that block the flow. Think of a parachute, a flat billboard, or a cylinder. The shape, or "form," of these objects is the primary cause of the drag. The friction drag is still there, but it's tiny compared to the massive pressure difference.</li>
+                    </ul>
+
+                    <h3>The Drag Coefficient (\KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE)</h3>
+                    <p>The raw drag force (\KATEX_INLINE_OPEN F_D \KATEX_INLINE_CLOSE) isn't very useful for comparing objects because it depends on size, fluid density, and speed. To create a fair comparison, we normalize the drag force into a dimensionless Drag Coefficient (\KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE).</p>
+                    <p>\KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE is a "shape factor." It tells you how aerodynamically "slippery" an object is, regardless of its size or the flow conditions. A low \KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE means a streamlined shape; a high \KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE means a blunt shape.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: Why Drag Coefficient Matters</b>
+                        <p>This is the absolute foundation of aerodynamics and the design of any object that moves through a fluid.</p>
+                        <ul>
+                            <li><b>Design for Efficiency:</b> The goal of designing a car, airplane, or submarine is to minimize \KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE. This directly translates to lower fuel consumption. You achieve this by making the body streamlined to minimize pressure drag.</li>
+                            <li><b>Design for Effect:</b> The goal of designing a parachute or a spoiler is to maximize \KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE to create as much resistance as possible. This is achieved by using a blunt shape to maximize pressure drag.</li>
+                            <li><b>Connecting to Heat Transfer:</b> The friction drag is the key. Remember the Chilton-Colburn analogy (\KATEX_INLINE_OPEN j_H = C_f / 2 \KATEX_INLINE_CLOSE)? The friction coefficient \KATEX_INLINE_OPEN C_f \KATEX_INLINE_CLOSE is just the friction drag coefficient \KATEX_INLINE_OPEN C_{D,\text{friction}} \KATEX_INLINE_CLOSE. By understanding friction drag, we have a direct pathway to predicting heat transfer.</li>
+                        </ul>
+                    </div>
+
+                    <h3>Key Formulas</h3>
+                    <ol>
+                        <li><b>The Two Components of Drag</b>
+                            <ul>
+                                <li>Drag (\KATEX_INLINE_OPEN F_D \KATEX_INLINE_CLOSE): The total force a fluid exerts on a body in the direction of flow.</li>
+                                <li>Friction Drag (\KATEX_INLINE_OPEN F_{D,\text{friction}} \KATEX_INLINE_CLOSE): Part of drag caused by wall shear stress (\KATEX_INLINE_OPEN \tau_w \KATEX_INLINE_CLOSE).</li>
+                                <li>Pressure Drag (\KATEX_INLINE_OPEN F_{D,\text{pressure}} \KATEX_INLINE_CLOSE): Part of drag caused by pressure differences.</li>
+                            </ul>
+                        </li>
+                        <li><b>The Drag Coefficient (\KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE)</b>
+                            <p>Definition: A dimensionless number that represents the drag characteristics of a body.</p>
+                            ````math C_D = \frac{F_D}{\frac{1}{2} \rho V^2 A} ````
+                            <p>Key Variables:</p>
+                            <ul>
+                                <li>\KATEX_INLINE_OPEN F_D \KATEX_INLINE_CLOSE: The total drag force (N).</li>
+                                <li>\KATEX_INLINE_OPEN \rho \KATEX_INLINE_CLOSE: Density of the fluid (kg/m³).</li>
+                                <li>\KATEX_INLINE_OPEN V \KATEX_INLINE_CLOSE: Upstream (free-stream) velocity (m/s).</li>
+                                <li>\KATEX_INLINE_OPEN A \KATEX_INLINE_CLOSE: Frontal Area for blunt bodies. For streamlined bodies like flat plates parallel to the flow, it is the surface area.</li>
+                            </ul>
+                        </li>
+                        <li><b>Combining Drag Coefficients</b>
+                            ````math C_D = C_{D,\text{friction}} + C_{D,\text{pressure}} ````
+                        </li>
+                        <li><b>Special Case: Parallel Flow over a Flat Plate</b>
+                            <p>For a thin flat plate parallel to the flow, there is no pressure difference. Therefore, Pressure Drag \KATEX_INLINE_OPEN \approx 0 \KATEX_INLINE_CLOSE, and the total drag coefficient is equal to the friction coefficient (\KATEX_INLINE_OPEN C_f \KATEX_INLINE_CLOSE).</p>
+                            ````math C_D = C_f ````
+                        </li>
+                    </ol>
+                </div>
+            </section>
+            
+            <!-- Section 2: Heat Transfer Framework -->
+            <section id="sec-heat-transfer-framework" class="roadmap-section">
+                <div class="section-header"><h2>2. Practical Heat Transfer Framework</h2></div>
+                <div class="section-content">
+                    <p>This section establishes the standard, practical framework we will use to solve heat transfer problems. It introduces three key practical concepts: the form of the solution (correlations), the film temperature, and the difference between local and average coefficients.</p>
+
+                    <h3>1. The Form of the Solution (The Empirical Correlation)</h3>
+                    <p>Decades of experiments have shown that the relationships between the Nusselt, Reynolds, and Prandtl numbers can be accurately captured by a simple, powerful formula.</p>
+                    <div class="insight">
+                        <i><b>Physical Insight: The "Car's Fuel Economy ⛽" Analogy</b>
+                        <br>Predicting a car's fuel economy is complex. After testing thousands of cars, engineers might find a simple "rule of thumb" correlation that works well, like MPG = C * (1 / Weight)^0.5 * (Engine_Displacement)^-0.3. This is exactly what \KATEX_INLINE_OPEN Nu = C \cdot Re^m \cdot Pr^n \KATEX_INLINE_CLOSE is for heat transfer. It's not a fundamental law, but a highly effective, experimentally-verified empirical correlation that captures the essential relationships.</i>
+                    </div>
+
+                    <h3>2. The Film Temperature (Where to get our data?)</h3>
+                    <p>Fluid properties (k, μ, ρ, \KATEX_INLINE_OPEN c_p \KATEX_INLINE_CLOSE) change with temperature. To solve this, we use a simple, practical compromise: the film temperature (\KATEX_INLINE_OPEN T_f \KATEX_INLINE_CLOSE).</p>
+                    <div class="insight">
+                        <i><b>Physical Insight: The "Choosing Paint Color 🎨" Analogy</b>
+                        <br>To choose a single paint color for a room with bright and shady areas, you'd pick a color that looks best in the "average" lighting. The film temperature is this "average condition." We calculate the arithmetic average of the wall temperature (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE) and the free-stream temperature (\KATEX_INLINE_OPEN T_\infty \KATEX_INLINE_CLOSE) and assume the fluid behaves as if it were at this single, uniform temperature. It's a very good approximation.</i>
+                    </div>
+
+                    <h3>3. Local vs. Average Coefficients</h3>
+                    <p>The boundary layer grows as fluid flows along a surface, so the heat transfer coefficient changes. We must distinguish between the value at a single point and the average over the whole surface.</p>
+                    <div class="insight">
+                        <i><b>Physical Insight: The "Highway Road Trip 🛣️" Analogy</b>
+                        <br>On a road trip, your "local" speed changes constantly. But for the whole trip, you have an "average" speed (Total Distance / Total Time) which is most useful. Similarly, for designing a heat exchanger, we are usually most interested in the total heat transfer from the entire surface, so we need the average heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE), which is found by integrating the local coefficient (\KATEX_INLINE_OPEN h_x \KATEX_INLINE_CLOSE).</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: The 8-Step Convection Procedure</b>
+                        <p>Master this process to solve the vast majority of practical forced convection problems:</p>
+                        <ol>
+                            <li><b>Identify the Geometry:</b> Is it a flat plate, a cylinder, a sphere?</li>
+                            <li><b>Calculate the Film Temperature (\KATEX_INLINE_OPEN T_f \KATEX_INLINE_CLOSE):</b> \KATEX_INLINE_OPEN T_f = (T_s + T_\infty) / 2 \KATEX_INLINE_CLOSE.</li>
+                            <li><b>Look Up Fluid Properties:</b> Find k, ν, Pr, etc., at the film temperature.</li>
+                            <li><b>Calculate the Reynolds Number (Re):</b> Use the properties you just found.</li>
+                            <li><b>Find the Correct Correlation:</b> Find the appropriate \KATEX_INLINE_OPEN Nu = C \cdot Re^m \cdot Pr^n \KATEX_INLINE_CLOSE equation for your geometry and flow regime.</li>
+                            <li><b>Calculate the Nusselt Number (Nu):</b> Plug in Re and Pr.</li>
+                            <li><b>Calculate the Average h:</b> Rearrange the Nusselt number definition: \KATEX_INLINE_OPEN h = Nu \cdot k / L_c \KATEX_INLINE_CLOSE.</li>
+                            <li><b>Calculate Total Heat Transfer (Q):</b> Use Newton's Law of Cooling: \KATEX_INLINE_OPEN Q = h \cdot A \cdot (T_s - T_\infty) \KATEX_INLINE_CLOSE.</li>
+                        </ol>
+                    </div>
+
+                    <h3>Key Formulas</h3>
+                    <ol>
+                        <li><b>The General Form of Convection Correlations</b>
+                           ````math Nu = C \cdot Re_L^m \cdot Pr^n ````
+                           <p>C, m, and n are constants that you look up for a specific situation.</p>
+                        </li>
+                        <li><b>The Film Temperature (\KATEX_INLINE_OPEN T_f \KATEX_INLINE_CLOSE)</b>
+                           <p>Purpose: To determine the temperature at which to evaluate fluid properties.</p>
+                           ````math T_f = \frac{T_s + T_\infty}{2} ````
+                        </li>
+                        <li><b>Average vs. Local Coefficients</b>
+                           <ul>
+                               <li>Local (\KATEX_INLINE_OPEN C_{f,x}, h_x, Nu_x \KATEX_INLINE_CLOSE): The value at a single point x from the leading edge.</li>
+                               <li>Average (\KATEX_INLINE_OPEN C_f, h, Nu \KATEX_INLINE_CLOSE): The value averaged over the entire length L of the surface.</li>
+                           </ul>
+                           <p>Relationship: The average is the integral of the local.</p>
+                           ````math h = \frac{1}{L} \int_0^L h_x dx ````
+                           <p>For many common cases, the book provides separate, simplified formulas for both local and average coefficients.</p>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Section 3A: Flat Plate Concepts -->
+            <section id="sec-flat-plate-concepts" class="roadmap-section">
+                <div class="section-header"><h2>3A. Flat Plates: Core Concepts & Flow Regimes</h2></div>
+                <div class="section-content">
+                    <p>At its heart, "flow over a flat plate" is our simplified, ideal model for understanding how fluids interact with surfaces. In a plant, very few things are perfect flat plates, but many things behave like one: the top of a large storage tank exposed to wind, the wall of a long rectangular duct, or the sides of a large heat exchanger shell.</p>
+                    
+                    <h3>The Big Idea: The Boundary Layer</h3>
+                    <p>Imagine a wide, slow-moving river (the fluid) flowing over a long, submerged concrete slab (the flat plate). Right at the surface, the water is still due to the "no-slip condition." Far above, it moves at its full speed. That region of changing velocity near the surface is the <b>velocity boundary layer</b>. It's the fluid's "zone of influence" where the plate is slowing it down. This layer starts at zero thickness at the leading edge and grows as the fluid flows along the plate.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: Laminar vs. Turbulent Flow</b>
+                        <p>Why do we care so much about whether this flow is smooth (laminar) or chaotic (turbulent)? It comes down to two critical engineering trade-offs: <b>Drag vs. Heat Transfer</b>.</p>
+                        <ul>
+                            <li><b>⚙️ Drag (Friction):</b> Think of the boundary layer as the fluid "rubbing" against the plate.
+                                <ul>
+                                    <li><b>Laminar Flow:</b> Smooth, orderly traffic. Fluid layers slide past each other politely. Friction is relatively low.</li>
+                                    <li><b>Turbulent Flow:</b> Rush hour traffic. The fluid is chaotic, with eddies and swirls. Friction is much higher.</li>
+                                </ul>
+                            </li>
+                            <li><b>📈 Heat Transfer:</b> The same mechanisms that cause friction also drive heat transfer.
+                                <ul>
+                                    <li><b>Laminar Flow:</b> Poor mixing. Heat has to slowly "soak" through the fluid layers. Low heat transfer.</li>
+                                    <li><b>Turbulent Flow:</b> Excellent mixing. Chaotic eddies act like tiny spoons, constantly stirring the fluid. Very high heat transfer.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        The <b>Reynolds Number (Re)</b> is our crucial diagnostic tool. It tells us if inertia or viscosity is winning. For a flat plate, the transition happens at a "critical" Reynolds number, \KATEX_INLINE_OPEN Re_{cr} \KATEX_INLINE_CLOSE.</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The Laminar/Turbulent Trade-off</b>
+                        <p>Your job as an engineer is to understand this trade-off. Do you want low drag and are willing to accept poor heat transfer? Or do you need high heat transfer and can tolerate the higher pumping costs or structural loads? This section gives you the tools to calculate the friction for each scenario.</p>
+                    </div>
+
+                    <h3>The Reynolds Number for a Flat Plate</h3>
+                    <ul>
+                        <li><b>Definition:</b> The ratio of inertial forces to viscous forces. It predicts the flow regime.</li>
+                        <li><b>Local Reynolds Number (at distance x):</b>````math Re_x = \frac{\rho V x}{\mu} = \frac{V x}{\nu} ````</li>
+                        <li><b>Total Reynolds Number (at end of plate, length L):</b>````math Re_L = \frac{\rho V L}{\mu} = \frac{V L}{\nu} ````</li>
+                        <li><b>Critical Reynolds Number (\KATEX_INLINE_OPEN Re_{cr} \KATEX_INLINE_CLOSE):</b> The point where flow begins to transition to turbulent. For a flat plate, this is typically assumed to be:````math Re_{cr} \approx 5 \times 10^5 ````</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Section 4A: Flat Plate Friction -->
+            <section id="sec-flat-plate-friction" class="roadmap-section">
+                <div class="section-header"><h2>4A. Flat Plates: Friction & Drag Calculations</h2></div>
+                <div class="section-content">
+                    <p>The friction coefficient (\KATEX_INLINE_OPEN C_f \KATEX_INLINE_CLOSE) is a dimensionless number representing the friction or drag on the surface. We can calculate it based on the flow regime determined by the Reynolds number.</p>
+                    <ul>
+                        <li><b>Local Friction Coefficient (\KATEX_INLINE_OPEN C_{f,x} \KATEX_INLINE_CLOSE):</b> The friction at a single point x along the plate.</li>
+                        <li><b>Average Friction Coefficient (\KATEX_INLINE_OPEN C_f \KATEX_INLINE_CLOSE):</b> The average friction over the entire length L of the plate.</li>
+                    </ul>
+
+                    <h3>Formulas Based on Flow Regime</h3>
+                    
+                    <h4>Case 1: Flow is Laminar Everywhere (\KATEX_INLINE_OPEN Re_L < 5 \times 10^5 \KATEX_INLINE_CLOSE)</h4>
+                    <ul>
+                        <li>Local: ````math C_{f,x} = \frac{0.664}{Re_x^{1/2}} ````</li>
+                        <li>Average: ````math C_f = \frac{1.33}{Re_L^{1/2}} ````</li>
+                    </ul>
+                    
+                    <h4>Case 2: Flow is Turbulent Everywhere (\KATEX_INLINE_OPEN Re_L > 5 \times 10^5 \KATEX_INLINE_CLOSE)</h4>
+                    <p>(This assumes the laminar section is negligibly small)</p>
+                    <ul>
+                        <li>Local: ````math C_{f,x} = \frac{0.059}{Re_x^{1/5}} ````</li>
+                        <li>Average: ````math C_f = \frac{0.074}{Re_L^{1/5}} ````</li>
+                    </ul>
+
+                    <h4>Case 3: Mixed Flow (Laminar then Turbulent on the Plate)</h4>
+                    <p>(This is the most common case for long plates where \KATEX_INLINE_OPEN Re_L > 5 \times 10^5 \KATEX_INLINE_CLOSE)</p>
+                    <ul>
+                        <li>Average: ````math C_f = \frac{0.074}{Re_L^{1/5}} - \frac{1742}{Re_L} ````</li>
+                    </ul>
+
+                    <h4>Case 4: Turbulent Flow over a Rough Surface</h4>
+                    <p>(Use when surface roughness, \KATEX_INLINE_OPEN \varepsilon \KATEX_INLINE_CLOSE, is significant)</p>
+                    <ul>
+                        <li>Average: ````math C_f = (1.89 - 1.62 \log(\varepsilon/L))^{-2.5} ````</li>
+                    </ul>
+                    
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: Roughness Effects</b>
+                        <p>In laminar flow, roughness has almost no effect. In turbulent flow, it dramatically increases friction and the required pumping power.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5A: Flat Plate Heat -->
+            <section id="sec-flat-plate-heat" class="roadmap-section">
+                <div class="section-header"><h2>5A. Flat Plates: Heat Transfer Calculations</h2></div>
+                <div class="section-content">
+                    <p>In chemical engineering, we are constantly trying to either put heat into a system or take it out. This section gives us the tools to quantify how well a moving fluid can do that job using dimensionless numbers.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: Dimensionless Numbers are Your Friends</b>
+                        <p>Calculating the heat transfer coefficient (h) from scratch is incredibly complex. So, we rely on correlations using dimensionless numbers.</p>
+                        <ul>
+                            <li><b>Prandtl Number (Pr) ⚙️:</b> A fluid property describing its "personality" for handling momentum versus heat. It's the ratio of momentum diffusivity to thermal diffusivity. High Pr fluids (oil) are viscous; low Pr fluids (liquid metals) conduct heat very well.</li>
+                            <li><b>Nusselt Number (Nu) 📈:</b> The star of the show. It's the dimensionless heat transfer coefficient. It tells you how much better convection is at transferring heat compared to pure conduction. If Nu = 100, convection is enhancing heat transfer by a factor of 100.</li>
+                        </ul>
+                        Your goal is to use Re and Pr to find the correct Nu correlation, solve for Nu, and then find the real heat transfer coefficient, h.</i>
+                    </div>
+
+                    <h3>Key Dimensionless Numbers</h3>
+                    <ul>
+                        <li><b>Nusselt Number (Nu):</b> The dimensionless heat transfer coefficient.
+                            <ul>
+                                <li>Local: ````math Nu_x = \frac{h_x x}{k} ````</li>
+                                <li>Average: ````math Nu = \frac{h L}{k} ````</li>
+                            </ul>
+                        </li>
+                        <li><b>Prandtl Number (Pr):</b> A fluid property.
+                            ````math Pr = \frac{\nu}{\alpha} = \frac{\mu C_p}{k} ````
+                        </li>
+                    </ul>
+
+                    <h3>Heat Transfer Correlations (for Isothermal Plates)</h3>
+                    <p><i>Note: Properties should be evaluated at the film temperature, \KATEX_INLINE_OPEN T_{film} = (T_s + T_\infty)/2 \KATEX_INLINE_CLOSE.</i></p>
+
+                    <h4>Case 1: Flow is Laminar Everywhere (\KATEX_INLINE_OPEN Re_L < 5 \times 10^5 \KATEX_INLINE_CLOSE)</h4>
+                    <ul>
+                        <li>Local: ````math Nu_x = 0.332 Re_x^{0.5} Pr^{1/3} \quad (\text{for } Pr > 0.6) ````</li>
+                        <li>Average: ````math Nu = 0.664 Re_L^{0.5} Pr^{1/3} \quad (\text{for } Pr > 0.6) ````</li>
+                    </ul>
+                    
+                    <h4>Case 2: Flow is Turbulent Everywhere (\KATEX_INLINE_OPEN Re_L > 5 \times 10^5 \KATEX_INLINE_CLOSE)</h4>
+                    <p>(Assumes laminar section is negligible)</p>
+                    <ul>
+                        <li>Local: ````math Nu_x = 0.0296 Re_x^{0.8} Pr^{1/3} \quad (\text{for } 0.6 \le Pr \le 60) ````</li>
+                        <li>Average: ````math Nu = 0.037 Re_L^{0.8} Pr^{1/3} \quad (\text{for } 0.6 \le Pr \le 60) ````</li>
+                    </ul>
+                    
+                    <h4>Case 3: Mixed Flow (Laminar then Turbulent on the Plate)</h4>
+                    <p>(Use when \KATEX_INLINE_OPEN Re_L > 5 \times 10^5 \KATEX_INLINE_CLOSE and the laminar section is significant)</p>
+                    <ul>
+                        <li>Average: ````math Nu = (0.037 Re_L^{0.8} - 871) Pr^{1/3} \quad (\text{for } 0.6 \le Pr \le 60) ````</li>
+                    </ul>
+
+                    <h4>Case 4: Special Fluids (Liquid Metals, Low Pr)</h4>
+                    <p>The standard correlations are invalid. For laminar flow:</p>
+                    <ul>
+                        <li>Local: ````math Nu_x = 0.565 (Re_x Pr)^{1/2} = 0.565 Pe_x^{1/2} \quad (\text{for } Pr \le 0.05) ````</li>
+                    </ul>
+                    <p>A general correlation for all Pr (Laminar), the Churchill-Ozoe equation (7-26), is more complex but more broadly applicable.</p>
+                </div>
+            </section>
+            
+            <!-- Section 6A: Flat Plate Special -->
+            <section id="sec-flat-plate-special" class="roadmap-section">
+                <div class="section-header"><h2>6A. Flat Plates: Special Cases & Boundary Conditions</h2></div>
+                <div class="section-content">
+                    <p>This section adapts our ideal theory to more realistic engineering problems, such as when heating doesn't start at the leading edge or when the heat input is constant instead of the temperature.</p>
+
+                    <h3>1. The Unheated Starting Length: "The Head Start Problem"</h3>
+                    <p>Imagine a long workbench with air flowing over it. A hot plate is placed halfway down the bench. The velocity boundary layer starts at the bench's edge (\KATEX_INLINE_OPEN x=0 \KATEX_INLINE_CLOSE), but the thermal boundary layer only starts at the hot plate (\KATEX_INLINE_OPEN x=\xi \KATEX_INLINE_CLOSE).</p>
+                    <div class="insight">
+                        <i><b>Physical Insight: An Insulating Blanket</b>
+                        <br>That pre-existing, thick velocity boundary layer acts like an insulating blanket. Because the fluid near the surface is already moving slowly, it's less effective at grabbing heat and carrying it away compared to the fluid right at the leading edge of a fully heated plate. The result is a lower local heat transfer coefficient.</i>
+                    </div>
+
+                    <h4>Formulas for Unheated Starting Length (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE = constant)</h4>
+                    <ul>
+                        <li><b>Local Nusselt Number (\KATEX_INLINE_OPEN Nu_x \KATEX_INLINE_CLOSE at a point \KATEX_INLINE_OPEN x > \xi \KATEX_INLINE_CLOSE):</b>
+                            <ul>
+                                <li>Laminar: ````math Nu_x = \frac{Nu_{x(\xi=0)}}{[1 - (\xi/x)^{3/4}]^{1/3}} ````</li>
+                                <li>Turbulent: ````math Nu_x = \frac{Nu_{x(\xi=0)}}{[1 - (\xi/x)^{9/10}]^{1/9}} ````</li>
+                            </ul>
+                        </li>
+                        <li><b>Average Nusselt Number (\KATEX_INLINE_OPEN Nu \KATEX_INLINE_CLOSE over heated section \KATEX_INLINE_OPEN \xi \rightarrow L \KATEX_INLINE_CLOSE):</b>
+                            <ul>
+                                <li>Laminar: ````math Nu = Nu_{(\xi=0)} \frac{L}{L-\xi} [1 - (\xi/L)^{3/4}]^{2/3} ````</li>
+                                <li>Turbulent: ````math Nu = Nu_{(\xi=0)} \frac{L}{L-\xi} [1 - (\xi/L)^{9/10}]^{8/9} ````</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    
+                    <h3>2. Uniform Heat Flux: "The Electric Heater Problem"</h3>
+                    <p>So far, we've assumed a constant temperature plate. But what if you have a constant energy input, like from an electric heater? This is the uniform heat flux (\KATEX_INLINE_OPEN q_s = \text{constant} \KATEX_INLINE_CLOSE) condition. In this case, the surface temperature \KATEX_INLINE_OPEN T_s(x) \KATEX_INLINE_CLOSE will vary along the plate.</p>
+                    <div class="insight">
+                        <i><b>Physical Insight: Varying Surface Temperature</b>
+                        <br>If you apply a constant heat flux, the surface temperature will not be constant. At the leading edge, \KATEX_INLINE_OPEN h_x \KATEX_INLINE_CLOSE is high, so the surface only needs to be slightly warmer to transfer the heat. Downstream, \KATEX_INLINE_OPEN h_x \KATEX_INLINE_CLOSE decreases, so the surface temperature must rise to get rid of the same amount of heat flux.</i>
+                    </div>
+
+                    <h4>Formulas for Uniform Heat Flux (\KATEX_INLINE_OPEN q_s \KATEX_INLINE_CLOSE = constant)</h4>
+                    <ul>
+                        <li><b>Local Nusselt Number (\KATEX_INLINE_OPEN Nu_x \KATEX_INLINE_CLOSE):</b>
+                            <ul>
+                                <li>Laminar: ````math Nu_x = 0.453 Re_x^{0.5} Pr^{1/3} ````</li>
+                                <li>Turbulent: ````math Nu_x = 0.0308 Re_x^{0.8} Pr^{1/3} ````</li>
+                            </ul>
+                            <p><i>Key Insight: These values are slightly higher (36% for laminar, 4% for turbulent) than their isothermal counterparts.</i></p>
+                        </li>
+                    </ul>
+                    <div class="rule-of-thumb">
+                        <b>Design Application: Calculating Surface Temperature</b>
+                        <p>This is a critical application. First, calculate \KATEX_INLINE_OPEN h_x \KATEX_INLINE_CLOSE from the appropriate \KATEX_INLINE_OPEN Nu_x \KATEX_INLINE_CLOSE formula above. Then, use Newton's Law of Cooling to find the local surface temperature:</p>
+                        ````math T_s(x) = T_\infty + \frac{q_s}{h_x} ````
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 3B: Blunt Body Concepts -->
+            <section id="sec-blunt-body-concepts" class="roadmap-section">
+                <div class="section-header"><h2>3B. Cylinders/Spheres: Core Concepts & Flow Separation</h2></div>
+                <div class="section-content">
+                    <p>We now move from the idealized flat plate to the much more complex (and common) world of blunt bodies like cylinders and spheres. The key difference? The fluid can't just flow straight; it has to go around the object. This introduces a whole new, dominant form of drag: <b>Pressure Drag</b>.</p>
+                    
+                    <h3>The Big Idea: Pressure Drag and Flow Separation</h3>
+                    <p>With a flat plate, drag was all about friction. For blunt bodies, Pressure Drag is the main villain. It's caused by a phenomenon called <b>flow separation</b>.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: The Wake ⚙️</b>
+                        <br>Imagine a river flowing smoothly over a large, submerged boulder. As the water flows over the front half, it hugs the boulder's surface. But as it passes the top, the water is moving too fast to make the sharp turn and follow the back of the boulder. It "separates" from the surface. This creates a chaotic, swirling, low-pressure zone behind the boulder called the <b>wake</b>. The difference between the high pressure at the front and the very low pressure in the wake at the back creates a powerful net force pushing the object downstream. A bigger wake means more pressure drag.</i>
+                    </div>
+
+                    <h3>The Most Important Concept: The "Drag Crisis"</h3>
+                    <p>This is a classic engineering concept that seems backward at first, but it's vital.</p>
+                    <ul>
+                        <li><b>Laminar Boundary Layer:</b> "Lazy," low-energy flow. It separates early (at about 80° from the front). This creates a WIDE wake and HIGH pressure drag.</li>
+                        <li><b>Turbulent Boundary Layer:</b> "Energetic," chaotic flow. Extra mixing allows it to "stick" to the surface longer. It separates much later (at about 140°). This creates a NARROW wake and LOW pressure drag.</li>
+                    </ul>
+                    <p>This leads to the <b>"Drag Crisis"</b> 📈: At a critical Reynolds number (\KATEX_INLINE_OPEN \sim 2 \times 10^5 \KATEX_INLINE_CLOSE), the boundary layer on the cylinder spontaneously trips from laminar to turbulent. This causes the wake to shrink dramatically, and the total drag coefficient suddenly drops!</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Real-World Example: Why Golf Balls Have Dimples</b>
+                        <p>The dimples are "roughness" that intentionally trip the boundary layer into a turbulent state at a lower speed. This turbulent layer clings to the ball longer, creating a smaller wake and less pressure drag, allowing the ball to fly much farther.</p>
+                    </div>
+
+                    <h3>Key Formulas & Definitions</h3>
+                    <ul>
+                        <li><b>Characteristic Length:</b> For cylinders and spheres, the characteristic length is the external diameter, D.</li>
+                        <li><b>Reynolds Number:</b> ````math Re_D = \frac{VD}{\nu} ````</li>
+                        <li><b>Drag Coefficient (\KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE) Behavior:</b> The drag coefficient for a cylinder/sphere is a strong function of Re. Understand the key regions from the graph (Fig. 7-17):
+                            <ul>
+                                <li><b>Creeping Flow (\KATEX_INLINE_OPEN Re < 1 \KATEX_INLINE_CLOSE):</b> Drag is almost all friction. For a sphere, \KATEX_INLINE_OPEN C_D = 24/Re \KATEX_INLINE_CLOSE.</li>
+                                <li><b>Constant \KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE Range (\KATEX_INLINE_OPEN 10^3 < Re < 2 \times 10^5 \KATEX_INLINE_CLOSE):</b> Laminar boundary layer, large turbulent wake, high drag.</li>
+                                <li><b>The Drag Crisis (\KATEX_INLINE_OPEN Re \approx 2 \times 10^5 \KATEX_INLINE_CLOSE):</b> Boundary layer trips to turbulent, wake shrinks, \KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE drops sharply.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Section 4B: Blunt Body Roughness -->
+            <section id="sec-blunt-body-roughness" class="roadmap-section">
+                <div class="section-header"><h2>4B. Cylinders/Spheres: Effect of Surface Roughness</h2></div>
+                <div class="section-content">
+                    <p>This section is all about how to control the transition to a turbulent boundary layer using surface roughness to reduce drag.</p>
+                    
+                    <h3>The Big Idea: Triggering Turbulence on Purpose</h3>
+                    <p>Think of the laminar boundary layer as a person walking carefully on a tightrope. Surface roughness provides a "nudge" that disrupts the balance, forcing the flow to "tumble" into a turbulent state at a much lower speed (lower Reynolds number).</p>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: The Right Tool for the Right Job ⚙️</b>
+                        <p>Roughness is not a magic bullet; it's a specialized tool. Using it incorrectly can make things worse. The graph of \KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE vs. Re for different roughness values (Fig. 7-19) tells the whole story.</p>
+                        <ul>
+                            <li><b>Low Re ("High Drag Zone"):</b> The boundary layer is laminar and stable. Roughness just adds a little extra friction. Here, roughness is bad.</li>
+                            <li><b>Intermediate Re ("Drag Crisis Zone"):</b> This is where the magic happens. Rough surfaces have their "drag crisis" moment (the dip in \KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE) at a much earlier Re. Here, roughness is GOOD. A golf ball operates in this zone.</li>
+                            <li><b>High Re ("Fully Turbulent Zone"):</b> All boundary layers are turbulent. Adding roughness just creates more friction, increasing the overall drag. Here, roughness is BAD.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <h3>Interpreting the Drag Graph (Fig. 7-19)</h3>
+                    <ul>
+                        <li><b>X-axis:</b> Reynolds Number (\KATEX_INLINE_OPEN Re \KATEX_INLINE_CLOSE). Represents the flow condition.</li>
+                        <li><b>Y-axis:</b> Drag Coefficient (\KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE). Represents aerodynamic efficiency.</li>
+                        <li><b>Observation 1:</b> The Re at which the drag crisis (the dip) occurs decreases as roughness (\KATEX_INLINE_OPEN \varepsilon/D \KATEX_INLINE_CLOSE) increases.</li>
+                        <li><b>Observation 2:</b> At Re values after the drag crisis dip, a higher roughness leads to a higher drag coefficient.</li>
+                    </ul>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Application: Drag Force Calculation</b>
+                        <p>Once you determine the correct \KATEX_INLINE_OPEN C_D \KATEX_INLINE_CLOSE from the graph (based on both \KATEX_INLINE_OPEN Re \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \varepsilon/D \KATEX_INLINE_CLOSE), you can calculate the drag force.</p>
+                        ````math F_D = C_D \cdot A \cdot \left( \frac{\rho V^2}{2} \right) ````
+                        <p><b>Frontal Area (A):</b></p>
+                        <ul>
+                            <li>For a cylinder of length L: ````math A = L \cdot D ````</li>
+                            <li>For a sphere: ````math A = \frac{\pi D^2}{4} ````</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 5B: Blunt Body Heat -->
+            <section id="sec-blunt-body-heat" class="roadmap-section">
+                <div class="section-header"><h2>5B. Cylinders/Spheres: Heat Transfer Calculations</h2></div>
+                <div class="section-content">
+                    <p>The physics of heat transfer is intimately linked to the flow patterns around the object. The story of drag was all about the wake. The story of heat transfer is also all about the wake.</p>
+                    
+                    <h3>The Big Idea: Heat Transfer Follows the Flow</h3>
+                    <p>The local heat transfer coefficient (\KATEX_INLINE_OPEN h_\theta \KATEX_INLINE_CLOSE) is not uniform around a cylinder. It changes dramatically depending on what the fluid is doing at that specific spot.</p>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: Cooling a Hot Potato</b>
+                        <br>Imagine cooling a hot potato in a windy storm.
+                        <ul>
+                            <li><b>The Front (θ=0°):</b> The wind slams directly into it. High turbulence, high \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE.</li>
+                            <li><b>The Sides (0° < θ < 80°):</b> The air flows smoothly, and an insulating boundary layer grows. Local \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE decreases.</li>
+                            <li><b>The Back (The Wake, θ > 80°):</b> The flow separates, creating a chaotic, swirling mess. This intense mixing is very good at grabbing heat. Local \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE increases again.</li>
+                        </ul>
+                        As an engineer, you need the <b>average</b> heat transfer coefficient (\KATEX_INLINE_OPEN h_{avg} \KATEX_INLINE_CLOSE), which is what the empirical correlations provide.</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Procedure for Blunt Body Heat Transfer</b>
+                        <ol>
+                            <li>Identify the geometry (cylinder, sphere?).</li>
+                            <li>Calculate the Reynolds number (\KATEX_INLINE_OPEN Re_D \KATEX_INLINE_CLOSE) to characterize the flow.</li>
+                            <li>Find fluid properties at the correct temperature (usually film temperature).</li>
+                            <li>Plug these numbers into the appropriate correlation to find the average Nusselt number (\KATEX_INLINE_OPEN Nu_{avg} \KATEX_INLINE_CLOSE).</li>
+                            <li>Use \KATEX_INLINE_OPEN Nu_{avg} \KATEX_INLINE_CLOSE to solve for the \KATEX_INLINE_OPEN h_{avg} \KATEX_INLINE_CLOSE you need for your calculation (\KATEX_INLINE_OPEN Q = h A \Delta T \KATEX_INLINE_CLOSE).</li>
+                        </ol>
+                    </div>
+
+                    <h3>Key Correlations for Average Nusselt Number (\KATEX_INLINE_OPEN Nu \KATEX_INLINE_CLOSE)</h3>
+                    <h4>For a Circular Cylinder:</h4>
+                    <ul>
+                        <li><b>Churchill-Bernstein Equation (7-35):</b> The most comprehensive and accurate formula. This should be your default choice.
+                            ````math Nu_{cyl} = 0.3 + \frac{0.62 Re_D^{1/2} Pr^{1/3}}{[1+(0.4/Pr)^{2/3}]^{1/4}} \left[ 1 + \left( \frac{Re_D}{282000} \right)^{5/8} \right]^{4/5} ````
+                        </li>
+                        <li><b>Simpler Zukauskas Correlation (Table 7-1):</b> An easier-to-use power-law formula.
+                            ````math Nu = C \cdot Re^m \cdot Pr^n ````
+                            CRITICAL: You must choose the correct constants C and m from the table based on the Reynolds number range.
+                        </li>
+                    </ul>
+
+                    <h4>For a Sphere:</h4>
+                    <ul>
+                        <li><b>Whitaker Correlation (7-36):</b> The recommended comprehensive formula for spheres.
+                            ````math Nu_{sph} = 2 + (0.4 Re_D^{1/2} + 0.06 Re_D^{2/3}) Pr^{0.4} \left( \frac{\mu_\infty}{\mu_s} \right)^{1/4} ````
+                        </li>
+                    </ul>
+
+                    <h4>Important Practical Notes:</h4>
+                    <ul>
+                        <li><b>Characteristic Length:</b> Always use the diameter D.</li>
+                        <li><b>Property Evaluation Temperature:</b>
+                            <ul>
+                                <li>For cylinders: Use the <b>film temperature</b> \KATEX_INLINE_OPEN T_{film} = (T_s + T_\infty)/2 \KATEX_INLINE_CLOSE.</li>
+                                <li>For the Whitaker sphere equation: Use the <b>free-stream temperature</b> \KATEX_INLINE_OPEN T_\infty \KATEX_INLINE_CLOSE, except for \KATEX_INLINE_OPEN \mu_s \KATEX_INLINE_CLOSE, which is evaluated at the surface temperature \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Section 7: Tube Bank Concepts -->
+            <section id="sec-tube-banks-concepts" class="roadmap-section">
+                <div class="section-header"><h2>7. Advanced Application: Tube Bank Core Concepts</h2></div>
+                <div class="section-content">
+                    <p>Flow across tube banks is the absolute core of designing shell-and-tube heat exchangers. You can't just analyze one tube and multiply by 100, because the wake from the first row of tubes becomes the turbulent, chaotic inflow for the second row.</p>
+
+                    <h3>The Big Idea: It's All About the Gaps</h3>
+                    <ul>
+                        <li><b>The Squeeze:</b> To get through the bank, the fluid must squeeze through the narrow gaps between tubes. This causes the fluid to speed up to a <b>maximum velocity (\KATEX_INLINE_OPEN V_{max} \KATEX_INLINE_CLOSE)</b> inside the bank. This higher velocity is what governs the physics, not the slow approach velocity.</li>
+                        <li><b>The Arrangement:</b> How you arrange the tubes matters immensely.
+                            <ul>
+                                <li><b>In-line Arrangement:</b> Tubes are in perfect rows. Fluid finds relatively straight channels. Tubes in the back are "shielded." This results in less turbulence.</li>
+                                <li><b>Staggered Arrangement:</b> Tubes are offset. Fluid is forced into a tortuous, zig-zag path, creating intense turbulence and mixing.</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The Fundamental Heat Exchanger Trade-Off ⚙️</b>
+                        <p>As a design engineer, you are constantly balancing performance against cost.</p>
+                        <ul>
+                            <li><b>Staggered Arrangement:</b>
+                                <ul>
+                                    <li><b>Benefit:</b> High turbulence leads to a high heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE).</li>
+                                    <li><b>Cost:</b> Chaotic path creates high resistance, leading to a high pressure drop (\KATEX_INLINE_OPEN \Delta P \KATEX_INLINE_CLOSE) and higher pumping costs.</li>
+                                </ul>
+                            </li>
+                            <li><b>In-line Arrangement:</b>
+                                <ul>
+                                    <li><b>Benefit:</b> Smoother flow path results in a lower pressure drop (\KATEX_INLINE_OPEN \Delta P \KATEX_INLINE_CLOSE), which is cheaper to operate.</li>
+                                    <li><b>Cost:</b> Shielding and lower turbulence give a lower heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE), requiring a larger heat exchanger.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <h3>The Log Mean Temperature Difference (LMTD)</h3>
+                    <p>In a heat exchanger, the fluid temperature is constantly changing. You can't just use a simple \KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE. The LMTD is the "true" average temperature difference that correctly drives the heat transfer over the entire unit.</p>
+                </div>
+            </section>
+            
+            <!-- Section 8: Tube Bank Heat -->
+            <section id="sec-tube-banks-heat" class="roadmap-section">
+                <div class="section-header"><h2>8. Tube Banks: Heat Transfer Calculation Procedure</h2></div>
+                <div class="section-content">
+                    <p>This section is very procedural. Follow these steps carefully for any tube bank problem.</p>
+                    
+                    <h3>1. Define the Geometry</h3>
+                    <ul>
+                        <li>Arrangement: In-line or Staggered.</li>
+                        <li>Pitches: Transverse (\KATEX_INLINE_OPEN S_T \KATEX_INLINE_CLOSE), Longitudinal (\KATEX_INLINE_OPEN S_L \KATEX_INLINE_CLOSE).</li>
+                        <li>Characteristic Length: Tube outer diameter, D.</li>
+                    </ul>
+
+                    <h3>2. Calculate the Maximum Velocity (\KATEX_INLINE_OPEN V_{max} \KATEX_INLINE_CLOSE)</h3>
+                    <p>This is the most critical first step. The Reynolds number is based on \KATEX_INLINE_OPEN V_{max} \KATEX_INLINE_CLOSE.</p>
+                    <ul>
+                        <li><b>In-line:</b> ````math V_{max} = V \frac{S_T}{S_T - D} ````</li>
+                        <li><b>Staggered:</b> First, calculate the diagonal pitch ````math S_D = \sqrt{S_L^2 + (S_T/2)^2} ````. Then:
+                            <ul>
+                                <li>If ````math 2(S_D - D) < (S_T - D) ````, then ````math V_{max} = V \frac{S_T}{2(S_D - D)} ````</li>
+                                <li>Otherwise, ````math V_{max} = V \frac{S_T}{S_T - D} ````</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h3>3. Calculate the Reynolds Number</h3>
+                    ````math Re_D = \frac{\rho V_{max} D}{\mu} ````
+
+                    <h3>4. Find the Average Nusselt Number (\KATEX_INLINE_OPEN Nu_D \KATEX_INLINE_CLOSE)</h3>
+                    <p>Use the Zukauskas Correlation and Table 7-2.</p>
+                    <ul>
+                        <li><b>General Form:</b> ````math Nu_D = C Re_D^m Pr^n \left( \frac{Pr}{Pr_s} \right)^{0.25} ````</li>
+                        <li>Find your \KATEX_INLINE_OPEN Re_D \KATEX_INLINE_CLOSE range in Table 7-2 for your arrangement.</li>
+                        <li>Select the corresponding constants C and m. For most cases, n = 0.36.</li>
+                    </ul>
+
+                    <h3>5. Correct for Number of Rows (\KATEX_INLINE_OPEN N_L \KATEX_INLINE_CLOSE)</h3>
+                    <p>The correlations in Table 7-2 are for \KATEX_INLINE_OPEN N_L > 16 \KATEX_INLINE_CLOSE. If \KATEX_INLINE_OPEN N_L < 16 \KATEX_INLINE_CLOSE, you must apply a correction factor F from Table 7-3.</p>
+                    ````math Nu_{D, N_L < 16} = F \cdot Nu_D ````
+
+                    <h3>6. Property Evaluation</h3>
+                    <ul>
+                        <li>Evaluate all fluid properties (\KATEX_INLINE_OPEN \rho, \mu, k, c_p, Pr \KATEX_INLINE_CLOSE) at the arithmetic mean temperature, \KATEX_INLINE_OPEN T_m = (T_i + T_e)/2 \KATEX_INLINE_CLOSE.</li>
+                        <li>Evaluate \KATEX_INLINE_OPEN Pr_s \KATEX_INLINE_CLOSE at the surface temperature, \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+
+                    <h3>7. Calculate the Heat Transfer Rate (\KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE)</h3>
+                    <p>The proper driving force is the Log Mean Temperature Difference (\KATEX_INLINE_OPEN \Delta T_{lm} \KATEX_INLINE_CLOSE).</p>
+                    ````math \Delta T_{lm} = \frac{\Delta T_1 - \Delta T_2}{\ln(\Delta T_1 / \Delta T_2)} ````
+                    <p>where \KATEX_INLINE_OPEN \Delta T_1 \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \Delta T_2 \KATEX_INLINE_CLOSE are the temperature differences at the inlet and outlet.</p>
+                    ````math \dot{Q} = h A_s \Delta T_{lm} ````
+                    <p>Alternatively, one can first find the outlet temperature \KATEX_INLINE_OPEN T_e \KATEX_INLINE_CLOSE:</p>
+                    ````math T_e = T_s - (T_s - T_i) \exp\left(-\frac{A_s h}{\dot{m} c_p}\right) ````
+                    <p>Then find the heat rate:</p>
+                    ````math \dot{Q} = \dot{m} c_p (T_e - T_i) ````
+                </div>
+            </section>
+            
+            <!-- Section 9: Tube Bank Pressure -->
+            <section id="sec-tube-banks-pressure" class="roadmap-section">
+                <div class="section-header"><h2>9. Tube Banks: Pressure Drop Calculation</h2></div>
+                <div class="section-content">
+                    <p>We've figured out how well a tube bank can transfer heat; now we have to calculate the cost of doing that job. In engineering, "cost" often means pressure drop.</p>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: Pressure Drop is the Energy "Toll"</b>
+                        <br>Think of the fluid as a truck driver and the tube bank as a winding, bumpy toll road. Pressure is the fuel in the tank. The Pressure Drop (\KATEX_INLINE_OPEN \Delta P \KATEX_INLINE_CLOSE) is the total amount of fuel the driver burns to overcome the resistance. It's the energy that is irreversibly "lost" to friction and turbulence.</i>
+                    </div>
+                    
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: \KATEX_INLINE_OPEN \Delta P \KATEX_INLINE_CLOSE = Money 📈</b>
+                        <p>Pressure drop is a direct link to the operating cost (OPEX) of your equipment.</p>
+                        <ul>
+                            <li>\KATEX_INLINE_OPEN \Delta P \KATEX_INLINE_CLOSE determines the size and capital cost (CAPEX) of the pump or fan needed.</li>
+                            <li>The Pumping Power required to overcome this \KATEX_INLINE_OPEN \Delta P \KATEX_INLINE_CLOSE is a direct draw on electricity, 24/7, for the life of the plant (OPEX).</li>
+                        </ul>
+                        <p>This section brings the great engineering trade-off home. A staggered bank gives high heat transfer (BENEFIT) but also high pressure drop (COST). Your job is to balance these factors.</p>
+                    </div>
+
+                    <h3>1. The Pressure Drop Formula</h3>
+                    <ul>
+                        <li><b>Core Equation:</b> ````math \Delta P = N_L f \chi \frac{\rho V_{max}^2}{2} ````</li>
+                        <li><b>\KATEX_INLINE_OPEN N_L \KATEX_INLINE_CLOSE</b> = Number of tube rows in the direction of flow.</li>
+                        <li><b>\KATEX_INLINE_OPEN f \KATEX_INLINE_CLOSE</b> = Friction factor (from charts in Fig. 7-27).</li>
+                        <li><b>\KATEX_INLINE_OPEN \chi \KATEX_INLINE_CLOSE</b> = Correction factor for non-ideal arrangements (from charts).</li>
+                        <li><b>\KATEX_INLINE_OPEN \rho \KATEX_INLINE_CLOSE</b> = Fluid density (at mean temperature \KATEX_INLINE_OPEN T_m \KATEX_INLINE_CLOSE).</li>
+                        <li><b>\KATEX_INLINE_OPEN V_{max} \KATEX_INLINE_CLOSE</b> = Maximum velocity within the tube bank.</li>
+                    </ul>
+
+                    <h3>2. How to Use the Friction Factor Charts (Fig. 7-27)</h3>
+                    <ol>
+                        <li>Choose the Right Chart: (a) for In-line and (b) for Staggered.</li>
+                        <li>Calculate \KATEX_INLINE_OPEN Re_{D,max} \KATEX_INLINE_CLOSE (x-axis).</li>
+                        <li>Calculate pitch-to-diameter ratios: \KATEX_INLINE_OPEN P_T = S_T/D \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN P_L = S_L/D \KATEX_INLINE_CLOSE.</li>
+                        <li>Find the curve on the main chart that corresponds to your \KATEX_INLINE_OPEN P_T \KATEX_INLINE_CLOSE value and read the friction factor \KATEX_INLINE_OPEN f \KATEX_INLINE_CLOSE from the y-axis.</li>
+                        <li>Find the Correction Factor \KATEX_INLINE_OPEN \chi \KATEX_INLINE_CLOSE from the small insert chart based on \KATEX_INLINE_OPEN P_T/P_L \KATEX_INLINE_CLOSE. If you have a square in-line (\KATEX_INLINE_OPEN S_T = S_L \KATEX_INLINE_CLOSE) or equilateral staggered (\KATEX_INLINE_OPEN S_T = S_D \KATEX_INLINE_CLOSE) arrangement, then \KATEX_INLINE_OPEN \chi = 1 \KATEX_INLINE_CLOSE.</li>
+                    </ol>
+
+                    <h3>3. The Pumping Power Formula</h3>
+                    <ul>
+                        <li><b>Definition:</b> The power required to overcome the calculated pressure drop.</li>
+                        <li><b>Core Equation:</b> ````math \dot{W}_{pump} = \dot{V} \Delta P = \frac{\dot{m} \Delta P}{\rho} ````</li>
+                        <li><b>\KATEX_INLINE_OPEN \dot{V} \KATEX_INLINE_CLOSE</b> = Volumetric flow rate (m³/s).</li>
+                        <li><b>\KATEX_INLINE_OPEN \dot{m} \KATEX_INLINE_CLOSE</b> = Mass flow rate (kg/s).</li>
+                        <li><b>\KATEX_INLINE_OPEN \Delta P \KATEX_INLINE_CLOSE</b> = Pressure drop (Pa or N/m²).</li>
+                        <li><b>\KATEX_INLINE_OPEN \dot{W}_{pump} \KATEX_INLINE_CLOSE</b> = Power (Watts).</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const workflowNodes = document.querySelectorAll('.workflow-node');
+            const sections = document.querySelectorAll('.roadmap-section');
+            const sectionHeaders = document.querySelectorAll('.section-header');
+
+            const collapseAllSections = () => {
+                sections.forEach(section => {
+                    section.classList.remove('expanded');
+                });
+            };
+
+            workflowNodes.forEach(node => {
+                node.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+
+                    if (targetSection) {
+                        const isExpanded = targetSection.classList.contains('expanded');
+                        
+                        if (!isExpanded) {
+                            collapseAllSections();
+                        }
+
+                        targetSection.classList.toggle('expanded');
+                        
+                        setTimeout(() => {
+                           targetSection.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }, 100);
+                    }
+                });
+            });
+
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const parentSection = this.parentElement;
+                    parentSection.classList.toggle('expanded');
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
