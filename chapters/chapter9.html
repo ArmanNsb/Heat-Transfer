@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Workflow: Natural Convection</title>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+            displayMath: [['```math', '```']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+             transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 45%;
+            position: relative;
+        }
+
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+        
+        .decision::after { 
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+        
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector::after {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+
+        .section-header::after {
+            content: '▼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>Visual Workflow: Natural Convection</h1>
+
+        <div class="workflow-map">
+            <div class="workflow-node" data-target="sec-mechanism">
+                1. Physical Mechanism of Natural Convection
+            </div>
+            <div class="workflow-node" data-target="sec-equation-motion">
+                2. Mathematical Framework: Equation of Motion
+            </div>
+            <div class="workflow-node" data-target="sec-grashof">
+                3. Key Parameter: The Grashof Number
+            </div>
+            <div class="workflow-node" data-target="sec-workflow">
+                4. The Engineering "Cookbook" Workflow
+            </div>
+
+            <div class="workflow-node decision no-connector" data-target="sec-geometry-decision">
+                <span>5. Decision: What is the Geometry?</span>
+            </div>
+
+            <div class="flow-branch">
+                <div class="branch-container">
+                    <h3>External Flow (Over Surfaces)</h3>
+                    <div class="workflow-node" data-target="sec-surfaces">
+                        6a. Applications: Convection Over Surfaces
+                    </div>
+                    <div class="workflow-node no-connector" data-target="sec-finned">
+                        7a. Advanced: Finned Surfaces & PCBs
+                    </div>
+                </div>
+                <div class="branch-container">
+                    <h3>Internal Flow (Inside Enclosures)</h3>
+                    <div class="workflow-node" data-target="sec-enclosures-intro">
+                        6b. Intro: Convection Inside Enclosures
+                    </div>
+                    <div class="workflow-node no-connector" data-target="sec-enclosures-geo">
+                        7b. Applications: Enclosure Geometries
+                    </div>
+                </div>
+            </div>
+
+            <div class="rejoin-connector"></div>
+
+            <div class="workflow-node" data-target="sec-combined">
+                8. Final Analysis: Combined Convection & Radiation
+            </div>
+        </div>
+
+        <div id="accordion-container">
+            <!-- Section 1: Physical Mechanism -->
+            <section class="roadmap-section" id="sec-mechanism">
+                <div class="section-header">
+                    <h2>1. Physical Mechanism of Natural Convection</h2>
+                </div>
+                <div class="section-content">
+                    <p>In forced convection, we use a pump or a fan to force a fluid across a surface to add or remove heat. Natural convection happens without any external machinery. The fluid moves itself, purely because of temperature differences.</p>
+                    
+                    <div class="insight">
+                        <i><b>Industrial Analogy: Cooling a Hot Storage Tank 🏭</b>
+                        <br>Imagine a large, uninsulated tank of hot water sitting in a cool warehouse.
+                        <ol>
+                            <li><b>The First Touch (Conduction):</b> The air molecules directly touching the hot outer wall of the tank heat up via conduction.</li>
+                            <li><b>The Density Change:</b> As these air molecules get hotter, they gain energy, spread out, and become less dense. You now have a thin layer of warm, "light" air next to the tank.</li>
+                            <li><b>The Buoyancy Engine (The "Why"):</b> Nature doesn't like this density imbalance. This pocket of warm air is pushed upward by the surrounding cooler, denser air. This upward push is the buoyancy force. It's the exact same principle that makes a hot air balloon rise. The common phrase "heat rises" is a misnomer; it's the heated, less-dense fluid that rises.</li>
+                            <li><b>The Current Begins:</b> As the warm air rises, cooler air from the floor level is pulled in towards the bottom of the tank to fill the space.</li>
+                            <li><b>The Cycle Continues:</b> This new cool air gets heated, becomes less dense, and also rises, creating a continuous, slow-moving loop called a natural convection current.</li>
+                        </ol>
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Why This Matters to a Practicing Engineer:</b>
+                        <ul>
+                            <li><b>It's "Free" Cooling (or Heating):</b> This process happens with zero energy input for pumps or fans, meaning lower capital and operating costs. It's used for cooling things that don't need rapid temperature change, like storage tanks or electronic control panels.</li>
+                            <li><b>It's a Safety Factor:</b> Natural convection is always there as a baseline. If a pump in a forced cooling system fails, heat will still be removed via natural convection (and radiation). Engineers rely on this for passive safety systems.</li>
+                            <li><b>It Can Be a Limitation:</b> It's a much slower process than forced convection. Understanding the limits of natural convection is crucial for process timing and control.</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Governing Principle</h3>
+                    <p>Natural convection is fluid motion induced by buoyancy forces, which arise from density differences in a fluid due to temperature gradients.</p>
+
+                    <h3>Critical Definitions & Formulas</h3>
+                    <div class="card">
+                        <b>Buoyancy Force (\KATEX_INLINE_OPEN F_{buoyancy} \KATEX_INLINE_CLOSE):</b> The upward force exerted by a fluid, equal to the weight of the fluid displaced.
+                        ```math
+                        F_{buoyancy} = \rho_{fluid} \cdot g \cdot V_{body}
+                        ```
+                    </div>
+                    <div class="card">
+                        <b>Volume Expansion Coefficient (\KATEX_INLINE_OPEN \beta \KATEX_INLINE_CLOSE):</b> The critical property that links temperature to density. It measures the fractional change in density per unit change in temperature at constant pressure. A large \KATEX_INLINE_OPEN \beta \KATEX_INLINE_CLOSE means a fluid's density is very sensitive to temperature, making it good for natural convection.
+                        ```math
+                        \beta = - \frac{1}{\rho} \left( \frac{\partial\rho}{\partial T} \right)_P \quad (\text{Units: 1/K})
+                        ```
+                    </div>
+                    <div class="card">
+                        <b>Approximation for Density Difference:</b> For practical calculations, we relate the density difference directly to the temperature difference using \KATEX_INLINE_OPEN \beta \KATEX_INLINE_CLOSE.
+                        ```math
+                        \rho_\infty - \rho \approx \rho \beta (T - T_\infty)
+                        ```
+                        Where \KATEX_INLINE_OPEN \infty \KATEX_INLINE_CLOSE refers to the fluid far away from the surface.
+                    </div>
+                    <div class="card">
+                        <b>Ideal Gas Simplification:</b> For ideal gases, \KATEX_INLINE_OPEN \beta \KATEX_INLINE_CLOSE is simply the inverse of the absolute temperature. This is a very common and useful shortcut!
+                        ```math
+                        \beta_{ideal\_gas} = \frac{1}{T} \quad (\text{where T is in Kelvin or Rankine})
+                        ```
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 2: Equation of Motion -->
+            <section class="roadmap-section" id="sec-equation-motion">
+                <div class="section-header">
+                    <h2>2. Mathematical Framework: Equation of Motion</h2>
+                </div>
+                <div class="section-content">
+                    <p>Here, we translate the physics into the mathematical language engineers use for predictions. The goal is to take the familiar momentum equation (Newton's Second Law for fluids) and add a new term to account for the buoyancy that drives the flow.</p>
+                    
+                    <div class="insight">
+                        <i><b>Industrial Analogy: Designing a Silent Control Panel Cooler ⚙️</b>
+                        <br>Imagine an enclosed cabinet full of sensitive electronics that gets hot. You can't use a fan because the environment is dusty. You must rely on natural convection.
+                        <br><br>The standard momentum equation would predict zero flow because there's no fan. We know this is wrong. We are missing a force. The derivation in your text adds the buoyancy term, \KATEX_INLINE_OPEN g\beta(T - T_\infty) \KATEX_INLINE_CLOSE, which is the mathematical representation of the buoyancy force.
+                        <ul>
+                           <li>\KATEX_INLINE_OPEN g \KATEX_INLINE_CLOSE: Gravity is needed to have a "down" for the "up" buoyant force to oppose.</li>
+                           <li>\KATEX_INLINE_OPEN \beta \KATEX_INLINE_CLOSE: The volume expansion coefficient links temperature to density change.</li>
+                           <li>\KATEX_INLINE_OPEN (T - T_\infty) \KATEX_INLINE_CLOSE: The temperature difference is the trigger.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <h3>The Boussinesq Approximation</h3>
+                    <p>This is a brilliant engineering simplification. We treat density as constant everywhere *except* for the density difference that creates the buoyancy. It lets us ignore small changes in other fluid properties, which makes the math solvable without sacrificing accuracy for most common scenarios.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Why This Matters to a Practicing Engineer:</b>
+                        <ul>
+                            <li><b>Foundation for Prediction:</b> This equation is the foundation for all natural convection heat transfer correlations. The dimensionless numbers you will use (like the Grashof number) are derived directly from this analysis.</li>
+                            <li><b>Understanding the Limits:</b> Knowing that temperature is in the momentum equation and velocity is in the energy equation shows they are coupled. You can't solve for one without the other, which is why the solutions are complex.</li>
+                            <li><b>Visualizing the Flow:</b> The velocity profile is unique. Unlike pipe flow, velocity is zero at the wall and far away, peaking in between. This tells you the "action" is all happening within a distinct boundary layer.</li>
+                        </ul>
+                    </div>
+
+                    <h3>Governing Equations for Natural Convection (Vertical Plate)</h3>
+                    <p>This is a set of coupled partial differential equations.</p>
+                    <div class="card">
+                        <b>Continuity (Mass Conservation):</b>
+                        ```math
+                        \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} = 0
+                        ```
+                    </div>
+                    <div class="card">
+                        <b>Momentum (x-direction):</b>
+                        ```math
+                        \underbrace{u \frac{\partial u}{\partial x} + v \frac{\partial u}{\partial y}}_{\text{Inertial Forces}} = \underbrace{\nu \frac{\partial^2 u}{\partial y^2}}_{\text{Viscous Forces}} + \underbrace{g\beta(T - T_\infty)}_{\text{Buoyancy Force}}
+                        ```
+                    </div>
+                    <div class="card">
+                        <b>Energy (Heat Conservation):</b>
+                        ```math
+                        u \frac{\partial T}{\partial x} + v \frac{\partial T}{\partial y} = \alpha \frac{\partial^2 T}{\partial y^2}
+                        ```
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 3: Grashof Number -->
+            <section class="roadmap-section" id="sec-grashof">
+                <div class="section-header">
+                    <h2>3. Key Parameter: The Grashof Number</h2>
+                </div>
+                <div class="section-content">
+                    <p>In forced convection, the Reynolds number (Re) is king. In natural convection, there is no externally forced velocity, so we need a different tool to predict the flow. This is where the Grashof number (Gr) comes in. It's the Reynolds number's counterpart for natural convection.</p>
+                    
+                    <div class="insight">
+                        <i><b>Industrial Analogy: Is a Cooling Fan Necessary? 🏭</b>
+                        <br>Imagine you're responsible for a large electric motor that gets hot. Is the natural air circulation in the room enough to keep it from overheating, or do you need to install a fan? The Grashof number is your primary diagnostic tool.
+                        <br><br><b>The Competing Forces:</b>
+                        <ul>
+                            <li><b>Buoyancy Force:</b> The warm air next to the motor wants to rise, driving the cooling flow.</li>
+                            <li><b>Viscous Force:</b> The air's own internal friction resists this movement.</li>
+                        </ul>
+                        You calculate Gr and interpret the result:
+                        <ul>
+                            <li><b>High Grashof Number (e.g., \KATEX_INLINE_OPEN > 10^9 \KATEX_INLINE_CLOSE):</b> Buoyancy >> Viscous. You'll get a strong, chaotic, turbulent flow. Natural convection is powerful; a fan might not be necessary.</li>
+                            <li><b>Low Grashof Number:</b> Buoyancy ≈ Viscous. The flow will be slow, smooth, and laminar. Natural convection is weak; you must install a fan.</li>
+                        </ul>
+                        </i>
+                    </div>
+                    
+                    <h3>Definition & Formula</h3>
+                    <p>The Grashof Number (Gr) is a dimensionless number representing the ratio of the buoyancy force to the viscous force acting on a fluid in natural convection.</p>
+                    ```math
+                    Gr_L = \frac{\text{Buoyancy Force}}{\text{Viscous Force}} = \frac{g \beta (T_s - T_\infty) L_c^3}{\nu^2}
+                    ```
+                    <ul>
+                        <li>\KATEX_INLINE_OPEN g \KATEX_INLINE_CLOSE: Gravitational acceleration (m/s²)</li>
+                        <li>\KATEX_INLINE_OPEN \beta \KATEX_INLINE_CLOSE: Volume expansion coefficient (1/K)</li>
+                        <li>\KATEX_INLINE_OPEN (T_s - T_\infty) \KATEX_INLINE_CLOSE: Temperature difference (K or °C)</li>
+                        <li>\KATEX_INLINE_OPEN L_c \KATEX_INLINE_CLOSE: Characteristic length (m)</li>
+                        <li>\KATEX_INLINE_OPEN \nu \KATEX_INLINE_CLOSE: Kinematic viscosity of the fluid (m²/s)</li>
+                    </ul>
+
+                    <h3>Critical Grashof Number</h3>
+                    <p>This is the approximate value of Gr at which the flow transitions from laminar to turbulent. For a vertical plate, the critical value is \KATEX_INLINE_OPEN Gr_{crit} \approx 10^9 \KATEX_INLINE_CLOSE.</p>
+                    
+                    <div class="rule-of-thumb">
+                        <b>Mixed Convection Criterion:</b>
+                        <p>What if you have both natural convection (from heat) and some forced convection (from a breeze)? The ratio \KATEX_INLINE_OPEN Gr / Re^2 \KATEX_INLINE_CLOSE tells you who wins:</p>
+                        <ul>
+                            <li><b>\KATEX_INLINE_OPEN Gr / Re^2 \gg 1 \KATEX_INLINE_CLOSE:</b> Natural Convection Dominates. Ignore the breeze.</li>
+                            <li><b>\KATEX_INLINE_OPEN Gr / Re^2 \ll 1 \KATEX_INLINE_CLOSE:</b> Forced Convection Dominates. Ignore the natural convection effect.</li>
+                            <li><b>\KATEX_INLINE_OPEN Gr / Re^2 \approx 1 \KATEX_INLINE_CLOSE:</b> Mixed Convection. Both are important and require special correlations.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 4: General Workflow -->
+            <section class="roadmap-section" id="sec-workflow">
+                <div class="section-header">
+                    <h2>4. The Engineering "Cookbook" Workflow</h2>
+                </div>
+                <div class="section-content">
+                    <p>In the real world, you will almost never solve the momentum and energy equations from scratch. Instead, we use empirical correlations. This is the bridge between pure theory and engineering practice.</p>
+
+                    <div class="insight">
+                        <i><b>Industrial Analogy: Using a Cookbook Recipe ⚙️</b>
+                        <br>Think of heat transfer correlations as recipes from an engineering cookbook.
+                        <ul>
+                            <li><b>The Dish:</b> The final answer: "How much heat (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE) is being transferred?"</li>
+                            <li><b>The Ingredients:</b> Temperatures, object size/shape (\KATEX_INLINE_OPEN L_c, A_s \KATEX_INLINE_CLOSE), and fluid properties (\KATEX_INLINE_OPEN k, \nu, \beta, Pr \KATEX_INLINE_CLOSE).</li>
+                            <li><b>The Recipe Card:</b> The empirical formula, \KATEX_INLINE_OPEN Nu = C \cdot Ra^n \KATEX_INLINE_CLOSE, tells you how to combine your ingredients. \KATEX_INLINE_OPEN C \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN n \KATEX_INLINE_CLOSE are constants determined from experiments for a specific shape.</li>
+                        </ul>
+                        </i>
+                    </div>
+                    
+                    <h3>The Key Player: Rayleigh Number (Ra)</h3>
+                    <p>The Rayleigh number (\KATEX_INLINE_OPEN Ra = Gr \cdot Pr \KATEX_INLINE_CLOSE) is a brilliant piece of engineering efficiency. It combines both the flow behavior (Grashof number) and the thermal behavior (Prandtl number) into a single, powerful dimensionless number. For natural convection, Ra is the new king. It alone tells you everything you need to know: whether the flow is laminar or turbulent, and how to calculate the heat transfer.</p>
+                    ```math
+                    Ra_L = Gr_L \cdot Pr = \frac{g \beta (T_s - T_\infty) L_c^3}{\nu \alpha}
+                    ```
+                    
+                    <div class="rule-of-thumb">
+                        <b>The Calculation Workflow:</b>
+                        <ol>
+                            <li><b>Identify Geometry:</b> Determine the shape and find its characteristic length, \KATEX_INLINE_OPEN L_c \KATEX_INLINE_CLOSE.</li>
+                            <li><b>Calculate Film Temperature:</b> \KATEX_INLINE_OPEN T_f = (T_s + T_\infty) / 2 \KATEX_INLINE_CLOSE.</li>
+                            <li><b>Find Fluid Properties:</b> Look up \KATEX_INLINE_OPEN \nu, k, Pr, \beta \KATEX_INLINE_CLOSE at the film temperature, \KATEX_INLINE_OPEN T_f \KATEX_INLINE_CLOSE.</li>
+                            <li><b>Calculate Rayleigh Number (Ra):</b> Plug everything into the Ra formula.</li>
+                            <li><b>Select Correlation:</b> Based on the geometry and Ra value, choose the correct formula \KATEX_INLINE_OPEN Nu = C \cdot Ra^n \KATEX_INLINE_CLOSE from a table.</li>
+                            <li><b>Calculate Nusselt Number (Nu):</b> Solve for Nu.</li>
+                            <li><b>Calculate Heat Transfer Coefficient (h):</b> Rearrange the definition: \KATEX_INLINE_OPEN h = (Nu \cdot k) / L_c \KATEX_INLINE_CLOSE.</li>
+                            <li><b>Calculate Heat Transfer Rate (Q):</b> Use Newton's Law of Cooling: \KATEX_INLINE_OPEN Q = h \cdot A_s \cdot (T_s - T_\infty) \KATEX_INLINE_CLOSE. 📈</li>
+                        </ol>
+                    </div>
+
+                    <h3>The Empirical Formula</h3>
+                    <p>The general form for the average Nusselt Number (Nu) is:</p>
+                    ```math
+                    Nu = C \cdot (Ra_L)^n
+                    ```
+                    <p>The exponent \KATEX_INLINE_OPEN n \KATEX_INLINE_CLOSE is a key indicator of the flow regime:</p>
+                    <ul>
+                        <li>\KATEX_INLINE_OPEN n \approx 1/4 \KATEX_INLINE_CLOSE for Laminar Flow</li>
+                        <li>\KATEX_INLINE_OPEN n \approx 1/3 \KATEX_INLINE_CLOSE for Turbulent Flow</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Dummy Section for Decision Node -->
+            <section class="roadmap-section" id="sec-geometry-decision">
+                <div class="section-header">
+                    <h2>5. Decision Point: Select a Geometry Type</h2>
+                </div>
+                <div class="section-content">
+                    <p>The general workflow is now established. The next critical step is to identify the physical geometry of the system. The specific empirical correlations used to calculate the Nusselt number depend entirely on the shape and orientation of the surface(s).</p>
+                    <p>Is the fluid flow occurring... </p>
+                    <ul>
+                        <li><b>Externally</b>, over a single surface exposed to a large body of fluid (like a hot pipe in a room)?</li>
+                        <li><b>Internally</b>, within a fluid trapped between two or more surfaces (like the air gap in a double-pane window)?</li>
+                    </ul>
+                    <p>Select a branch below to explore the specific correlations for each case.</p>
+                </div>
+            </section>
+
+            <!-- Section 6a: Surfaces -->
+            <section class="roadmap-section" id="sec-surfaces">
+                <div class="section-header">
+                    <h2>6a. Applications: Convection Over Surfaces</h2>
+                </div>
+                <div class="section-content">
+                    <p>The fundamental principle of buoyancy driving the flow doesn't change, but the effectiveness of that flow is dictated by the shape and orientation of the surface. The key question is always: "How easily can the heated (or cooled) fluid get away?"</p>
+                    
+                    <div class="insight">
+                        <i><b>Industrial Analogy: Designing a Chimney System 🏭</b>
+                        <br>Think of the natural convection current as the draft in a chimney.
+                        <ul>
+                            <li><b>Vertical Plate/Cylinder:</b> Your ideal, standard chimney. The hot air has a clear, straight path to rise, creating a strong draft.</li>
+                            <li><b>Inclined Plate:</b> A tilted chimney. The effective gravitational "pull" along the pipe is reduced (\KATEX_INLINE_OPEN g \rightarrow g\cos\theta \KATEX_INLINE_CLOSE), weakening the draft.</li>
+                            <li><b>Horizontal Plate (Hot Surface Up):</b> An open campfire. Hot air rises freely and efficiently. Very effective heat transfer.</li>
+                            <li><b>Horizontal Plate (Hot Surface Down):</b> A fire on the ceiling. Hot air is trapped. Very ineffective heat transfer.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>General Rule:</b> Evaluate all fluid properties (\KATEX_INLINE_OPEN k, \nu, Pr, \beta \KATEX_INLINE_CLOSE) at the film temperature, \KATEX_INLINE_OPEN T_f = (T_s + T_\infty) / 2 \KATEX_INLINE_CLOSE. The most common mistake is using the wrong Characteristic Length (\KATEX_INLINE_OPEN L_c \KATEX_INLINE_CLOSE).
+                    </div>
+                    
+                    <h3>1. Vertical Plates & Cylinders</h3>
+                    <ul>
+                        <li><b>Insight:</b> The ideal "chimney."</li>
+                        <li><b>Characteristic Length:</b> \KATEX_INLINE_OPEN L_c = L \KATEX_INLINE_CLOSE (the height).</li>
+                        <li><b>Vertical Cylinders:</b> Can be treated as a vertical plate if curvature is negligible. Condition:
+                        ```math
+                        D \ge \frac{35L}{Gr_L^{1/4}}
+                        ```
+                        </li>
+                    </ul>
+
+                    <h3>2. Inclined Plates</h3>
+                    <ul>
+                        <li><b>Insight:</b> A tilted chimney with a weaker draft.</li>
+                        <li><b>Characteristic Length:</b> \KATEX_INLINE_OPEN L_c = L \KATEX_INLINE_CLOSE (the height).</li>
+                        <li><b>Modification:</b> For stable cases with \KATEX_INLINE_OPEN \theta < 60^\circ \KATEX_INLINE_CLOSE, use vertical plate correlations but replace \KATEX_INLINE_OPEN g \KATEX_INLINE_CLOSE with \KATEX_INLINE_OPEN g\cos(\theta) \KATEX_INLINE_CLOSE in the Rayleigh number.</li>
+                    </ul>
+                    
+                    <h3>3. Horizontal Plates</h3>
+                    <ul>
+                        <li><b>Insight:</b> Flow is either helped (facing up) or hindered (facing down).</li>
+                        <li><b>Characteristic Length:</b> \KATEX_INLINE_OPEN L_c = A_s / P \KATEX_INLINE_CLOSE (Surface Area / Perimeter).</li>
+                        <li>For a square of side \KATEX_INLINE_OPEN a \KATEX_INLINE_CLOSE: \KATEX_INLINE_OPEN L_c = a/4 \KATEX_INLINE_CLOSE.</li>
+                        <li>For a circle of diameter \KATEX_INLINE_OPEN D \KATEX_INLINE_CLOSE: \KATEX_INLINE_OPEN L_c = D/4 \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+
+                    <h3>4. Horizontal Cylinders & Spheres</h3>
+                    <ul>
+                        <li><b>Insight:</b> Boundary layer develops from the bottom and forms a plume at the top.</li>
+                        <li><b>Characteristic Length:</b> \KATEX_INLINE_OPEN L_c = D \KATEX_INLINE_CLOSE (the outside diameter).</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Section 7a: Finned Surfaces -->
+            <section class="roadmap-section" id="sec-finned">
+                <div class="section-header">
+                    <h2>7a. Advanced: Finned Surfaces & PCBs</h2>
+                </div>
+                <div class="section-content">
+                    <p>When we place surfaces close together to form channels, like the fins on a heat sink, a critical design conflict arises: the trade-off between maximizing surface area and providing enough space for the fluid to flow.</p>
+                    
+                    <div class="insight">
+                        <i><b>Industrial Analogy: Designing a Parking Garage ⚙️</b>
+                        <ul>
+                            <li><b>Widely Spaced Fins (Huge Lanes):</b> Great traffic flow (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is high), but few parking spots (\KATEX_INLINE_OPEN A_s \KATEX_INLINE_CLOSE is low). Total cars parked is low (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE is low).</li>
+                            <li><b>Tightly Packed Fins (Tiny Lanes):</b> Massive number of spots (\KATEX_INLINE_OPEN A_s \KATEX_INLINE_CLOSE is huge), but traffic jams choke the flow (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE plummets). Total cars parked is low (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE is low).</li>
+                            <li><b>Optimum Spacing (The "Sweet Spot"):</b> The perfect balance of spots and lane width that maximizes the number of cars parked per hour (maximum heat transfer, \KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE). This is the concept of optimum fin spacing, \KATEX_INLINE_OPEN S_{opt} \KATEX_INLINE_CLOSE.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Why This Matters to a Practicing Engineer:</b>
+                        <p>This allows for the design of the most compact and efficient passive cooling system for a given heat load. It is essential for electronics cooling (VFDs, PLCs), where reliability is key. A 10°C drop in temperature can double the life of a component.</p>
+                    </div>
+
+                    <h3>Case 1: Isothermal Finned Surfaces (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE = constant)</h3>
+                    <ul>
+                        <li><b>Application:</b> Heat sinks for single, hot components (e.g., a CPU).</li>
+                        <li><b>Characteristic Length:</b> Fin Spacing (\KATEX_INLINE_OPEN S \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Rayleigh Number:</b> \KATEX_INLINE_OPEN Ra_S = (g \beta (T_s - T_\infty) S^3) / (\nu \alpha) \KATEX_INLINE_CLOSE</li>
+                        <li><b>Optimum Fin Spacing (\KATEX_INLINE_OPEN S_{opt} \KATEX_INLINE_CLOSE):</b>
+                        ```math
+                        S_{opt} = 2.714 \left( \frac{S^3 L}{Ra_S} \right)^{1/4}
+                        ```
+                        </li>
+                    </ul>
+
+                    <h3>Case 2: Isoflux Vertical PCBs (\KATEX_INLINE_OPEN q_s \KATEX_INLINE_CLOSE = constant)</h3>
+                    <ul>
+                        <li><b>Application:</b> Racks of circuit boards with evenly distributed heat sources.</li>
+                        <li><b>Key Feature:</b> Temperature increases from bottom (\KATEX_INLINE_OPEN T_0 \KATEX_INLINE_CLOSE) to top (\KATEX_INLINE_OPEN T_L \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Modified Rayleigh Number:</b> \KATEX_INLINE_OPEN Ra_S^* = (g \beta q_s S^4) / (k \nu^2) \KATEX_INLINE_CLOSE</li>
+                        <li><b>Optimum Fin Spacing (\KATEX_INLINE_OPEN S_{opt} \KATEX_INLINE_CLOSE):</b>
+                        ```math
+                        S_{opt} = 2.12 \left( \frac{S^4 L}{Ra_S^*} \right)^{1/5}
+                        ```
+                        </li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Section 6b: Enclosures Intro -->
+            <section class="roadmap-section" id="sec-enclosures-intro">
+                <div class="section-header">
+                    <h2>6b. Intro: Convection Inside Enclosures</h2>
+                </div>
+                <div class="section-content">
+                    <p>We now shift from a single surface in a large fluid to a fluid trapped between two surfaces at different temperatures. This creates a "convection engine" that significantly changes heat transfer.</p>
+
+                    <div class="insight">
+                        <i><b>Analogy: The Double-Pane Window & The Pot of Water</b>
+                        <ul>
+                            <li><b>Double-Pane Window (Vertical Enclosure):</b> On a cold day, the warm inner pane heats the trapped air, which rises. It then moves across to the cold outer pane, cools, and sinks. This continuous loop, or "convection cell," transfers heat much faster than pure conduction would.</li>
+                            <li><b>Pot of Water on a Stove (Horizontal Enclosure, Heated from Below):</b> The water at the bottom gets hot and rises, while cooler water from the top sinks. This instability kicks off a churning motion (if \KATEX_INLINE_OPEN Ra > 1708 \KATEX_INLINE_CLOSE), which is great for heating evenly.</li>
+                            <li><b>Pot of Water Heated from Above:</b> The hot, light water stays at the top. The cold, dense water stays at the bottom. The fluid is stable; heat only transfers downwards via slow, pure conduction.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>The Engineer's Shortcut: Effective Thermal Conductivity (\KATEX_INLINE_OPEN k_{eff} \KATEX_INLINE_CLOSE)</b>
+                        <p>Instead of solving complex fluid dynamics, we package all the convective enhancement into the Nusselt number (\KATEX_INLINE_OPEN Nu \KATEX_INLINE_CLOSE). We then pretend the fluid is a solid with a new, "effective" conductivity, \KATEX_INLINE_OPEN k_{eff} = k \cdot Nu \KATEX_INLINE_CLOSE. If \KATEX_INLINE_OPEN Nu = 5 \KATEX_INLINE_CLOSE, it means convection is transferring 5 times more heat than conduction alone. This is a powerful tool for quick calculations.</p>
+                        ```math
+                        \dot{Q} = k_{eff} A_s \frac{T_1 - T_2}{L_c} = (k \cdot Nu) A_s \frac{T_1 - T_2}{L_c}
+                        ```
+                    </div>
+                    
+                    <h3>Key Parameters</h3>
+                    <ul>
+                        <li><b>Characteristic Length (\KATEX_INLINE_OPEN L_c \KATEX_INLINE_CLOSE):</b> The distance between the two surfaces.</li>
+                        <li><b>Average Temperature:</b> Fluid properties are evaluated at \KATEX_INLINE_OPEN T_{avg} = (T_1 + T_2)/2 \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Rayleigh Number (\KATEX_INLINE_OPEN Ra_L \KATEX_INLINE_CLOSE):</b> Determines if convection occurs and how strong it is.</li>
+                        <li><b>Nusselt Number (\KATEX_INLINE_OPEN Nu \KATEX_INLINE_CLOSE):</b> The enhancement factor. \KATEX_INLINE_OPEN Nu = 1 \KATEX_INLINE_CLOSE means pure conduction. \KATEX_INLINE_OPEN Nu > 1 \KATEX_INLINE_CLOSE means convection is enhancing heat transfer.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Section 7b: Enclosure Geometries -->
+            <section class="roadmap-section" id="sec-enclosures-geo">
+                <div class="section-header">
+                    <h2>7b. Applications: Enclosure Geometries</h2>
+                </div>
+                <div class="section-content">
+                    <p>Engineers rely on a library of pre-made formulas (correlations) derived from experiments for specific geometries. Your job is to know which tool to grab for which job based on the geometry, fluid (Prandtl number), and flow intensity (Rayleigh number).</p>
+
+                    <div class="rule-of-thumb">
+                        <b>General Procedure for All Enclosures:</b>
+                        <ol>
+                            <li>Identify Geometry (horizontal, vertical, etc.).</li>
+                            <li>Calculate Average Temperature: \KATEX_INLINE_OPEN T_{avg} = (T_{hot} + T_{cold})/2 \KATEX_INLINE_CLOSE.</li>
+                            <li>Find Fluid Properties (\KATEX_INLINE_OPEN k, \nu, \beta, Pr \KATEX_INLINE_CLOSE) at \KATEX_INLINE_OPEN T_{avg} \KATEX_INLINE_CLOSE.</li>
+                            <li>Determine Characteristic Length, \KATEX_INLINE_OPEN L_c \KATEX_INLINE_CLOSE (the gap size).</li>
+                            <li>Calculate Rayleigh Number, \KATEX_INLINE_OPEN Ra_L \KATEX_INLINE_CLOSE.</li>
+                            <li>Select the Correct Correlation based on geometry, \KATEX_INLINE_OPEN Ra_L \KATEX_INLINE_CLOSE, \KATEX_INLINE_OPEN Pr \KATEX_INLINE_CLOSE, and aspect ratio (\KATEX_INLINE_OPEN H/L \KATEX_INLINE_CLOSE).</li>
+                            <li>Calculate Nusselt Number, \KATEX_INLINE_OPEN Nu \KATEX_INLINE_CLOSE.</li>
+                            <li>Calculate Heat Transfer, \KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE.</li>
+                        </ol>
+                    </div>
+
+                    <h3>1. Horizontal Rectangular Enclosures (Heated from Below)</h3>
+                    <ul>
+                        <li>Convection starts only if \KATEX_INLINE_OPEN Ra_L > 1708 \KATEX_INLINE_CLOSE.</li>
+                        <li>Correlations are typically simple power laws: \KATEX_INLINE_OPEN Nu = C \cdot Ra_L^n \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+                    
+                    <h3>2. Inclined Rectangular Enclosures</h3>
+                    <ul>
+                        <li>Behavior is a complex blend of horizontal and vertical cases.</li>
+                        <li>The tilt angle \KATEX_INLINE_OPEN \theta \KATEX_INLINE_CLOSE is critical. The term \KATEX_INLINE_OPEN \cos(\theta) \KATEX_INLINE_CLOSE may appear in the Ra calculation.</li>
+                    </ul>
+
+                    <h3>3. Vertical Rectangular Enclosures</h3>
+                    <ul>
+                        <li>Flow is always present as a single convection loop.</li>
+                        <li>The Aspect Ratio (\KATEX_INLINE_OPEN H/L \KATEX_INLINE_CLOSE) is very important and often appears in the correlations. A tall, thin enclosure behaves differently than a short, wide one.</li>
+                    </ul>
+
+                    <h3>4. Concentric Horizontal Cylinders</h3>
+                    <ul>
+                        <li><b>Characteristic Length:</b> \KATEX_INLINE_OPEN L_c = (D_o - D_i)/2 \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Heat Transfer Formula:</b> Uses a characteristic \KATEX_INLINE_OPEN \ln(D_o/D_i) \KATEX_INLINE_CLOSE term.</li>
+                        <li>Correlations often calculate \KATEX_INLINE_OPEN k_{eff}/k \KATEX_INLINE_CLOSE directly using a special geometric factor, \KATEX_INLINE_OPEN F_{cyl} \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+
+                    <h3>5. Concentric Spheres</h3>
+                    <ul>
+                        <li><b>Characteristic Length:</b> \KATEX_INLINE_OPEN L_c = (D_o - D_i)/2 \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Heat Transfer Rate (\KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE):</b>
+                        ```math
+                        \dot{Q} = k_{eff} \frac{\pi D_i D_o}{L_c} (T_i - T_o)
+                        ```
+                        </li>
+                        <li><b>Effective Thermal Conductivity (\KATEX_INLINE_OPEN k_{eff} \KATEX_INLINE_CLOSE):</b> Found using a specific correlation that requires calculating a geometric factor, \KATEX_INLINE_OPEN F_{sph} \KATEX_INLINE_CLOSE.
+                        ```math
+                        \frac{k_{eff}}{k} = 0.74 \left( \frac{Pr}{0.861 + Pr} \right)^{1/4} (F_{sph} Ra_L)^{1/4}
+                        ```
+                        </li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Section 8: Combined Effects -->
+            <section class="roadmap-section" id="sec-combined">
+                <div class="section-header">
+                    <h2>8. Final Analysis: Combined Convection & Radiation</h2>
+                </div>
+                <div class="section-content">
+                    <p>In forced convection, heat transfer coefficients are often so high that radiation can be ignored. However, natural convection is a much gentler process with low coefficients. This means radiation, which is always present, becomes a significant partner in the total heat transfer.</p>
+
+                    <div class="insight">
+                        <i><b>Analogy: Heating a Room</b>
+                        <ul>
+                            <li><b>Natural Convection</b> is like a radiator heating the air, which then slowly circulates to warm you.</li>
+                            <li><b>Radiation</b> is like a fireplace. You feel its heat instantly, even if the air is cold, because the heat travels as electromagnetic waves.</li>
+                        </ul>
+                        In reality, both are happening at the same time. The total heat transfer is the sum of both effects.
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Why it Matters to a Practicing Engineer:</b>
+                        <p>If you calculate heat loss from a hot object (like an uninsulated steam pipe) using only natural convection, <b>your answer could be 50% wrong or more.</b></p>
+                        <ul>
+                            <li><b>Energy Audits:</b> You will dramatically underestimate heat loss without accounting for radiation.</li>
+                            <li><b>Safety:</b> The radiant heat flux can pose a burn hazard even if the air temperature seems safe.</li>
+                            <li><b>Design & Material Selection:</b> A polished surface (low emissivity \KATEX_INLINE_OPEN \varepsilon \KATEX_INLINE_CLOSE) loses far less heat to radiation than a painted black surface (high \KATEX_INLINE_OPEN \varepsilon \KATEX_INLINE_CLOSE), even if convection is identical. This is a deliberate design choice.</li>
+                        </ul>
+                    </div>
+                    
+                    <h3>Governing Principle and Formulas</h3>
+                    <p>The total heat transfer is the linear sum of the two components.</p>
+                    ```math
+                    \dot{Q}_{total} = \dot{Q}_{conv} + \dot{Q}_{rad}
+                    ```
+                    <div class="card">
+                        <h4>Convection Component (\KATEX_INLINE_OPEN \dot{Q}_{conv} \KATEX_INLINE_CLOSE)</h4>
+                        <p>Calculated using the natural convection correlations you've already learned.</p>
+                        ```math
+                        \dot{Q}_{conv} = h A_s (T_s - T_\infty)
+                        ```
+                    </div>
+                    <div class="card">
+                        <h4>Radiation Component (\KATEX_INLINE_OPEN \dot{Q}_{rad} \KATEX_INLINE_CLOSE)</h4>
+                        <p><b>CRITICAL:</b> All temperatures (T) must be in absolute units (Kelvin or Rankine).</p>
+                        <p><b>General Case (Surface to surroundings):</b></p>
+                        ```math
+                        \dot{Q}_{rad} = \varepsilon \sigma A_s (T_s^4 - T_{surr}^4)
+                        ```
+                        <p><b>Specific Case (Between two large parallel plates):</b></p>
+                        ```math
+                        \dot{Q}_{rad} = \varepsilon_{effective} \sigma A_s (T_1^4 - T_2^4)
+                        ```
+                        Where \KATEX_INLINE_OPEN \varepsilon_{effective} = 1 / (1/\varepsilon_1 + 1/\varepsilon_2 - 1) \KATEX_INLINE_CLOSE and the Stefan-Boltzmann constant is \KATEX_INLINE_OPEN \sigma = 5.67 \times 10^{-8} \text{ W/m}^2\cdot\text{K}^4 \KATEX_INLINE_CLOSE.
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const workflowNodes = document.querySelectorAll('.workflow-node');
+            const sections = document.querySelectorAll('.roadmap-section');
+            const sectionHeaders = document.querySelectorAll('.section-header');
+
+            const collapseAllSections = () => {
+                sections.forEach(section => {
+                    section.classList.remove('expanded');
+                });
+            };
+
+            workflowNodes.forEach(node => {
+                node.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+
+                    if (targetSection) {
+                        const isExpanded = targetSection.classList.contains('expanded');
+                        
+                        if (!isExpanded) {
+                            collapseAllSections();
+                        }
+
+                        targetSection.classList.toggle('expanded');
+                        
+                        setTimeout(() => {
+                           targetSection.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }, 100);
+                    }
+                });
+            });
+
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const parentSection = this.parentElement;
+                    parentSection.classList.toggle('expanded');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
