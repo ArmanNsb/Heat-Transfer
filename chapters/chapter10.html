@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Workflow: Boiling and Condensation</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+                displayMath: [['```math', '```']]
+            }
+        };
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+             transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 45%;
+            position: relative;
+        }
+
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .decision::after { 
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector::after {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+
+        .section-header::after {
+            content: '▼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>Boiling & Condensation: An Interactive Workflow</h1>
+
+        <!-- Part A: The Visual Workflow Map -->
+        <div class="workflow-map">
+            <div class="workflow-node" data-target="sec-intro-boiling">
+                1. Boiling Heat Transfer Fundamentals
+            </div>
+            <div class="workflow-node" data-target="sec-pool-boiling-intro">
+                2. Introduction to Pool Boiling
+            </div>
+            <div class="workflow-node decision" data-target="sec-pool-boiling-intro">
+                <span>The Boiling Curve: Regimes Analysis</span>
+            </div>
+
+            <div class="flow-branch">
+                <div class="branch-container">
+                    <h3>Desirable Operating Zone</h3>
+                    <div class="workflow-node no-connector" data-target="sec-pool-boiling-a">
+                        3a. Nucleate Boiling
+                    </div>
+                </div>
+                <div class="branch-container">
+                    <h3>Hazard & Failure Zone</h3>
+                    <div class="workflow-node no-connector" data-target="sec-pool-boiling-b">
+                        3b. Transition & Film Boiling
+                    </div>
+                </div>
+            </div>
+
+            <div class="rejoin-connector"></div>
+
+            <div class="workflow-node" data-target="sec-pool-boiling-c">
+                4. Pool Boiling Correlations (Engineer's Toolkit)
+            </div>
+            <div class="workflow-node" data-target="sec-enhancement">
+                5. Enhancement of Pool Boiling
+            </div>
+            <div class="workflow-node" data-target="sec-flow-boiling">
+                6. Flow Boiling
+            </div>
+            <div class="workflow-node" data-target="sec-intro-condensation">
+                7. Condensation Heat Transfer Fundamentals
+            </div>
+            <div class="workflow-node" data-target="sec-film-condensation-intro">
+                8. Film Condensation Fundamentals
+            </div>
+            <div class="workflow-node" data-target="sec-film-condensation-a">
+                9. Film Condensation on Vertical Plates
+            </div>
+            <div class="workflow-node" data-target="sec-film-condensation-b">
+                10. Real World Extensions & Geometries
+            </div>
+            <div class="workflow-node" data-target="sec-special-cases">
+                11. Special Cases: In-Tube & Dropwise Condensation
+            </div>
+        </div>
+
+        <!-- Part B: The Detailed Accordion Sections -->
+        <div id="accordion-container">
+
+            <section class="roadmap-section" id="sec-intro-boiling">
+                <div class="section-header"><h2>1. Boiling Heat Transfer Fundamentals</h2></div>
+                <div class="section-content">
+                    <p>Boiling and condensation are the heavy lifters of industrial heat transfer. While single-phase convection is essential, phase change is where you move massive amounts of energy efficiently. Mastering this is key to understanding everything from power generation to distillation.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight:</b> Think of single-phase convection (what you've studied so far) as a fleet of small pickup trucks carrying heat. Each molecule can only carry a little bit of energy (its sensible heat). Boiling, on the other hand, is like deploying a fleet of massive cargo planes. Each bubble that forms is packed with a huge amount of energy called the latent heat of vaporization (\KATEX_INLINE_OPEN h_{fg} \KATEX_INLINE_CLOSE). This is why boiling is one of the most effective modes of heat transfer we have.</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication:</b> As engineers, we constantly face the challenge of transferring large amounts of heat quickly and in a compact piece of equipment. Boiling is the solution. ⚙️
+                        <br><br>
+                        <b>Industrial Analogy:</b> Imagine the reboiler at the bottom of a distillation column. Its job is to vaporize a portion of the liquid to drive the separation process. You need to pump a tremendous amount of energy into that liquid to make vapor. You can't do that effectively just by warming it; you need to make it boil. The rapid formation and movement of bubbles create intense mixing at the heat transfer surface, skyrocketing the heat transfer coefficient (h) and allowing a smaller, cheaper reboiler to do the job.
+                    </div>
+
+                    <h3>Boiling vs. Evaporation: What's the Real Difference?</h3>
+                    <p>Your textbook makes a crucial distinction here. Don't gloss over it.</p>
+                    <ul>
+                        <li><b>Evaporation:</b> This is a "surface-level" phenomenon. Think of a puddle drying on a warm day. It's a calm, slow process happening only at the liquid-air interface, driven by a difference in vapor pressure.</li>
+                        <li><b>Boiling:</b> This is a "bulk" phenomenon initiated at a solid surface. It's dynamic and aggressive. Bubbles form on the hot solid surface because that surface is hotter than the liquid's boiling point (\KATEX_INLINE_OPEN T_s > T_{\text{sat}} \KATEX_INLINE_CLOSE). These bubbles are our energy "cargo planes."</li>
+                    </ul>
+
+                    <h3>Key Classifications to Visualize</h3>
+                    <p>Engineers classify boiling to predict its behavior and design equipment accordingly.</p>
+                    <ul>
+                        <li><b>Pool Boiling vs. Flow Boiling:</b>
+                            <ul>
+                                <li><b>Pool Boiling:</b> The fluid is stagnant. Think of a pot of water on your stove. The only fluid motion comes from the bubbles rising and natural convection. This is common in kettle-type reboilers.</li>
+                                <li><b>Flow Boiling:</b> The fluid is being pumped. Think of water being forced through tubes in a power plant boiler 🏭. This is more complex because you have both forced convection and boiling happening at the same time.</li>
+                            </ul>
+                        </li>
+                        <li><b>Subcooled vs. Saturated Boiling:</b>
+                            <ul>
+                                <li><b>Subcooled Boiling:</b> The bulk of the liquid is still below its boiling point, but the surface is hot enough to create bubbles. These bubbles form on the hot surface, travel a short distance into the cooler liquid, and then collapse, releasing their energy. It's like a local sizzle. This is fantastic for high-heat-flux cooling applications where you don't want to produce vapor downstream.</li>
+                                <li><b>Saturated Boiling:</b> The entire body of liquid is at its boiling point. The bubbles form, rise all the way to the surface, and escape. This is what you want when your goal is to generate vapor, like in a steam boiler or a distillation column reboiler.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>The key takeaway is that boiling is a powerful, complex form of convection where the formation and motion of vapor bubbles drastically enhance the rate of heat transfer.</p>
+                    
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h3>1. Fundamental Concepts</h3>
+                    <ul>
+                        <li><b>Boiling:</b> A liquid-to-vapor phase change occurring at a solid-liquid interface when the surface temperature (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE) is higher than the liquid's saturation temperature (\KATEX_INLINE_OPEN T_{\text{sat}} \KATEX_INLINE_CLOSE). Characterized by bubble formation.</li>
+                        <li><b>Evaporation:</b> A liquid-to-vapor phase change occurring at a liquid-vapor interface, driven by vapor pressure differences. No bubbles are formed.</li>
+                        <li><b>Excess Temperature (\KATEX_INLINE_OPEN \Delta T_{\text{excess}} \KATEX_INLINE_CLOSE):</b> The fundamental driving force for boiling heat transfer.</li>
+                    </ul>
+                    ````math
+                    \Delta T_{\text{excess}} = T_s - T_{\text{sat}}
+                    ````
+                    <h3>2. Governing Equation</h3>
+                    <p>Boiling heat flux is described by Newton's Law of Cooling, but the heat transfer coefficient (h) is much larger and more complex than in single-phase convection.</p>
+                    ````math
+                    q'' = h \cdot (T_s - T_{\text{sat}}) = h \cdot \Delta T_{\text{excess}} \quad (\text{W/m}^2)
+                    ````
+                    <h3>3. Critical Physical Properties</h3>
+                    <p>In addition to standard fluid properties (\KATEX_INLINE_OPEN \rho, \mu, k, c_p \KATEX_INLINE_CLOSE), boiling analysis heavily relies on:</p>
+                    <ul>
+                        <li><b>Latent Heat of Vaporization (\KATEX_INLINE_OPEN h_{fg} \KATEX_INLINE_CLOSE):</b> The large amount of energy absorbed to convert a unit mass of liquid to vapor. This is the primary quantity of energy moved during boiling.</li>
+                        <li><b>Surface Tension (\KATEX_INLINE_OPEN \sigma \KATEX_INLINE_CLOSE):</b> The force that holds the liquid-vapor interface of a bubble together. It's what allows bubbles to exist.</li>
+                    </ul>
+                    <h3>4. Boiling Classifications</h3>
+                    <ul>
+                        <li><b>Based on Fluid Motion:</b>
+                            <ul>
+                                <li><b>Pool Boiling:</b> No bulk fluid motion (e.g., kettle reboiler).</li>
+                                <li><b>Flow Boiling:</b> Fluid is actively pumped across the heating surface (e.g., boiler tubes).</li>
+                            </ul>
+                        </li>
+                        <li><b>Based on Bulk Fluid Temperature:</b>
+                            <ul>
+                                <li><b>Subcooled (or Local) Boiling:</b> Bulk liquid temperature is below \KATEX_INLINE_OPEN T_{\text{sat}} \KATEX_INLINE_CLOSE. Bubbles form and collapse in the liquid.</li>
+                                <li><b>Saturated (or Bulk) Boiling:</b> Bulk liquid temperature is at \KATEX_INLINE_OPEN T_{\text{sat}} \KATEX_INLINE_CLOSE. Bubbles form and rise to the free surface.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="roadmap-section" id="sec-pool-boiling-intro">
+                <div class="section-header"><h2>2. Introduction to Pool Boiling & The Boiling Curve</h2></div>
+                <div class="section-content">
+                    <p>This concept is fundamental. Understanding the different boiling regimes is critical for designing and operating equipment safely and efficiently. Missing this can lead to catastrophic failures.</p>
+                    <div class="insight">
+                        <i><b>Physical Insight:</b> Imagine you have a powerful stove burner and you slowly, steadily turn up the heat under a pot of water. The boiling curve is a graph that tells you exactly what happens to the water—and more importantly, the rate of heat transfer—as the pot's surface gets hotter and hotter relative to the water's boiling point. The x-axis is our "burner setting" (\KATEX_INLINE_OPEN \Delta T_{\text{excess}} \KATEX_INLINE_CLOSE), and the y-axis is the "boiling power" (heat flux, \KATEX_INLINE_OPEN q'' \KATEX_INLINE_CLOSE). What Nukiyama discovered is that the relationship isn't a simple straight line. The way the liquid boils changes dramatically, going through distinct phases or "regimes."</i>
+                    </div>
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb:</b> The boiling curve is your roadmap for design and safety. 🏭
+                        <ul>
+                            <li><b>Design Goal:</b> You want to operate your equipment in the most efficient region to get the maximum heat transfer for the minimum cost (i.e., smallest equipment size and lowest surface temperature).</li>
+                            <li><b>Safety Hazard:</b> Some regions of the curve are unstable and dangerous. If your process accidentally enters one of these regimes, you can get a sudden, massive drop in heat transfer, leading to a rapid temperature spike and equipment failure (burnout).</li>
+                        </ul>
+                    </div>
+                    <p>The following sections will walk through the specific regimes of the boiling curve.</p>
+                </div>
+            </section>
+
+            <section class="roadmap-section" id="sec-pool-boiling-a">
+                <div class="section-header"><h2>3a. The Boiling Curve: Nucleate Boiling (The Operating Zone)</h2></div>
+                <div class="section-content">
+                    <h3>1. Natural Convection Boiling (Up to Point A)</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> This is the "calm before the storm." The burner is on low. The pot surface is slightly hotter than 100°C, but not hot enough to form stable vapor bubbles. The water at the bottom gets hot, becomes less dense, and rises, while cooler, denser water from the top sinks to take its place. It's just simple natural convection. Heat transfer is happening, but it's not very effective.</i>
+                    </div>
+
+                    <h3>2. Nucleate Boiling (Points A to C): The Money Zone 📈</h3>
+                    <p>This is the most important regime for industrial applications. It's where the real action is.</p>
+                    <div class="insight">
+                        <i><b>Analogy:</b> You've turned the burner up. The surface is now hot enough to create stable steam bubbles at tiny imperfections on the pot's surface (these are called nucleation sites).</i>
+                    </div>
+                    <ul>
+                        <li><b>Region A-B (Isolated Bubbles):</b> At first, individual bubbles form, detach, and rise. As they move, they act like tiny, powerful agitators, violently stirring the liquid right at the hot surface and pulling in cooler liquid to replace them. This intense mixing is why the heat transfer rate starts to skyrocket. If the bulk liquid is subcooled, you'll see these bubbles form and then collapse as they rise into the colder water.</li>
+                        <li><b>Region B-C (Columns of Bubbles):</b> You crank the heat even higher. Now, bubbles form so rapidly and from so many sites that they merge into columns and jets of vapor. The agitation is extremely intense, leading to a massive heat transfer rate. This is the "roaring boil" you see in a pot.</li>
+                    </ul>
+
+                    <h3>The Peak: Critical Heat Flux (Point C)</h3>
+                    <p>This is the summit of our curve, the maximum possible heat transfer rate in nucleate boiling. It's an incredibly important design limit. Beyond this point, things get dangerous. Why? The surface is generating bubbles so fast that they start to blanket the surface, preventing fresh liquid from getting in.</p>
+                    
+                    <div class="rule-of-thumb">
+                        <b>Design Implication:</b> For an engineer, Nucleate Boiling is the target operating regime. It provides exceptionally high heat transfer coefficients (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) at reasonably low surface temperatures. It's the sweet spot of efficiency.
+                    </div>
+                    
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h3>1. The Boiling Curve</h3>
+                    <ul>
+                        <li>A plot of heat flux (\KATEX_INLINE_OPEN q'' \KATEX_INLINE_CLOSE) vs. excess temperature (\KATEX_INLINE_OPEN \Delta T_{\text{excess}} \KATEX_INLINE_CLOSE).</li>
+                        <li>It describes the different physical mechanisms (regimes) of pool boiling.</li>
+                        <li>The shape is generally consistent for all fluids, but the specific values depend on the fluid, pressure, and surface material.</li>
+                    </ul>
+                    <h3>2. Key Boiling Regimes (Part 1)</h3>
+                    <ul>
+                        <li><b>Natural Convection Boiling (Region before A):</b>
+                            <ul>
+                                <li>\KATEX_INLINE_OPEN \Delta T_{\text{excess}} \KATEX_INLINE_CLOSE is small (~1-5°C for water).</li>
+                                <li>No bubbles are formed. Heat transfer is by natural convection only. \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is low.</li>
+                            </ul>
+                        </li>
+                        <li><b>Nucleate Boiling (Region A-C):</b> The most desirable regime.
+                            <ul>
+                                <li>\KATEX_INLINE_OPEN \Delta T_{\text{excess}} \KATEX_INLINE_CLOSE is moderate (~5-30°C for water).</li>
+                                <li>Characterized by the formation of bubbles at nucleation sites.</li>
+                                <li>Onset of Nucleate Boiling (ONB) occurs at Point A.</li>
+                                <li>The intense mixing from bubble motion causes a very high heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE).</li>
+                                <li>Sub-regions: Isolated Bubbles (A-B) and Jets and Columns (B-C).</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>3. The Critical Limit</h3>
+                    <ul>
+                        <li><b>Critical Heat Flux (CHF) or \KATEX_INLINE_OPEN q''_{\text{max}} \KATEX_INLINE_CLOSE (Point C):</b>
+                            <ul>
+                                <li>The maximum achievable heat flux in the nucleate boiling regime.</li>
+                                <li>Exceeding this point leads to a dramatic change in the boiling mechanism and a drop in heat transfer efficiency.</li>
+                                <li>For engineers, this is a critical safety and design limit. You must design systems to operate well below the CHF to avoid burnout.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="roadmap-section" id="sec-pool-boiling-b">
+                <div class="section-header"><h2>3b. The Boiling Curve: Transition & Film Boiling (The Hazard Zone)</h2></div>
+                <div class="section-content">
+                    <p>We left off at Point C, the Critical Heat Flux (CHF), which was the peak of boiling performance. Now, we're going to explore the "dark side" of the curve.</p>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication:</b> This is about understanding operational limits and failure modes. As a plant engineer, you are the guardian of the equipment. Knowing why a reboiler might suddenly fail or why a cooling system could catastrophically overheat is your direct responsibility. This part of the curve explains one of the most dramatic failure modes in heat transfer: burnout. ⚙️
+                    </div>
+                    <h3>3. Transition Boiling (Points C to D): The Unstable Cliff</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> You've cranked the burner past the roaring boil (Point C). The bottom of the pot is now so hot that the bubbles are forming too fast to escape. They merge into an unstable, patchy blanket of steam that covers parts of the surface.
+                        <br><br><b>The Problem:</b> Steam is a terrible conductor of heat compared to liquid water. It acts like an insulator. So, where this vapor blanket exists, heat transfer is very poor. Where liquid can momentarily touch the surface, you still get some violent nucleate boiling.
+                        <br><br><b>Why it's unstable:</b> This regime is a chaotic mix of good heat transfer (liquid contact) and terrible heat transfer (vapor blanket). As you try to increase the heat (\KATEX_INLINE_OPEN q'' \KATEX_INLINE_CLOSE), the vapor blanket grows, which reduces the overall heat transfer. It's a highly unstable, unpredictable state, which is why we never design equipment to operate here.</i>
+                    </div>
+
+                    <h3>4. Film Boiling (Beyond Point D): The Insulated Glow</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> You've turned the burner to maximum. The pot's surface is now so hot that a complete, stable blanket of steam forms between the metal and the water. The liquid is no longer touching the hot surface at all.
+                        <br><br><b>The Leidenfrost Effect:</b> This is exactly what happens when you sprinkle water droplets on a skillet that is well above boiling temperature. The droplets skitter around on a cushion of their own vapor. The vapor film is insulating them from the hot surface, so they boil away slowly. Point D, the minimum heat flux, is called the Leidenfrost point.
+                        <br><br><b>Heat Transfer Mechanism:</b> How does heat get across this vapor film? Primarily through conduction and radiation. At extremely high temperatures (large \KATEX_INLINE_OPEN \Delta T_{\text{excess}} \KATEX_INLINE_CLOSE), radiation becomes dominant, which is why the curve starts to rise again. The surface is literally glowing red-hot and radiating heat through the vapor to the liquid.</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Safety Hazard: The Burnout Jump (C to E): The Point of No Return</b>
+                        <p>This is the most critical concept here. In most real-world scenarios, you control the heat flux (e.g., by the flow of steam in a reboiler or the current in an electric heater). You don't directly control the surface temperature.</p>
+                        <p>Imagine you are operating at Point C, the peak of performance. You decide you need a little more vaporization, so you increase the heat input (\KATEX_INLINE_OPEN q'' \KATEX_INLINE_CLOSE) just a tiny bit.</p>
+                        <ul>
+                            <li>The system tries to transfer this extra heat, but it can't. The boiling mechanism is already maxed out.</li>
+                            <li>The result? The extra energy has nowhere to go but into the heating surface itself. The surface temperature (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE) begins to rise uncontrollably.</li>
+                            <li>As \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE rises, the boiling regime enters the transition phase, where the heat transfer gets worse, not better. This causes \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE to rise even faster.</li>
+                            <li>This runaway effect continues until the surface temperature is so high that film boiling can take over and steadily transfer the heat again. This new stable operating point is Point E.</li>
+                        </ul>
+                        <p><b>The problem is that the temperature at Point E is often thousands of degrees higher than at Point C.</b> For most materials like steel, this temperature is far above their melting point. The equipment fails catastrophically. This is <b>burnout</b>.</p>
+                    </div>
+
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h3>1. Boiling Regimes (Part 2)</h3>
+                    <ul>
+                        <li><b>Transition Boiling (Region C-D):</b>
+                            <ul>
+                                <li>An unstable mixture of nucleate and film boiling.</li>
+                                <li>Characterized by a growing vapor film that insulates the surface.</li>
+                                <li>Heat flux decreases as \KATEX_INLINE_OPEN \Delta T_{\text{excess}} \KATEX_INLINE_CLOSE increases.</li>
+                                <li>This regime is always avoided in practical applications.</li>
+                            </ul>
+                        </li>
+                        <li><b>Film Boiling (Region D onwards):</b>
+                            <ul>
+                                <li>The heating surface is completely covered by a stable vapor film.</li>
+                                <li>Heat transfer is low due to the insulating vapor layer.</li>
+                                <li><b>Leidenfrost Point (Point D):</b> The point of minimum heat flux (\KATEX_INLINE_OPEN q''_{\text{min}} \KATEX_INLINE_CLOSE).</li>
+                                <li>Heat transfer occurs via conduction and radiation across the vapor film.</li>
+                                <li>The heat flux slowly increases again with \KATEX_INLINE_OPEN \Delta T_{\text{excess}} \KATEX_INLINE_CLOSE primarily due to radiation.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>2. The Burnout Phenomenon</h3>
+                    <ul>
+                        <li><b>Cause:</b> Occurs in heat-flux-controlled systems when the heat input exceeds the Critical Heat Flux (\KATEX_INLINE_OPEN q''_{\text{max}} \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Mechanism:</b>
+                            <ol>
+                                <li>\KATEX_INLINE_OPEN q''_{\text{input}} > q''_{\text{max}} \KATEX_INLINE_CLOSE.</li>
+                                <li>The fluid cannot remove the heat fast enough.</li>
+                                <li>The excess energy is absorbed by the heater material, causing its temperature (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE) to rise rapidly.</li>
+                                <li>The operating point jumps from Point C directly to Point E on the boiling curve, bypassing the transition regime.</li>
+                            </ol>
+                        </li>
+                        <li><b>Result:</b> The temperature at Point E is often above the melting point of the material, leading to burnout (catastrophic failure).</li>
+                        <li><b>Conclusion:</b> \KATEX_INLINE_OPEN q''_{\text{max}} \KATEX_INLINE_CLOSE is a critical design limit. Systems are designed with a safety factor to operate well below this point.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section class="roadmap-section" id="sec-pool-boiling-c">
+                <div class="section-header"><h2>4. Pool Boiling Correlations (The Engineer's Toolkit)</h2></div>
+                <div class="section-content">
+                    <p>This section moves from the what and why of the boiling curve to the how much. These correlations are the tools engineers use to actually size and design equipment like reboilers, vaporizers, and boilers. It's time to bridge the theory with the math.</p>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication:</b> As a design or process engineer, your job is to answer questions like: "To boil 100 kg/min of this solvent, how big does my reboiler need to be?" or "If I use 150 psig steam for heating, what will the heat flux be, and is it safely below the CHF?" These formulas are your toolkit for providing those answers. ⚙️
+                    </div>
+                    
+                    <h3>Nucleate Boiling (Rohsenow Equation)</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> Think of this as the master recipe for the "money zone" (nucleate boiling). It's complex and has a lot of ingredients (fluid properties like viscosity, density, latent heat, etc.). Crucially, it also includes "secret ingredients" (\KATEX_INLINE_OPEN C_{sf} \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN n \KATEX_INLINE_CLOSE) that depend on the specific pot and stove combination (the fluid-surface pairing).
+                        <br><br><b>Practical Insight:</b> The textbook mentions a potential error of ±100%. This sounds terrible, but it highlights a critical real-world lesson: boiling is sensitive! Surface roughness, cleanliness, and impurities can drastically change the outcome. In practice, engineers rely on these correlations for initial design but often use large safety factors or proprietary data from equipment vendors.</i>
+                    </div>
+
+                    <h3>Peak Heat Flux (CHF) (Zuber/Kutateladze Equation)</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> This isn't a recipe; it's the fire alarm limit. This equation calculates the absolute maximum heat flux your system can handle before burnout becomes an imminent threat.
+                        <br><br><b>Practical Insight:</b> Notice what's not in this equation: surface properties (\KATEX_INLINE_OPEN C_{sf} \KATEX_INLINE_CLOSE) or liquid viscosity. The CHF is more of a hydrodynamic stability limit—it's about the physics of bubbles getting in each other's way, not the specifics of the surface. As an engineer, you calculate \KATEX_INLINE_OPEN q''_{\text{max}} \KATEX_INLINE_CLOSE and then design your system to operate at a fraction of that value (e.g., 50-70%) to ensure a robust safety margin.</i>
+                    </div>
+                    
+                    <h3>Minimum Heat Flux (Leidenfrost Point)</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> This is the "reset button" point. It tells you the lowest heat flux possible during film boiling. If you are stuck in film boiling and want to get back to the efficient nucleate boiling regime, you must reduce your heat flux below this value.</i>
+                    </div>
+                    
+                    <h3>Film Boiling (Bromley Equation)</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> This is the recipe for the "inefficient but stable" high-temp zone. It calculates heat transfer across the insulating vapor film. It includes a term for heat transfer through the superheated vapor. At very high temperatures, you also have to add in the effect of radiation, because the surface is literally glowing hot.</i>
+                    </div>
+                    
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h3>1. Nucleate Boiling Correlation (Rohsenow)</h3>
+                    <ul>
+                        <li><b>When to Use:</b> To calculate heat flux in the nucleate boiling regime (Region A-C).</li>
+                        <li><b>Formula (Eq. 10-2):</b>
+                            ````math
+                            q''_{\text{nucleate}} = \mu_l h_{fg} \left[ \frac{g(\rho_l - \rho_v)}{\sigma} \right]^{1/2} \left[ \frac{c_{pl}(T_s - T_{\text{sat}})}{C_{sf} h_{fg} Pr_l^n} \right]^3
+                            ````
+                        </li>
+                        <li><b>Key Points:</b> Heavily dependent on fluid properties. Requires empirical constants \KATEX_INLINE_OPEN C_{sf} \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN n \KATEX_INLINE_CLOSE for the specific fluid-surface combination (Table 10-3). High potential for error; used for estimation and design with safety factors.</li>
+                    </ul>
+                    
+                    <h3>2. Critical Heat Flux (CHF) Correlation (Zuber)</h3>
+                    <ul>
+                        <li><b>When to Use:</b> To calculate the maximum possible heat flux before burnout (Point C). This is a critical safety calculation. 📈</li>
+                        <li><b>Formula (Eq. 10-3):</b>
+                            ````math
+                            q''_{\text{max}} = C_{cr} h_{fg} \left[ \sigma g \rho_v^2 (\rho_l - \rho_v) \right]^{1/4}
+                            ````
+                        </li>
+                        <li><b>Key Points:</b> \KATEX_INLINE_OPEN C_{cr} \KATEX_INLINE_CLOSE is a constant that depends on heater geometry (Table 10-4). Independent of surface condition. It's a hydrodynamic limit. Your design operating flux must be significantly lower than this value.</li>
+                    </ul>
+
+                    <h3>3. Minimum Heat Flux Correlation (Zuber/Berensen)</h3>
+                    <ul>
+                        <li><b>When to Use:</b> To find the Leidenfrost point (Point D), the lowest heat flux in film boiling.</li>
+                        <li><b>Formula (Eq. 10-4):</b>
+                            ````math
+                            q''_{\text{min}} = 0.09 \rho_v h_{fg} \left[ \frac{\sigma g (\rho_l - \rho_v)}{(\rho_l + \rho_v)^2} \right]^{1/4}
+                            ````
+                        </li>
+                    </ul>
+
+                    <h3>4. Film Boiling Correlation (Bromley)</h3>
+                    <ul>
+                        <li><b>When to Use:</b> To calculate heat flux when the surface is fully insulated by a vapor film (Region D-E).</li>
+                        <li><b>Formula (convection part, Eq. 10-5):</b>
+                            ````math
+                            q''_{\text{film}} = C_{\text{film}} \left[ \frac{g k_v^3 \rho_v (\rho_l - \rho_v)(h_{fg} + 0.4c_{pv}(T_s - T_{\text{sat}}))}{\mu_v D (T_s - T_{\text{sat}})} \right]^{1/4} (T_s - T_{\text{sat}})
+                            ````
+                        </li>
+                        <li><b>Key Points:</b> Vapor properties (\KATEX_INLINE_OPEN k_v, \rho_v, \mu_v \KATEX_INLINE_CLOSE) are evaluated at the film temperature, \KATEX_INLINE_OPEN T_f = (T_s + T_{\text{sat}})/2 \KATEX_INLINE_CLOSE. At high \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE, radiation must be added. Total heat flux is a combination of film boiling and radiation.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section class="roadmap-section" id="sec-enhancement">
+                <div class="section-header"><h2>5. Enhancement of Pool Boiling</h2></div>
+                <div class="section-content">
+                    <p>So far, we've treated the heating surface as a simple, smooth plane. But what if we could redesign the surface to be a perfect "bubble-making machine"? That's the entire goal of boiling enhancement.</p>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The "Why" Behind Enhancement</b>
+                        <p>In industry, efficiency is king. Better heat transfer means you can either:</p>
+                        <ul>
+                            <li>Get the same job done with a smaller, cheaper piece of equipment.</li>
+                            <li>Push more product through your existing equipment.</li>
+                            <li>Use lower-grade (i.e., cheaper) energy sources, like low-pressure steam, because you don't need a high surface temperature to get the job done.</li>
+                        </ul>
+                        <p>All of these save money and improve the process. 📈</p>
+                    </div>
+
+                    <h3>The Core Mechanism: More Bubble Factories</h3>
+                    <p>The secret to nucleate boiling is the nucleation sites—the microscopic pits and scratches where bubbles are born.</p>
+                    <div class="insight">
+                        <i><b>Analogy:</b> Imagine a standard smooth tube is a field with a few holes where you can plant seeds (form bubbles). An enhanced surface is like a perfectly plowed and prepared farm field with thousands of ideal spots, ready for planting. The more spots you have, the more seeds you can grow (bubbles you can create) at the same time, leading to a much larger harvest (heat flux).</i>
+                    </div>
+
+                    <h3>Two Levels of Enhancement:</h3>
+                    <ul>
+                        <li><b>Simple Roughening (The Basic Upgrade):</b> This is like taking a sandblaster to our field. You create more random pits and scratches. It works well initially, increasing the number of nucleation sites and boosting the heat transfer rate. However, over time, fouling or smoothing can fill in these scratches, and the benefit fades. Importantly, this random roughness doesn't do much to increase the ultimate speed limit—the CHF. The "burnout" point remains roughly the same.</li>
+                        <li><b>Engineered Surfaces (The High-Performance Engine):</b> These are surfaces with specially designed, microscopic structures. Think of them not just as holes, but as tiny, optimized "bubble factories."
+                            <ul>
+                                <li>Porous coatings act like a metallic sponge bonded to the surface, creating a vast network of stable vapor-trapping cavities.</li>
+                                <li>Machined cavities (like Thermoexcel-E) are precision-engineered tunnels and pores that manage the flow of liquid in and vapor out.</li>
+                            </ul>
+                            Because these surfaces don't just create bubbles but also help manage the vapor removal, they can achieve a much higher boiling intensity before the vapor starts to blanket the surface. This is why engineered surfaces not only dramatically improve nucleate boiling heat transfer (by up to 10x) but can also increase the CHF (by up to 3x), giving you a much higher and safer operating limit. 🏭
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="roadmap-section" id="sec-flow-boiling">
+                <div class="section-header"><h2>6. Flow Boiling</h2></div>
+                <div class="section-content">
+                    <p>While pool boiling is great for understanding the fundamentals, most industrial-scale vaporization happens in tubes with fluid being pumped through them. This is flow boiling.</p>
+                    <div class="insight">
+                        <i><b>Analogy:</b> Think of the difference between pool boiling and flow boiling like this: Pool boiling is like cooking pasta in a pot on your stove. Flow boiling is like a continuous food processing plant where you pump a liquid ingredient into a long heated pipe and it comes out as a vapor at the other end. The process isn't static; it evolves as the fluid travels.</i>
+                    </div>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The "Why" Behind Flow Boiling</b>
+                        <p>This is the workhorse of industrial heat transfer. 🏭 Power plant boilers, the reboilers that drive distillation columns, and the evaporator coils in your refrigerator all rely on flow boiling. Understanding the journey of the fluid through a heated pipe is essential for designing efficient and, most importantly, safe equipment. The key is to know where you get the best performance and where you risk catastrophic failure.</p>
+                    </div>
+
+                    <h3>The Journey Through a Heated Pipe (Following Figure 10-19)</h3>
+                    <p>Let's follow a drop of liquid as it gets pumped into a hot pipe. Its form will change dramatically, and with it, the effectiveness of the heat transfer.</p>
+                    <ol>
+                        <li><b>Forced Convection (Liquid Only):</b> At the entrance (\KATEX_INLINE_OPEN x=0 \KATEX_INLINE_CLOSE), the liquid is just being heated. This is simple, single-phase forced convection, just as you studied in Chapter 8. Heat transfer is okay, but nothing special.</li>
+                        <li><b>Bubbly Flow:</b> As the wall gets hot enough, the first bubbles appear. They detach and are swept along by the flowing liquid. These bubbles act like tiny agitators, increasing turbulence and improving heat transfer. The heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) starts to rise.</li>
+                        <li><b>Slug Flow:</b> The bubbles grow and merge into larger, bullet-shaped vapor pockets called "slugs." The flow is now a chaotic, churning mixture. This intense agitation further increases the heat transfer coefficient.</li>
+                        <li><b>Annular Flow (The Peak Performance Zone 📈):</b> This is the most efficient regime. The vapor slugs all combine to form a continuous, fast-moving core in the center of the pipe. The remaining liquid is smeared against the wall in a thin, highly turbulent film.
+                            <div class="insight">
+                                <i><b>Analogy:</b> Imagine heat trying to get from the pipe wall into the fluid. In annular flow, the heat only has to cross a very thin, churning layer of liquid. It's like trying to cook a pancake that's paper-thin—the heat gets through almost instantly. This is why the heat transfer coefficient reaches its maximum in this regime.</i>
+                            </div>
+                        </li>
+                        <li><b>Mist Flow (The Danger Zone):</b> As heating continues, that thin liquid film on the wall starts to evaporate and break apart. This critical point is called "dryout." Once the wall is dry, the remaining liquid is just a mist of droplets carried in the fast-moving vapor core.
+                            <div class="rule-of-thumb">
+                                <b>Safety Hazard:</b> Vapor is a terrible coolant (a good insulator). Once the liquid film is gone, the pipe wall is no longer being cooled effectively. The heat transfer coefficient plummets dramatically. If you continue to supply the same amount of heat, the pipe wall temperature will spike, which can lead to overheating and burnout.
+                            </div>
+                        </li>
+                    </ol>
+
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h3>1. Fundamental Concepts</h3>
+                    <ul>
+                        <li><b>Flow Boiling:</b> Boiling that occurs when fluid is forced to move over a surface or through a tube by external means (like a pump).</li>
+                        <li><b>External vs. Internal Flow:</b>
+                            <ul>
+                                <li><b>External:</b> Flow over a heated object. Higher velocity increases \KATEX_INLINE_OPEN q'' \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN q''_{\text{max}} \KATEX_INLINE_CLOSE.</li>
+                                <li><b>Internal:</b> Flow inside a heated tube (two-phase flow). This is more complex and involves a sequence of regimes.</li>
+                            </ul>
+                        </li>
+                        <li><b>Vapor Quality (\KATEX_INLINE_OPEN x \KATEX_INLINE_CLOSE):</b> The mass fraction of vapor in the mixture. It's the primary indicator of how far along the boiling process is. \KATEX_INLINE_OPEN x=0 \KATEX_INLINE_CLOSE is all liquid; \KATEX_INLINE_OPEN x=1 \KATEX_INLINE_CLOSE is all vapor.</li>
+                    </ul>
+
+                    <h3>2. The Flow Regimes in a Heated Tube</h3>
+                    <p>The sequence describes the fluid's evolution from liquid to vapor:</p>
+                    <ol>
+                        <li>Forced Convection (Liquid)</li>
+                        <li>Bubbly Flow</li>
+                        <li>Slug Flow</li>
+                        <li><b>Annular Flow</b> → Highest Heat Transfer Coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE)</li>
+                        <li><b>Mist Flow</b> → Sharp drop in \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE after "Dryout"</li>
+                        <li>Forced Convection (Vapor)</li>
+                    </ol>
+
+                    <h3>3. Critical Heat Flux (CHF) in Flow Boiling</h3>
+                    <ul>
+                        <li>The practical limit for heat transfer is often caused by Dryout.</li>
+                        <li><b>Dryout:</b> The point where the liquid film in annular flow breaks down, leaving a dry spot on the wall.</li>
+                        <li><b>Consequence:</b> A drastic reduction in the heat transfer coefficient, leading to a rapid temperature rise of the tube wall and potential for burnout.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section class="roadmap-section" id="sec-intro-condensation">
+                <div class="section-header"><h2>7. Condensation Heat Transfer Fundamentals</h2></div>
+                <div class="section-content">
+                    <p>Condensation is the process of turning a vapor back into a liquid by bringing it into contact with a surface that is colder than its saturation temperature (\KATEX_INLINE_OPEN T_s < T_{\text{sat}} \KATEX_INLINE_CLOSE). This process releases the massive amount of energy that was stored in the vapor as latent heat (\KATEX_INLINE_OPEN h_{fg} \KATEX_INLINE_CLOSE).</p>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The "Why" Behind Condensation</b>
+                        <p>This is how we complete the cycle in many processes. 🏭 In a power plant, you must condense the steam exiting the turbine back into water to pump it back to the boiler. In a refrigerator, you must condense the hot refrigerant gas to a liquid to send it back to the evaporator. Condensers are essential for closing these energy loops.</p>
+                    </div>
+
+                    <h3>The Main Hurdle: The Condensate Film</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> Imagine trying to cool a hot object by spraying it with cold water. The layer of water covering the object acts as a barrier to further cooling. In condensation, the liquid film that forms on the cold surface acts as an insulating blanket. Heat released from the condensing vapor must travel through this liquid film to reach the cold wall. The thicker this film gets, the worse the heat transfer becomes. This is <b>film condensation</b>, and it's the most common type we encounter.</i>
+                    </div>
+
+                    <h3>The "Holy Grail": Dropwise Condensation</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> Think of a freshly waxed car in the rain. Water beads up into droplets and rolls right off, leaving the surface exposed. <b>Dropwise condensation</b> is the same idea. The condensate forms droplets that quickly roll off the surface, exposing fresh, cold metal for more vapor to condense on directly. This is far more efficient (up to 10x better!) because there's no insulating liquid film. However, it's very difficult to maintain in industrial settings, so as conservative engineers, we almost always design for the less efficient but more reliable film condensation.</i>
+                    </div>
+
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h3>1. Driving Force</h3>
+                    <p>Condensation occurs when a vapor contacts a surface with a temperature \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE that is below the vapor's saturation temperature, \KATEX_INLINE_OPEN T_{\text{sat}} \KATEX_INLINE_CLOSE.</p>
+                    <h3>2. Two Modes of Condensation</h3>
+                    <ul>
+                        <li><b>Film Condensation:</b>
+                            <ul>
+                                <li>The condensate wets the surface and forms a continuous liquid film.</li>
+                                <li>This film acts as a thermal resistance, impeding heat transfer.</li>
+                                <li>The film gets thicker as it flows down the surface, making heat transfer worse at the bottom than at the top.</li>
+                                <li>This is the default, conservative assumption for equipment design.</li>
+                            </ul>
+                        </li>
+                        <li><b>Dropwise Condensation:</b>
+                            <ul>
+                                <li>The condensate forms discrete droplets that do not wet the surface.</li>
+                                <li>Droplets grow, merge, and roll off, exposing fresh surface area.</li>
+                                <li>Heat transfer rates can be >10 times higher than film condensation.</li>
+                                <li>Highly desirable but difficult to sustain in practice.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section class="roadmap-section" id="sec-film-condensation-intro">
+                <div class="section-header"><h2>8. Film Condensation Fundamentals</h2></div>
+                <div class="section-content">
+                    <p>We've established that in the real world, we design for film condensation. Now, we need to understand the physics of that liquid film. Imagine a cold vertical wall in a steam-filled room. Steam molecules hit the wall, cool down, and turn into liquid water. This liquid sticks to the wall (due to the no-slip condition) and starts to flow downwards because of gravity. As it flows, more steam condenses on top of it, so the film gets progressively thicker from top to bottom.</p>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The "Why" Behind This Analysis</b>
+                        <p>Everything that follows—all the complex heat transfer equations—is based on understanding this simple film. The entire resistance to heat transfer is contained within this layer of liquid. To an engineer, the problem of condensation heat transfer boils down to one question: <b>How thick is that film?</b> ⚙️</p>
+                        <p>A thin film means low resistance and great heat transfer. A thick film means high resistance and poor heat transfer.</p>
+                    </div>
+
+                    <h3>Key Concepts Introduced:</h3>
+                    <ul>
+                        <li><b>Flow Regimes (Laminar vs. Turbulent):</b> Just like fluid flow in a pipe, this falling liquid film can be either smooth (laminar) or chaotic (turbulent). A turbulent film will be better at transferring heat. We need a way to predict which regime we're in, and for that, we use the Reynolds Number.</li>
+                        <li><b>Reynolds Number for a Film:</b> The standard Reynolds number is \KATEX_INLINE_OPEN Re = \rho VD/\mu \KATEX_INLINE_CLOSE. For a thin film, the "diameter" isn't obvious. So, we use the hydraulic diameter (\KATEX_INLINE_OPEN D_h \KATEX_INLINE_CLOSE), which is a clever way to define a characteristic length for non-circular flows. For a film, it simplifies to four times the film thickness (\KATEX_INLINE_OPEN D_h = 4\delta \KATEX_INLINE_CLOSE). This gives us a tool to check if our film flow is laminar or turbulent.</li>
+                        <li><b>Correcting the Energy Term (\KATEX_INLINE_OPEN h_{fg}^* \KATEX_INLINE_CLOSE):</b> The primary energy released is the latent heat (\KATEX_INLINE_OPEN h_{fg} \KATEX_INLINE_CLOSE). However, the liquid doesn't stay at the saturation temperature. It gets cooled down further as it travels along the cold wall. This "sensible heat" is an extra bit of energy we get out of the process. The modified latent heat (\KATEX_INLINE_OPEN h_{fg}^* \KATEX_INLINE_CLOSE) is a simple correction factor that lumps this extra bit of cooling energy in with the main latent heat, making our calculations simpler and more accurate.</li>
+                    </ul>
+
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h3>1. The Liquid Film</h3>
+                    <ul>
+                        <li><b>Formation:</b> Vapor condenses on a subcooled surface (\KATEX_INLINE_OPEN T_s < T_{\text{sat}} \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Motion:</b> Condensate flows due to gravity.</li>
+                        <li><b>Key Feature:</b> The film thickness (\KATEX_INLINE_OPEN \delta \KATEX_INLINE_CLOSE) increases in the direction of flow. This film creates the primary resistance to heat transfer.</li>
+                    </ul>
+
+                    <h3>2. The Reynolds Number (Re) for Film Condensation</h3>
+                    <ul>
+                        <li><b>Purpose:</b> To determine if the condensate film flow is laminar or turbulent.</li>
+                        <li><b>Definition:</b> Based on the hydraulic diameter, \KATEX_INLINE_OPEN D_h = 4\delta \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+                    ````math
+                    Re = \frac{4 \dot{m}}{p \mu_l}
+                    ````
+                    <p>where \KATEX_INLINE_OPEN \dot{m} \KATEX_INLINE_CLOSE is the mass flow rate of condensate at the bottom (kg/s), \KATEX_INLINE_OPEN p \KATEX_INLINE_CLOSE is the wetted perimeter (m), and \KATEX_INLINE_OPEN \mu_l \KATEX_INLINE_CLOSE is the liquid viscosity (kg/m·s). This form is useful because \KATEX_INLINE_OPEN \dot{m} \KATEX_INLINE_CLOSE is directly related to the total heat transfer, Q.</p>
+
+                    <h3>3. Modified Latent Heat of Vaporization (\KATEX_INLINE_OPEN h_{fg}^* \KATEX_INLINE_CLOSE)</h3>
+                    <ul>
+                        <li><b>Purpose:</b> To account for the additional energy released when the condensed liquid is subcooled below \KATEX_INLINE_OPEN T_{\text{sat}} \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Formula (Saturated Vapor):</b>
+                            ````math
+                            h_{fg}^* = h_{fg} + 0.68 c_{pl} (T_{\text{sat}} - T_s)
+                            ````
+                        </li>
+                        <li><b>Formula (Superheated Vapor):</b> Add another term to account for cooling the vapor down to saturation first.
+                            ````math
+                            h_{fg}^* = h_{fg} + 0.68 c_{pl} (T_{\text{sat}} - T_s) + c_{pv} (T_v - T_{\text{sat}})
+                            ````
+                        </li>
+                    </ul>
+                    
+                    <h3>4. Fundamental Heat Transfer Relation</h3>
+                    <p>The total rate of condensation heat transfer is linked directly to the mass of condensate formed.</p>
+                    ````math
+                    Q_{\text{conden}} = \dot{m} h_{fg}^*
+                    ````
+                    <p>It's also defined by Newton's law of cooling: \KATEX_INLINE_OPEN Q_{\text{conden}} = h \cdot A_s \cdot (T_{\text{sat}} - T_s) \KATEX_INLINE_CLOSE</p>
+                    
+                    <h3>5. Property Evaluation</h3>
+                    <p>Liquid properties (\KATEX_INLINE_OPEN \rho_l, \mu_l, c_{pl}, k_l \KATEX_INLINE_CLOSE) should be evaluated at the average film temperature, \KATEX_INLINE_OPEN T_f = (T_{\text{sat}} + T_s) / 2 \KATEX_INLINE_CLOSE. Latent heat (\KATEX_INLINE_OPEN h_{fg} \KATEX_INLINE_CLOSE) is always evaluated at the saturation temperature, \KATEX_INLINE_OPEN T_{\text{sat}} \KATEX_INLINE_CLOSE.</p>
+                </div>
+            </section>
+            
+            <section class="roadmap-section" id="sec-film-condensation-a">
+                <div class="section-header"><h2>9. Film Condensation on Vertical Plates (Nusselt Analysis)</h2></div>
+                <div class="section-content">
+                    <p>Nusselt's classic analysis of film condensation gives us our first real tool to predict heat transfer rates.</p>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The "Why" Behind Nusselt's Analysis</b>
+                        <p>This analysis gives us our first predictive equation for the heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE). It moves us from a qualitative understanding ("thicker film is bad") to a quantitative one ("if the plate is L meters tall, the average \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE will be X W/m²·K"). This is the foundation of condenser design. ⚙️</p>
+                    </div>
+
+                    <h3>Nusselt's Simple Idea (The Force Balance)</h3>
+                    <div class="insight">
+                        <i><b>Physical Insight:</b> The brilliant insight from Nusselt was to say, "Let's treat this falling film like a very slow, simple fluid mechanics problem and use that to figure out its thickness." Imagine a tiny piece of the liquid film. Gravity pulls it down, viscous drag from the wall pulls back, and buoyancy from the vapor pushes up. Nusselt assumed the film was flowing slowly (laminar flow) and set Force_down = Force_up. By solving this simple force balance, he could figure out the velocity profile, and from there, the total mass flow rate.
+                        <br><br><b>Connecting Flow to Heat Transfer:</b> Here's the key link: the total amount of liquid flowing at any point (\KATEX_INLINE_OPEN \dot{m} \KATEX_INLINE_CLOSE) is a direct result of all the vapor that has condensed above it. And the amount of vapor that condenses depends on the rate of heat transfer (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE). By setting the mass from the flow calculation equal to the mass from the heat transfer calculation, Nusselt derived an equation for the film thickness (\KATEX_INLINE_OPEN \delta \KATEX_INLINE_CLOSE) at any point x down the plate. Since heat transfer through the film is by conduction (\KATEX_INLINE_OPEN h = k/\delta \KATEX_INLINE_CLOSE), this immediately gave him an equation for the heat transfer coefficient, \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE.</i>
+                    </div>
+
+                    <h3>From Laminar to Wavy Flow</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> Nusselt's theory is perfect for a perfectly smooth, slow-moving film. But in reality, as the film gets faster and thicker, its surface develops ripples, like waves on a pond. Think of the ripples on the film as tiny mixers. They agitate the liquid, helping to transport heat across the film more effectively than pure conduction alone. The result is that the wavy-laminar regime (\KATEX_INLINE_OPEN 30 < Re < 1800 \KATEX_INLINE_CLOSE) has a better heat transfer coefficient than Nusselt's pure laminar theory predicts. The correlations for this regime are simply experimental "correction factors" applied to the laminar theory.</i>
+                    </div>
+                    
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h3>1. Flow Regimes for a Vertical Plate</h3>
+                    <ul>
+                        <li><b>Laminar:</b> \KATEX_INLINE_OPEN Re \le 30 \KATEX_INLINE_CLOSE (Smooth, wave-free film)</li>
+                        <li><b>Wavy-Laminar:</b> \KATEX_INLINE_OPEN 30 < Re < 1800 \KATEX_INLINE_CLOSE (Ripples on the film surface enhance heat transfer)</li>
+                        <li><b>Turbulent:</b> \KATEX_INLINE_OPEN Re > 1800 \KATEX_INLINE_CLOSE (Chaotic flow)</li>
+                    </ul>
+
+                    <h3>2. Key Formulas for Vertical Plates</h3>
+                    <p><b>Laminar Flow Heat Transfer (\KATEX_INLINE_OPEN h_{\text{vert, laminar}} \KATEX_INLINE_CLOSE):</b> Use when \KATEX_INLINE_OPEN Re \le 30 \KATEX_INLINE_CLOSE. This is the direct result of Nusselt's theory, corrected with \KATEX_INLINE_OPEN h_{fg}^* \KATEX_INLINE_CLOSE.</p>
+                    ````math
+                    h_{\text{vert, laminar}} = 0.943 \left[ \frac{g \rho_l (\rho_l - \rho_v) h_{fg}^* k_l^3}{\mu_l (T_{\text{sat}} - T_s) L} \right]^{1/4} \quad (\text{Eq. 10-22})
+                    ````
+                    <div class="insight">
+                        <i><b>Physical Insight:</b> Notice that \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is proportional to \KATEX_INLINE_OPEN L^{-1/4} \KATEX_INLINE_CLOSE. This means longer plates have a lower average heat transfer coefficient because the film gets thicker.</i>
+                    </div>
+
+                    <p><b>Wavy-Laminar Flow Heat Transfer (\KATEX_INLINE_OPEN h_{\text{vert, wavy}} \KATEX_INLINE_CLOSE):</b> Use when \KATEX_INLINE_OPEN 30 < Re < 1800 \KATEX_INLINE_CLOSE. It's a more complex, empirical formula that accounts for the mixing effect of the waves.</p>
+                    ````math
+                    h_{\text{vert, wavy}} = \frac{Re \cdot k_l}{1.08 Re^{1.22} - 5.2} \left( \frac{g}{\nu_l^2} \right)^{1/3} \quad (\text{Eq. 10-25})
+                    ````
+                    <p>Note: This formula requires you to know the Reynolds number first.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>The Design Process (How to Solve Problems)</b>
+                        <p>You usually don't know the Reynolds number beforehand. The process is typically:</p>
+                        <ol>
+                            <li>Assume a flow regime (start with laminar or wavy-laminar).</li>
+                            <li>Use the corresponding equation (e.g., Eq. 10-22 for laminar) to calculate the average heat transfer coefficient, \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE.</li>
+                            <li>Use your calculated \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE to find the total heat transfer, \KATEX_INLINE_OPEN Q = h \cdot A \cdot (T_{\text{sat}} - T_s) \KATEX_INLINE_CLOSE.</li>
+                            <li>Use \KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE to find the total mass flow rate, \KATEX_INLINE_OPEN \dot{m} = Q / h_{fg}^* \KATEX_INLINE_CLOSE.</li>
+                            <li>Use \KATEX_INLINE_OPEN \dot{m} \KATEX_INLINE_CLOSE to calculate the Reynolds number, \KATEX_INLINE_OPEN Re = 4\dot{m} / (p\mu_l) \KATEX_INLINE_CLOSE.</li>
+                            <li><b>Check your assumption:</b> Is the calculated Re in the range you assumed? If yes, you're done. If no, go back to step 1 and use the correlation for the correct regime.</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="roadmap-section" id="sec-film-condensation-b">
+                <div class="section-header"><h2>10. Film Condensation: Real World Extensions & Geometries</h2></div>
+                <div class="section-content">
+                    <p>We've mastered the theory for a smooth, laminar film on a vertical plate. Now we're upgrading our toolkit to handle the real world. Condensers aren't just single vertical plates. They are complex bundles of tubes, often horizontal, and they can experience a wide range of flow conditions.</p>
+                    <h3>1. Turbulent Flow (Re > 1800)</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> The gentle, flowing stream of the laminar film has become a raging waterfall. The intense mixing and eddies within this turbulent film are far more effective at transferring heat than simple conduction. The impact is that the heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) in the turbulent regime is significantly higher.</i>
+                    </div>
+
+                    <h3>2. Different Geometries (Horizontal vs. Vertical)</h3>
+                    <p><b>The Big Question:</b> Is it better to orient a condenser tube vertically or horizontally?</p>
+                    <p><b>The Answer:</b> Almost always horizontally.</p>
+                    <div class="insight">
+                        <i><b>Physical Insight:</b> The thickness of the condensate film is our enemy. On a long vertical tube, the film has a long way to travel, growing thicker and thicker. On a horizontal tube, the liquid only has to travel around the circumference (a very short distance) before dripping off. This results in a much thinner average film and therefore a higher average \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE. As the text shows, a tube only needs to be about 3 times longer than its diameter for the horizontal orientation to win.</i>
+                    </div>
+
+                    <h3>3. Tube Banks (The Inundation Effect)</h3>
+                    <div class="insight">
+                        <i><b>Analogy:</b> Imagine trying to shelter under a small umbrella in the rain. Now, imagine you're standing under a drainpipe that's collecting rain from the entire roof. You're going to get soaked.
+                        <br><br><b>The Effect:</b> In a stack of horizontal tubes, the condensate from the top tube drips onto the tube below it. This is called <b>inundation</b>. The second tube now has to deal with its own condensate plus all the liquid from the first tube. The film on the lower tubes is much thicker, and their individual performance is much worse. The equation provided gives you the average \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE for the entire stack, which gets progressively lower as you add more tubes (\KATEX_INLINE_OPEN N \KATEX_INLINE_CLOSE) to the stack.</i>
+                    </div>
+
+                    <h3>4. Two Critical "Real-World" Problems</h3>
+                    <p><b>Vapor Velocity:</b> Nusselt's theory assumes the vapor is still. But if you have high-velocity vapor flowing downwards with the film, it will "drag" the film along, thinning it out and improving heat transfer. If the vapor flows upwards against the film, it will slow it down, thicken it, and hurt heat transfer.</p>
+                    
+                    <div class="rule-of-thumb">
+                        <b>Safety Hazard: Noncondensable Gases (The Silent Killer 💀)</b>
+                        <p>This is one of the most important practical lessons. If a noncondensable gas like air leaks into your steam condenser, it's a disaster for performance.</p>
+                        <p><b>The Problem:</b> The steam molecules rush to the cold surface to condense, but the air molecules can't condense, so they just get left behind, building up an insulating "air blanket" right against the condensate film. Now, steam has to fight its way (diffuse) through this air barrier before it can even reach the liquid film. This adds a huge thermal resistance, and the heat transfer coefficient can plummet by 50% or more from even a tiny air leak. This is why condensers, especially those under vacuum, have systems to continuously remove noncondensables.</p>
+                    </div>
+                    
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h3>1. Flow Regime Correlations (Summary)</h3>
+                    <ul>
+                        <li><b>Turbulent Flow (Re > 1800) on Vertical Plate:</b> Use Labuntsov's empirical correlation (Eq. 10-28). It's complex but necessary for high Reynolds numbers.</li>
+                    </ul>
+
+                    <h3>2. Geometry-Based Correlations (for Laminar/Wavy-Laminar Flow)</h3>
+                    <ul>
+                        <li><b>Inclined Plate:</b> Use the vertical plate formula, but replace \KATEX_INLINE_OPEN g \KATEX_INLINE_CLOSE with \KATEX_INLINE_OPEN g \cdot \cos(\theta) \KATEX_INLINE_CLOSE.
+                            ````math
+                            h_{\text{inclined}} = h_{\text{vert}} (\cos\theta)^{1/4}
+                            ````
+                        </li>
+                        <li><b>Horizontal Tube:</b> A specific Nusselt-type equation is used, where the characteristic length is the tube diameter D.
+                            ````math
+                            h_{\text{horiz}} = 0.729 \left[ \frac{g \rho_l (\rho_l - \rho_v) h_{fg}^* k_l^3}{\mu_l (T_{\text{sat}} - T_s) D} \right]^{1/4} \quad (\text{Eq. 10-31})
+                            ````
+                        </li>
+                        <li><b>Horizontal Tube Bank:</b> The heat transfer is reduced by the inundation effect.
+                            ````math
+                            h_{\text{horiz, N tubes}} = \frac{h_{\text{horiz, 1 tube}}}{N^{1/4}}
+                            ````
+                        (where N is the number of tubes in a vertical tier)</li>
+                    </ul>
+                    
+                    <h3>3. Critical Operating Considerations</h3>
+                    <ul>
+                        <li><b>Horizontal vs. Vertical:</b> For tubes with \KATEX_INLINE_OPEN L > 2.77D \KATEX_INLINE_CLOSE, the horizontal orientation provides a higher heat transfer coefficient.</li>
+                        <li><b>Effect of Vapor Velocity:</b> Downward co-current flow enhances \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE; upward counter-current flow reduces \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Noncondensable Gases:</b> Even small amounts (e.g., <1% air in steam) create an insulating gas layer at the surface, drastically reducing the condensation heat transfer coefficient.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section class="roadmap-section" id="sec-special-cases">
+                <div class="section-header"><h2>11. Special Cases: In-Tube & Dropwise Condensation</h2></div>
+                <div class="section-content">
+                    <h3>1. Film Condensation Inside Horizontal Tubes</h3>
+                    <p>So far, we've focused on vapor condensing on the outside of a tube. But what if the vapor is flowing inside a cold tube? The physics changes slightly.</p>
+                    <div class="insight">
+                        <i><b>Analogy:</b> Think of the difference between rain hitting a telephone wire versus water flowing through a horizontal pipe. On the outside, the water runs off all around. On the inside, the condensate runs down the sides and forms a puddle at the bottom.
+                        <br><br><b>Physical Insight:</b> This puddle of liquid at the bottom of the pipe is much thicker than the film on the sides and top. Since the film thickness is our enemy, this means the heat transfer at the bottom of the tube is very poor. The correlation provided is an average that accounts for the thin film at the top and the thicker, stratified layer at the bottom. This scenario is common in condensers for refrigeration and air conditioning systems.</i>
+                    </div>
+
+                    <h4>Governing Equation (for low vapor velocity)</h4>
+                    <p>Use when \KATEX_INLINE_OPEN Re_{\text{vapor}} < 35,000 \KATEX_INLINE_CLOSE (at the tube inlet).</p>
+                    ````math
+                    h_{\text{internal}} = 0.555 \left[ \frac{g \rho_l(\rho_l-\rho_v)k_l^3}{\mu_l(T_{\text{sat}}-T_s)D} \right]^{1/4} \left( h_{fg} + \frac{3}{8}c_{pl}(T_{\text{sat}}-T_s) \right)
+                    ````
+
+                    <h3>2. Dropwise Condensation (The "Holy Grail")</h3>
+                    <p>This is a return to the ideal condensation mode we touched on earlier. It's so important that it's worth its own section. As engineers, we're always pushing for more efficiency. Dropwise condensation represents a massive potential improvement—a way to make condensers smaller, cheaper, and more effective.</p>
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: The Bottleneck Principle</b>
+                        <p>Your process is only as fast as its slowest step.</p>
+                        <p><i><b>Analogy:</b> Imagine a factory assembly line. You can install a new super-fast robot (dropwise condensation) that works 10 times faster, but if the next station on the line (e.g., the cooling water side) can only handle the old, slow speed, you've gained nothing. The parts will just pile up.</i></p>
+                        <p>In heat transfer, the overall heat transfer coefficient, \KATEX_INLINE_OPEN U \KATEX_INLINE_CLOSE, depends on all the resistances in series. If the resistance of the cooling water is huge, making the condensation resistance tiny with a fancy coating is a waste of money. You have to identify and fix the biggest resistance—the bottleneck—to see any real improvement.</p>
+                    </div>
+
+                    <h2>Key Takeaways & Formulas</h2>
+                    <h4>Dropwise Condensation Performance</h4>
+                    <ul>
+                        <li>Heat transfer coefficients (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) can be >10 times higher than in film condensation.</li>
+                        <li><b>Challenge:</b> Difficult to sustain in industrial environments. Relies on special coatings or chemical promoters that degrade over time.</li>
+                        <li><b>Design Philosophy:</b> Always be conservative and design equipment based on film condensation correlations.</li>
+                    </ul>
+                    <h4>Specific Correlation (Steam on Copper)</h4>
+                    ````math
+                    h_{\text{dropwise}} = 51,104 + 2044 \cdot T_{\text{sat}} \quad (\text{for } 22^\circ\text{C} < T_{\text{sat}} < 100^\circ\text{C})
+                    ````
+                    ````math
+                    h_{\text{dropwise}} = 255,510 \quad (\text{for } T_{\text{sat}} > 100^\circ\text{C})
+                    ````
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const workflowNodes = document.querySelectorAll('.workflow-node');
+            const sections = document.querySelectorAll('.roadmap-section');
+            const sectionHeaders = document.querySelectorAll('.section-header');
+
+            const collapseAllSections = () => {
+                sections.forEach(section => {
+                    section.classList.remove('expanded');
+                });
+            };
+
+            workflowNodes.forEach(node => {
+                node.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+
+                    if (targetSection) {
+                        const isExpanded = targetSection.classList.contains('expanded');
+                        
+                        if (!isExpanded) {
+                            collapseAllSections();
+                        }
+
+                        targetSection.classList.toggle('expanded');
+                        
+                        setTimeout(() => {
+                           targetSection.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }, 100);
+                    }
+                });
+            });
+
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const parentSection = this.parentElement;
+                    parentSection.classList.toggle('expanded');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
