@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Workflow: Convection Heat Transfer</title>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+            displayMath: [['```math', '```']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+        
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+             transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 45%;
+            position: relative;
+        }
+
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .decision::after { 
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+        
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector::after {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+
+        .section-header h2 {
+            border-bottom: none;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .section-header::after {
+            content: '▼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+        
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>Interactive Dashboard: Fundamentals of Convection</h1>
+
+        <div class="workflow-map">
+            <div class="workflow-node" data-target="sec-mechanism">
+                1. The Physical Mechanism of Convection
+            </div>
+            <div class="workflow-node" data-target="sec-boundary">
+                2. Boundary Layer Physics
+            </div>
+            <div class="workflow-node decision" data-target="sec-classify">
+                <span>3. Diagnostic:<br>Classify the Flow</span>
+            </div>
+            
+            <div class="flow-branch">
+                <div class="branch-container">
+                    <h3>LAMINAR FLOW</h3>
+                    <div class="workflow-node" data-target="sec-laminar">
+                        4a. Laminar Analysis: Exact Solutions
+                    </div>
+                </div>
+                <div class="branch-container">
+                    <h3>TURBULENT FLOW</h3>
+                    <div class="workflow-node" data-target="sec-turbulent">
+                        4b. Turbulent Analysis: Eddy Transport
+                    </div>
+                </div>
+            </div>
+
+            <div class="rejoin-connector"></div>
+
+            <div class="workflow-node" data-target="sec-governing">
+                5. The Mathematical Foundation: Governing Equations
+            </div>
+            <div class="workflow-node" data-target="sec-synthesis">
+                6. Synthesis: Analogies & Functional Forms
+            </div>
+        </div>
+
+        <div id="accordion-container">
+
+            <!-- Section 1: Physical Mechanism -->
+            <section id="sec-mechanism" class="roadmap-section">
+                <div class="section-header">
+                    <h2>1. The Physical Mechanism of Convection</h2>
+                </div>
+                <div class="section-content">
+                    <p>Welcome to Chapter 6! We're now moving from the world of heat transfer within solids (conduction) to the dynamic world of heat transfer involving fluids (convection). This is arguably the most important heat transfer mechanism in chemical engineering, governing everything from reactors to heat exchangers. This first section sets the stage beautifully.</p>
+                    
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>At its heart, convection is conduction with a helper. Conduction is the slow, orderly transfer of energy from one molecule to its neighbor. Convection adds a supercharger to this process: bulk fluid motion.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: Cooling a Hot Potato 🥔</b><br>
+                        <b>Pure Conduction (The Slow Way):</b> Imagine you have a hot potato sitting in a small, sealed box of perfectly still air. The potato's surface heats up the single layer of air molecules touching it. That layer then slowly heats up the next layer, which heats up the next, and so on. The heat has to "soak" its way through the air, layer by layer. This is a very slow process.<br><br>
+                        <b>Convection (The Fast Way):</b> Now, you take that same hot potato and put it in a room with a fan. The fan blows air across the potato's surface.
+                        <ol>
+                            <li><b>Step 1 (Conduction):</b> The potato's surface still heats up the tiny, thin layer of air right against its skin by conduction.</li>
+                            <li><b>Step 2 (Advection - The "Helper"):</b> But before that layer can slowly pass its heat to the next, the fan physically blows that hot layer away and immediately replaces it with a fresh, cool layer of air.</li>
+                            <li><b>Repeat:</b> This new cool layer rapidly absorbs heat from the potato, then gets blown away, replaced by more cool air.</li>
+                        </ol>
+                        Convection is this powerful one-two punch: conduction into the fluid at the surface, followed by advection (the bulk movement of the fluid) carrying that heat away. This is why a windy day feels much colder than a calm day at the same temperature, and why blowing on your soup makes it cool down faster.
+                        </i>
+                    </div>
+
+                    <h3>The "No-Slip" Condition: A Crucial Detail</h3>
+                    <p>This is a very important and slightly counter-intuitive concept. Fluid is "sticky" due to viscosity. A fluid flowing over a surface doesn't just glide over it. The very first layer of fluid molecules comes to a complete stop and sticks to the surface. Its velocity is zero.</p>
+                    <p>This "sticky" motionless layer then acts like a brake on the layer above it, which slows down the layer above that, and so on. This creates a region of changing velocity near the surface called the boundary layer.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight:</b> Since the fluid layer touching the surface is motionless, the only way heat can get from the solid surface into that first fluid layer is by pure conduction. The heat transfer coefficient, \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE, is our engineering "package deal" that accounts for both the conduction through this sticky layer and the subsequent removal of heat by the moving fluid beyond it.</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Design Implication: Why does this matter to you? 🏭</b>
+                        <p>Controlling convection is what chemical engineers do all day.</p>
+                        <ul>
+                            <li><b>Problem Solved:</b> How do we efficiently add or remove massive amounts of heat from a process? Convection is the answer. A simple jacket on a reactor relies on natural convection, which is slow. Adding a pump to circulate the cooling water (forced convection) dramatically increases the heat transfer rate (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) and allows for better temperature control and a more efficient reaction.</li>
+                            <li><b>Equipment Design:</b> The entire design of a shell-and-tube heat exchanger is about maximizing \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE. We use baffles to force the fluid to flow turbulently across the tubes, making \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE as high as possible to get the most heat transfer in the smallest possible unit. The difference between a good design and a bad design is often a factor of 10 or 100 in the value of \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE.</li>
+                        </ul>
+                    </div>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>1. Convection vs. Conduction</h4>
+                    <ul>
+                        <li><b>Conduction:</b> Heat transfer in a stationary medium (solid or fluid) via molecular interactions.</li>
+                        <li><b>Convection:</b> Heat transfer in a fluid involving bulk fluid motion. It is a combination of conduction at the surface and advection (fluid movement).</li>
+                    </ul>
+                    
+                    <h4>2. Newton's Law of Cooling</h4>
+                    <p>The defining equation for convection. It's deceptively simple.</p>
+                    ```math
+                    Q_{\text{conv}} = h A_s (T_s - T_{\infty})
+                    ```
+                    <ul>
+                        <li>\KATEX_INLINE_OPEN Q_{\text{conv}} \KATEX_INLINE_CLOSE: Rate of convection heat transfer (W).</li>
+                        <li>\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE: Convection Heat Transfer Coefficient (\KATEX_INLINE_OPEN \text{W/m}^2 \cdot \text{K} \KATEX_INLINE_CLOSE). This is the "grand prize" we are usually trying to find or control.</li>
+                        <li>\KATEX_INLINE_OPEN A_s \KATEX_INLINE_CLOSE: Surface area (\KATEX_INLINE_OPEN \text{m}^2 \KATEX_INLINE_CLOSE).</li>
+                        <li>\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE: Surface temperature (°C or K).</li>
+                        <li>\KATEX_INLINE_OPEN T_{\infty} \KATEX_INLINE_CLOSE: Fluid temperature sufficiently far from the surface (°C or K).</li>
+                    </ul>
+
+                    <h4>3. The Convection Coefficient (h)</h4>
+                    <p><b>CRITICAL:</b> \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is NOT a material property like \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE. It is an experimentally determined parameter that depends on a huge number of variables:
+                    <ul>
+                        <li>Fluid properties (\KATEX_INLINE_OPEN k, \rho, c_p, \mu \KATEX_INLINE_CLOSE)</li>
+                        <li>Fluid velocity (\KATEX_INLINE_OPEN V \KATEX_INLINE_CLOSE)</li>
+                        <li>Surface geometry and roughness</li>
+                        <li>Flow regime (laminar or turbulent)</li>
+                    </ul>
+                    
+                    <h4>4. The Link Between h and Conduction</h4>
+                    <p>This equation connects the empirical \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE to the physical reality at the surface.</p>
+                    ```math
+                    h = \frac{-k_{\text{fluid}} \left( \frac{\partial T}{\partial y} \right)_{y=0}}{T_s - T_{\infty}}
+                    ```
+                    <p><b>In Words:</b> The convection coefficient is proportional to the thermal conductivity of the fluid and the steepness of the temperature gradient in the fluid right at the surface. A fast-moving fluid "sweeps" heat away, making the temperature drop very sharply near the wall, resulting in a large \KATEX_INLINE_OPEN (\partial T / \partial y) \KATEX_INLINE_CLOSE and thus a high \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE.</p>
+                </div>
+            </section>
+
+            <!-- Section 2: Boundary Layers -->
+            <section id="sec-boundary" class="roadmap-section">
+                <div class="section-header">
+                    <h2>2. Boundary Layer Physics</h2>
+                </div>
+                <div class="section-content">
+                    
+                    <h2>Velocity Boundary Layer</h2>
+                    <p>This section focuses on what happens in the thin region right next to a solid surface when a fluid flows over it. The no-slip condition is the cause, and the boundary layer is the effect.</p>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: A Wide, Fast-Moving Crowd Entering a Narrow Doorway 🚶‍♂️🚶‍♀️</b>
+                        <p>Imagine a huge, wide crowd of people (the fluid) all walking forward at the same fast speed (\KATEX_INLINE_OPEN V \KATEX_INLINE_CLOSE, the free-stream velocity). They approach a building with a very wide entrance.</p>
+                        <ul>
+                            <li><b>The No-Slip Condition:</b> The very first people who get to the doorway stop completely to hold the doors open. Their velocity becomes zero right at the wall.</li>
+                            <li><b>Formation of the Boundary Layer:</b> The people directly behind them have to slow down because the people in front have stopped. The people behind them have to slow down a little bit, and so on. A "traffic jam" or a region of slow-moving people forms near the doors. This region of changing velocity is the velocity boundary layer.</li>
+                            <li><b>Boundary Layer Thickness (\KATEX_INLINE_OPEN \delta \KATEX_INLINE_CLOSE):</b> If you are far away from the doors (out in the street), you are still walking at the full, fast speed \KATEX_INLINE_OPEN V \KATEX_INLINE_CLOSE. You are in the inviscid flow region. The boundary layer thickness, \KATEX_INLINE_OPEN \delta \KATEX_INLINE_CLOSE, is the distance from the wall to the point where the people are moving at 99% of the full crowd speed. It's the "edge" of the traffic jam.</li>
+                            <li><b>Growth of the Boundary Layer:</b> As the crowd moves through the building's long lobby, the "traffic jam" gets wider. The boundary layer grows thicker as the flow moves along the surface.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <h3>Wall Shear Stress (\KATEX_INLINE_OPEN \tau_w \KATEX_INLINE_CLOSE)</h3>
+                    <p>Now, think about the force on the door-holders. The moving crowd behind them is constantly bumping into them, trying to push them forward. This force, spread over the area of the doorway, is the wall shear stress. It's the physical drag force that the fluid exerts on the surface.</p>
+                    <p>\KATEX_INLINE_OPEN \tau_w \KATEX_INLINE_CLOSE is proportional to two things:</p>
+                    <ul>
+                        <li><b>Viscosity (\KATEX_INLINE_OPEN \mu \KATEX_INLINE_CLOSE):</b> The "stickiness" or "internal friction" of the fluid. A crowd of people pushing through thick mud (high \KATEX_INLINE_OPEN \mu \KATEX_INLINE_CLOSE) will exert more force on the door-holders than a crowd pushing through air (low \KATEX_INLINE_OPEN \mu \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Velocity Gradient (\KATEX_INLINE_OPEN \partial u / \partial y \KATEX_INLINE_CLOSE) at the wall:</b> This is how steeply the velocity changes right at the surface. If the crowd goes from zero to full speed over a very short distance, the gradient is high, and the shear stress is high.</li>
+                    </ul>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Design Implication: Why does this matter?</b>
+                        <p>The velocity boundary layer is the gatekeeper for convective heat transfer.</p>
+                        <ul>
+                            <li><b>Drag and Pumping Power:</b> The wall shear stress, integrated over the entire surface area of a pipe or a heat exchanger tube, is the total friction drag. This drag is what determines the pressure drop and, therefore, how powerful a pump or fan you need. Understanding the boundary layer is key to predicting and minimizing pumping costs.</li>
+                            <li><b>Controlling Heat Transfer:</b> A thin, turbulent velocity boundary layer will lead to a thin thermal boundary layer and a very high heat transfer coefficient \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE. A thick, laminar velocity boundary layer leads to a thick thermal boundary layer and a low \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE. You cannot understand convective heat transfer without first understanding the velocity boundary layer.</li>
+                        </ul>
+                    </div>
+
+                    <h2>Thermal Boundary Layer</h2>
+                    <p>Just like the no-slip condition creates a velocity profile, a difference in temperature creates a thermal boundary layer. The velocity boundary layer and the thermal boundary layer develop simultaneously, but not necessarily at the same rate. This crucial difference is captured by the Prandtl Number (\KATEX_INLINE_OPEN \text{Pr} \KATEX_INLINE_CLOSE).</p>
+                    <ul>
+                        <li><b>Thermal Boundary Layer (\KATEX_INLINE_OPEN \delta_t \KATEX_INLINE_CLOSE):</b> The region of flow over a surface where the temperature changes from the surface temperature (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE) to 99% of the free-stream temperature (\KATEX_INLINE_OPEN T_{\infty} \KATEX_INLINE_CLOSE).</li>
+                    </ul>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: A Race Between Two Spills 💧</b>
+                        <p>Imagine you're at the top of a wide, sloped driveway. At the exact same time, you spill a bucket of thick, sticky maple syrup (high momentum diffusivity, \KATEX_INLINE_OPEN \nu \KATEX_INLINE_CLOSE) and a bucket of vibrant, red food coloring (high thermal diffusivity, \KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE). The Prandtl Number (\KATEX_INLINE_OPEN \text{Pr} = \nu/\alpha \KATEX_INLINE_CLOSE) tells you which spill spreads faster.</p>
+                        <ul>
+                            <li><b>Scenario 1: Heavy Oils (\KATEX_INLINE_OPEN \text{Pr} \gg 1 \KATEX_INLINE_CLOSE):</b> The oil itself (momentum) will ooze down, creating a thick velocity boundary layer (\KATEX_INLINE_OPEN \delta \KATEX_INLINE_CLOSE). The dye (heat) spreads very slowly through the oil. The thermal boundary layer (\KATEX_INLINE_OPEN \delta_t \KATEX_INLINE_CLOSE) is much, much thinner. (\KATEX_INLINE_OPEN \delta \gg \delta_t \KATEX_INLINE_CLOSE).</li>
+                            <li><b>Scenario 2: Liquid Metals (\KATEX_INLINE_OPEN \text{Pr} \ll 1 \KATEX_INLINE_CLOSE):</b> The thin fluid creates a thin velocity boundary layer. But the dye (heat) diffuses out incredibly fast, spreading much wider. The thermal boundary layer is much, much thicker. (\KATEX_INLINE_OPEN \delta_t \gg \delta \KATEX_INLINE_CLOSE).</li>
+                            <li><b>Scenario 3: Gases (\KATEX_INLINE_OPEN \text{Pr} \approx 1 \KATEX_INLINE_CLOSE):</b> The fluid and dye spread at roughly the same rate. The boundary layers have about the same thickness. (\KATEX_INLINE_OPEN \delta \approx \delta_t \KATEX_INLINE_CLOSE).</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <div class="card">
+                        <h3>Critical Question: Is a thicker boundary layer good or bad for heat transfer?</h3>
+                        <p><b>The short answer: A THIN thermal boundary layer is GOOD for heat transfer. A THICK thermal boundary layer is BAD for heat transfer.</b></p>
+                        <p>Think of the thermal boundary layer as an "Insulating Blanket." Heat has to transfer through this blanket.
+                        <ul>
+                            <li>A <b>THICK</b> blanket (\KATEX_INLINE_OPEN \delta_t \KATEX_INLINE_CLOSE is large) provides a lot of resistance. The temperature gradient is shallow, heat flows slowly, and the heat transfer coefficient \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is LOW.</li>
+                            <li>A <b>THIN</b> blanket (\KATEX_INLINE_OPEN \delta_t \KATEX_INLINE_CLOSE is small) offers little resistance. The temperature gradient is STEEP, heat flows rapidly, and the heat transfer coefficient \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is HIGH.</li>
+                        </ul>
+                        <b>Analogy: A Waterfall.</b> The temperature difference is the height of the fall. A thick boundary layer is a long, gentle cascade (low power). A thin boundary layer is a steep, dramatic cliff (high power). As an engineer, your goal is almost always to make the thermal boundary layer as THIN as possible, typically by increasing fluid velocity.
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 3: Classification -->
+            <section id="sec-classify" class="roadmap-section">
+                <div class="section-header">
+                    <h2>3. Diagnostic: Classifying the Flow</h2>
+                </div>
+                <div class="section-content">
+                    <p>This section is about sorting fluid flow problems into different categories. Why? Because the type of flow completely changes how we approach the problem and which equations we use. A chemical engineer needs to be able to look at a situation—like fluid in a pipe or air over a cooling fin—and immediately classify it. This is the first and most critical step in solving any convection problem.</p>
+                    
+                    <div class="insight">
+                        <i><b>Analogy: Diagnosing a Patient 🩺</b><br>
+                        Think of yourself as a "Fluid Doctor." A patient (a flow problem) comes to you. You can't just give them a generic pill. You have to ask a series of diagnostic questions to figure out exactly what you're dealing with. This chapter is your diagnostic checklist.</i>
+                    </div>
+
+                    <h3>The Diagnostic Questions</h3>
+                    <h4>1. Viscous vs. Inviscid (Is friction a major factor everywhere?)</h4>
+                    <p>This asks: "Is the fluid's 'stickiness' (viscosity) important for the whole problem, or just near the edges?" In a river, the middle is largely inviscid, while the riverbed and banks are viscous regions (boundary layers).</p>
+
+                    <h4>2. Internal vs. External Flow (Is the flow contained?)</h4>
+                    <p>This asks: "Is the fluid flowing inside something, or around something?" Internal flow (pipe, duct) is bounded and viscosity affects the entire flow. External flow (over a plate, around a cylinder) is unconfined and viscous effects are limited to the boundary layer.</p>
+
+                    <h4>3. Compressible vs. Incompressible Flow (Does the density change?)</h4>
+                    <p>This asks: "As the fluid flows, can I squeeze it and change its density?" Liquids are almost always treated as incompressible. Gases can be treated as incompressible if their speed is low (Mach number < 0.3).</p>
+
+                    <h4>4. Laminar vs. Turbulent Flow (Is the flow smooth or chaotic?)</h4>
+                    <p>This is the most important classification for heat transfer! It asks: "Is the fluid flowing in smooth, orderly layers, or is it a chaotic, mixing mess?" Turbulent flow is a heat transfer engineer's best friend because the chaotic mixing is incredibly effective at transferring heat, leading to much higher \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE values.</p>
+
+                    <h4>5. Natural vs. Forced Flow (What is making the fluid move?)</h4>
+                    <p>This asks: "Is the fluid moving because of an external 'push,' or is it moving on its own?" Forced flow uses a pump, fan, or agitator. Natural (or free) convection is driven by buoyancy forces—hotter, less dense fluid rising.</p>
+
+                    <h4>6. Steady vs. Unsteady Flow (If I stand still, do things change over time?)</h4>
+                    <p>Steady flow means properties at a fixed point do not change with time (\KATEX_INLINE_OPEN \partial / \partial t = 0 \KATEX_INLINE_CLOSE). Unsteady (transient) flow involves changes over time, typical of start-ups, shutdowns, or batch processes.</p>
+
+                    <h4>7. One-, Two-, and Three-Dimensional Flows (In how many directions is velocity changing?)</h4>
+                    <p>This is about simplifying a complex reality. We often try to simplify flows to 1D, as in the case of "fully developed flow" in a long pipe, where the velocity profile no longer changes with distance down the pipe.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Key Rules & Definitions</b>
+                        <ul>
+                            <li><b>Incompressible Gas Flow:</b> You can often assume a gas flow is incompressible if its Mach number is less than 0.3 (\KATEX_INLINE_OPEN \text{Ma} < 0.3 \KATEX_INLINE_CLOSE).</li>
+                            <li><b>No-Slip Condition:</b> A fundamental rule stating that a fluid has zero velocity relative to any solid surface it is in contact with. This is the cause of the velocity boundary layer.</li>
+                            <li><b>Steady:</b> No change at a point with time.</li>
+                            <li><b>Uniform:</b> No change with location over a region.</li>
+                            <li><b>Fully Developed Flow:</b> The condition in a pipe or duct where the velocity profile is constant and no longer changes with distance down the pipe.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4a: Laminar -->
+            <section id="sec-laminar" class="roadmap-section">
+                <div class="section-header">
+                    <h2>4a. Laminar Analysis: Exact Solutions for a Flat Plate</h2>
+                </div>
+                <div class="section-content">
+                    <p>We've derived the big, scary partial differential equations that govern convection. For the simple case of a flat plate, it's possible to solve them thanks to an ingenious mathematical trick developed by Blasius in 1908.</p>
+                    
+                    <h3>The Method: Similarity Solution</h3>
+                    <p>The breakthrough was to find a "magic" variable that could collapse two partial differential equations (PDEs) into a single, much simpler ordinary differential equation (ODE). This magic variable is called a similarity variable.</p>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: The Universal Recipe for a Shadow 👥</b>
+                        <p>Imagine the shadow cast by a person. As the shadow gets longer, the edge gets wider and fuzzier (the boundary layer grows). However, the <b>shape</b> of the fuzziness is always the same. If you "rescale" the shadow's edge at 1 meter and 10 meters by plotting velocity against a normalized distance, the two curves will lie perfectly on top of each other. They are self-similar.</p>
+                        <p>The similarity variable \KATEX_INLINE_OPEN \eta \KATEX_INLINE_CLOSE is the mathematical tool that performs this rescaling automatically, combining two variables (\KATEX_INLINE_OPEN x \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN y \KATEX_INLINE_CLOSE) into one.</p>
+                        </i>
+                    </div>
+
+                    <p>By rewriting the momentum and energy equations in terms of \KATEX_INLINE_OPEN \eta \KATEX_INLINE_CLOSE, we can solve them to get theoretical formulas for key engineering parameters. This is a bedrock theoretical result that validates our models and gives us powerful design formulas.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: Key Formulas for Laminar Flow Over a Flat Plate</b>
+                        <p>These results are valid for laminar flow (\KATEX_INLINE_OPEN \text{Re}_x < 5 \times 10^5 \KATEX_INLINE_CLOSE) over an isothermal flat plate.</p>
+                        
+                        <h4>1. Similarity Variable</h4>
+                        ```math
+                        \eta = y \sqrt{\frac{V}{\nu x}}
+                        ```
+
+                        <h4>2. Velocity Boundary Layer Thickness (\KATEX_INLINE_OPEN \delta \KATEX_INLINE_CLOSE)</h4>
+                        ```math
+                        \delta = \frac{4.91x}{\sqrt{\text{Re}_x}}
+                        ```
+                        <p><b>Interpretation:</b> The boundary layer grows proportionally to the square root of the distance \KATEX_INLINE_OPEN x \KATEX_INLINE_CLOSE.</p>
+
+                        <h4>3. Local Friction Coefficient (\KATEX_INLINE_OPEN C_{f,x} \KATEX_INLINE_CLOSE)</h4>
+                        <p>A dimensionless form of the wall shear stress (\KATEX_INLINE_OPEN \tau_w \KATEX_INLINE_CLOSE).</p>
+                        ```math
+                        C_{f,x} = \frac{\tau_w}{0.5 \rho V^2} = \frac{0.664}{\sqrt{\text{Re}_x}}
+                        ```
+                        <p><b>Interpretation:</b> The shear stress is highest at the leading edge (\KATEX_INLINE_OPEN x=0 \KATEX_INLINE_CLOSE) and decreases downstream.</p>
+
+                        <h4>4. Local Nusselt Number (\KATEX_INLINE_OPEN \text{Nu}_x \KATEX_INLINE_CLOSE)</h4>
+                        <p>This is the crowning achievement, obtained by solving the energy equation. Valid for \KATEX_INLINE_OPEN \text{Pr} > 0.6 \KATEX_INLINE_CLOSE.</p>
+                        ```math
+                        \text{Nu}_x = \frac{h_x x}{k} = 0.332 \text{Re}_x^{1/2} \text{Pr}^{1/3}
+                        ```
+                        <p><b>Interpretation:</b> This formula provides incredible insight. For example, it shows that the heat transfer coefficient \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is proportional to \KATEX_INLINE_OPEN \sqrt{V} \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN 1/\sqrt{x} \KATEX_INLINE_CLOSE.</p>
+                        
+                        <h4>5. Thermal Boundary Layer Thickness (\KATEX_INLINE_OPEN \delta_t \KATEX_INLINE_CLOSE)</h4>
+                        ```math
+                        \delta_t = \frac{\delta}{\text{Pr}^{1/3}} = \frac{4.91x}{\text{Pr}^{1/3} \sqrt{\text{Re}_x}}
+                        ```
+                        <p>This formally relates the thickness of the two boundary layers.</p>
+
+                        <h4>6. Film Temperature (\KATEX_INLINE_OPEN T_f \KATEX_INLINE_CLOSE)</h4>
+                        <p>For the most accurate answer, evaluate all fluid properties (\KATEX_INLINE_OPEN k, \mu, c_p, \rho \KATEX_INLINE_CLOSE) at the film temperature.</p>
+                        ```math
+                        T_f = \frac{T_s + T_{\infty}}{2}
+                        ```
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 4b: Turbulent -->
+            <section id="sec-turbulent" class="roadmap-section">
+                <div class="section-header">
+                    <h2>4b. Turbulent Analysis: Eddy Transport</h2>
+                </div>
+                <div class="section-content">
+                    <p>We've established that turbulent flow is chaotic and great for heat transfer. This section explains the mechanism. The key is that the total transport of heat or momentum in a turbulent flow is the sum of two parts: slow molecular diffusion and rapid, chaotic transport by swirling eddies.</p>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: A Bucket Brigade vs. a Chaotic Crowd 🔥</b>
+                        <p>Imagine you need to get water (heat) from a source to a fire.</p>
+                        <ul>
+                            <li><b>Laminar Flow (The Bucket Brigade):</b> A line of people stand still, passing buckets from one person to the next. The water moves in an orderly way, limited by how fast each person can pass to their immediate neighbor. This is molecular diffusion.</li>
+                            <li><b>Turbulent Flow (The Chaotic Crowd):</b> Instead of a line, you have a huge, chaotic crowd. Someone near the water source grabs a full bucket and randomly runs sideways deep into the crowd, handing it to someone in a hotter area. This chaotic exchange of entire "chunks" of fluid (people with buckets) is eddy transport. It's far more effective at moving water (heat) than the orderly bucket brigade.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <h3>Eddy Viscosity and Eddy Conductivity</h3>
+                    <p>The math for the chaotic eddy transport is impossibly complex. So, engineers created a brilliant conceptual leap: we pretend the fluid is still a bucket brigade, but we give the people "super powers."</p>
+                    <ul>
+                        <li><b>Turbulent Viscosity (\KATEX_INLINE_OPEN \mu_t \KATEX_INLINE_CLOSE):</b> The chaotic exchange of momentum by eddies feels like an extra, powerful "stickiness." We model this by adding a \KATEX_INLINE_OPEN \mu_t \KATEX_INLINE_CLOSE to the fluid's normal viscosity \KATEX_INLINE_OPEN \mu \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Turbulent Conductivity (\KATEX_INLINE_OPEN k_t \KATEX_INLINE_CLOSE):</b> The chaotic exchange of heat by eddies feels like the fluid has an extra, incredibly high thermal conductivity. We model this by adding \KATEX_INLINE_OPEN k_t \KATEX_INLINE_CLOSE to the fluid's normal conductivity \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+                    <p>In the middle of a turbulent pipe flow, \KATEX_INLINE_OPEN \mu_t \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN k_t \KATEX_INLINE_CLOSE can be thousands of times larger than \KATEX_INLINE_OPEN \mu \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE. However, right at the wall, the eddies die out, so \KATEX_INLINE_OPEN \mu_t \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN k_t \KATEX_INLINE_CLOSE drop to zero.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The Foundation of CFD</b>
+                        <p>This concept is the absolute foundation of all modern Computational Fluid Dynamics (CFD) software. CFD solvers don't track every eddy; instead, they use turbulence models (like k-epsilon) whose entire job is to predict the values of the eddy viscosity (\KATEX_INLINE_OPEN \mu_t \KATEX_INLINE_CLOSE) and eddy conductivity (\KATEX_INLINE_OPEN k_t \KATEX_INLINE_CLOSE) at every point in the flow.</p>
+                    </div>
+
+                    <h3>The Total Transport Equations</h3>
+                    <p>The total transport is the sum of the molecular (laminar) part and the eddy (turbulent) part.</p>
+                    
+                    <h4>1. Reynolds Decomposition</h4>
+                    <p>Any instantaneous property can be split into a time-averaged mean (\KATEX_INLINE_OPEN \bar{u} \KATEX_INLINE_CLOSE) and a fluctuating component (\KATEX_INLINE_OPEN u' \KATEX_INLINE_CLOSE).</p>
+                    ```math
+                    u = \bar{u} + u'
+                    ```
+                    
+                    <h4>2. Total Shear Stress (Friction)</h4>
+                    <p>Total Friction = (Regular Stickiness + Super-Stickiness from Eddies) × Average Velocity Gradient</p>
+                    ```math
+                    \tau_{\text{total}} = (\mu + \mu_t) \frac{\partial \bar{u}}{\partial y}
+                    ```
+                    
+                    <h4>3. Total Heat Flux (Heat Transfer)</h4>
+                    <p>Total Heat Flow = -(Regular Conductivity + Super-Conductivity from Eddies) × Average Temperature Gradient</p>
+                    ```math
+                    q_{\text{total}} = -(k + k_t) \frac{\partial \bar{T}}{\partial y}
+                    ```
+                    <p>This is the punchline. It mathematically shows why turbulence is so amazing for heat transfer. In the core of a pipe, \KATEX_INLINE_OPEN k_t \KATEX_INLINE_CLOSE can be 1000 times bigger than \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE, meaning the total effective conductivity is massive, and heat moves with incredible ease.</p>
+                </div>
+            </section>
+            
+            <!-- Section 5: Governing Equations -->
+            <section id="sec-governing" class="roadmap-section">
+                <div class="section-header">
+                    <h2>5. The Mathematical Foundation: Governing Equations</h2>
+                </div>
+                <div class="section-content">
+                    <p>This section builds the mathematical foundation of convection from the ground up using fundamental conservation laws. This is the source of all the analytical and computational solutions in fluid dynamics.</p>
+                    
+                    <h2>1. The Continuity Equation (Conservation of Mass)</h2>
+                    <p>The principle is incredibly simple: <b>Mass In = Mass Out</b>. The equation is the formal way of applying this rule to a tiny control volume.</p>
+                    <div class="insight">
+                        <i><b>Analogy: A Crowded Subway Car 🚇</b><br>
+                        Imagine a single subway car. For the number of people inside to remain constant (steady state), the rate at which people enter must exactly equal the rate at which people leave. The continuity equation is the mathematical ledger for this balance, applied to fluid mass.
+                        </i>
+                    </div>
+                    <h4>The Formula (for steady, 2D, incompressible flow):</h4>
+                    ```math
+                    \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y} = 0
+                    ```
+                    <p><b>What it means:</b> The velocity components \KATEX_INLINE_OPEN u \KATEX_INLINE_CLOSE (x-direction) and \KATEX_INLINE_OPEN v \KATEX_INLINE_CLOSE (y-direction) are not independent. If the flow speeds up in the x-direction (\KATEX_INLINE_OPEN \partial u / \partial x > 0 \KATEX_INLINE_CLOSE), it must move inward in the y-direction (\KATEX_INLINE_OPEN \partial v / \partial y < 0 \KATEX_INLINE_CLOSE) to supply the extra mass. This is the first equation that must be satisfied in any fluid flow problem.</p>
+
+                    <h2>2. The Momentum Equations (Conservation of Momentum)</h2>
+                    <p>The core principle is Newton's Second Law: <b>Force = Mass × Acceleration</b>. We apply this law to a tiny fluid element, balancing pressure forces, viscous (friction) forces, and the fluid's acceleration.</p>
+                    <h4>The x-Momentum Equation (within the boundary layer):</h4>
+                    ```math
+                    \rho \left( u \frac{\partial u}{\partial x} + v \frac{\partial u}{\partial y} \right) = \mu \frac{\partial^2 u}{\partial y^2} - \frac{dP}{dx}
+                    ```
+                    <p><b>Interpretation of Terms:</b><br>
+                    \KATEX_INLINE_OPEN \rho(u\frac{\partial u}{\partial x} + v\frac{\partial u}{\partial y}) \KATEX_INLINE_CLOSE = Inertial Forces (Mass × Acceleration)<br>
+                    \KATEX_INLINE_OPEN \mu \frac{\partial^2 u}{\partial y^2} \KATEX_INLINE_CLOSE = Viscous Forces (Friction)<br>
+                    \KATEX_INLINE_OPEN - \frac{dP}{dx} \KATEX_INLINE_CLOSE = Pressure Force</p>
+                    
+                    <div class="insight">
+                        <i><b>A Profound Simplification:</b> A key result from the boundary layer approximations is for the y-momentum equation, which simplifies to:</i>
+                        ```math
+                        \frac{\partial P}{\partial y} = 0
+                        ```
+                        <i>This means pressure does not change in the direction normal to the surface. This is a huge simplification that allows us to find the pressure from the simple inviscid flow outside the boundary layer and use it as an input to our boundary layer analysis.</i>
+                    </div>
+
+                    <h2>3. The Energy Equation (Conservation of Energy)</h2>
+                    <p>The principle is the First Law of Thermodynamics: <b>Energy In = Energy Out</b>. This equation accounts for energy transferred by the moving fluid (convection) and energy transferred by molecular interactions (conduction).</p>
+                    <h4>The Formula (simplified form):</h4>
+                    ```math
+                    \rho c_p \left( u \frac{\partial T}{\partial x} + v \frac{\partial T}{\partial y} \right) = k \left( \frac{\partial^2 T}{\partial x^2} + \frac{\partial^2 T}{\partial y^2} \right)
+                    ```
+                    <p><b>Interpretation of Terms:</b><br>
+                    Left Side: Net Rate of Energy Transfer by Convection (Advection)<br>
+                    Right Side: Net Rate of Energy Transfer by Conduction (Diffusion)</p>
+                    <h4>The Formula (with Viscous Dissipation):</h4>
+                    ```math
+                    \rho c_p \left( u \frac{\partial T}{\partial x} + v \frac{\partial T}{\partial y} \right) = k \left( \frac{\partial^2 T}{\partial x^2} + \frac{\partial^2 T}{\partial y^2} \right) + \mu \Phi
+                    ```
+                    <p>The new term, <b>Viscous Dissipation (\KATEX_INLINE_OPEN \mu \Phi \KATEX_INLINE_CLOSE)</b>, represents the conversion of mechanical work (friction) into thermal energy. It's a heat generation term that is important for very high-speed or high-viscosity flows.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>The Three Musketeers of Convection</b>
+                        <p>To solve a 2D convection problem, you must solve a system of three coupled partial differential equations:</p>
+                        <ol>
+                            <li><b>Continuity Equation</b> (Mass Balance)</li>
+                            <li><b>Momentum Equation</b> (Newton's 2nd Law)</li>
+                            <li><b>Energy Equation</b> (1st Law of Thermodynamics)</li>
+                        </ol>
+                        This is the "engine" of all CFD software.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 6: Synthesis -->
+            <section id="sec-synthesis" class="roadmap-section">
+                <div class="section-header">
+                    <h2>6. Synthesis: Analogies & Functional Forms</h2>
+                </div>
+                <div class="section-content">
+                    <p>This section pulls the camera back to show the "big picture" payoff of all the complex derivations. It explains why dimensionless numbers are so powerful and reveals the elegant connection between friction and heat transfer.</p>
+
+                    <h2>Functional Forms of Coefficients</h2>
+                    <p>We started with a huge list of variables affecting heat transfer (\KATEX_INLINE_OPEN V, L, \rho, \mu, c_p, k \KATEX_INLINE_CLOSE). By grouping them into a few powerful, dimensionless numbers, we dramatically simplify the problem.</p>
+
+                    <div class="insight">
+                        <i><b>Analogy: Baking a Cake 🎂</b><br>
+                        A normal recipe lists specific amounts: "200 grams of flour, 100 grams of sugar..." This is complex and hard to scale. A baker's recipe uses dimensionless ratios: "Use a flour-to-sugar mass ratio of 2:1." This is simple, scalable, and universal. The Reynolds number and Prandtl number are our "baker's ratios" for convection. The big finding is that the Nusselt number (our result) depends only on these key ratios.
+                        </i>
+                    </div>
+
+                    <p>This leads to a powerful conclusion: two vastly different physical situations will have the exact same Nusselt number if their Reynolds and Prandtl numbers are the same.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>The General Form of Convection Correlations</b>
+                        <p>This principle makes experimentation possible and gives us practical tools. Most empirical correlations for Nusselt number are presented in a simple power-law format:</p>
+                        ```math
+                        \text{Nu} = C \cdot \text{Re}_L^m \cdot \text{Pr}^n
+                        ```
+                        <ul>
+                            <li><b>C:</b> A constant that depends on the geometry (flat plate, cylinder, etc.).</li>
+                            <li><b>m:</b> The Reynolds number exponent (~0.5 for laminar, ~0.8 for turbulent).</li>
+                            <li><b>n:</b> The Prandtl number exponent (often around 1/3).</li>
+                        </ul>
+                        <p><b>Design Implication:</b> This form gives you powerful rules of thumb. If \KATEX_INLINE_OPEN m \approx 0.8 \KATEX_INLINE_CLOSE, doubling the velocity (\KATEX_INLINE_OPEN V \KATEX_INLINE_CLOSE) increases the heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) by a factor of about \KATEX_INLINE_OPEN 2^{0.8} \approx 1.74 \KATEX_INLINE_CLOSE.</p>
+                    </div>
+
+                    <h2>Analogies Between Momentum and Heat Transfer</h2>
+                    <p>If heat and momentum are transported by the same mechanisms (molecular diffusion or turbulent eddies), shouldn't there be a direct relationship between friction drag and heat transfer? The answer is yes.</p>
+                    
+                    <div class="insight">
+                        <i><b>Analogy: Two Different Packages, Same Delivery Truck 🚚</b><br>
+                        Imagine an eddy is a delivery truck. It has two jobs:
+                        <ol>
+                            <li><b>Delivering Momentum:</b> The truck's speed creates a force (friction).</li>
+                            <li><b>Delivering Heat:</b> The truck's temperature transfers thermal energy.</li>
+                        </ol>
+                        The delivery mechanism is the same. The efficiency of the route (i.e., the turbulence) affects both deliveries in the same way.
+                        </i>
+                    </div>
+                    
+                    <p>This relationship allows us to predict one phenomenon from the other, which is an incredibly powerful practical tool.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Key Analogies & Formulas</b>
+                        <h4>1. The Stanton Number (\KATEX_INLINE_OPEN \text{St} \KATEX_INLINE_CLOSE)</h4>
+                        <p>Another dimensionless heat transfer coefficient.</p>
+                        ```math
+                        \text{St} = \frac{h}{\rho V c_p} = \frac{\text{Nu}}{\text{Re}_L \text{Pr}}
+                        ```
+                        <h4>2. The Reynolds Analogy</h4>
+                        <p>The simplest analogy, but only accurate for \KATEX_INLINE_OPEN \text{Pr} \approx 1 \KATEX_INLINE_CLOSE (like gases) and simple flows.</p>
+                        ```math
+                        \frac{C_f}{2} = \text{St} \quad (\text{for Pr}=1)
+                        ```
+                        <h4>3. The Chilton-Colburn Analogy (Modified Reynolds Analogy)</h4>
+                        <p>This is the more general and widely applicable relationship that adds a correction for the Prandtl number. It works well for a wide range of fluids (\KATEX_INLINE_OPEN 0.6 < \text{Pr} < 60 \KATEX_INLINE_CLOSE).</p>
+                        ```math
+                        \frac{C_f}{2} = \text{St} \cdot \text{Pr}^{2/3}
+                        ```
+                        <p><b>Design Implication:</b> This is an incredibly useful tool. You can measure the pressure drop in a system to find the friction factor (\KATEX_INLINE_OPEN C_f \KATEX_INLINE_CLOSE), and then use this analogy to accurately estimate the heat transfer coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) without ever running a thermal experiment.</p>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const workflowNodes = document.querySelectorAll('.workflow-node');
+            const sections = document.querySelectorAll('.roadmap-section');
+            const sectionHeaders = document.querySelectorAll('.section-header');
+
+            const collapseAllSections = () => {
+                sections.forEach(section => {
+                    section.classList.remove('expanded');
+                });
+            };
+
+            workflowNodes.forEach(node => {
+                node.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+
+                    if (targetSection) {
+                        const isExpanded = targetSection.classList.contains('expanded');
+                        
+                        if (!isExpanded) {
+                            collapseAllSections();
+                        }
+
+                        targetSection.classList.toggle('expanded');
+                        
+                        setTimeout(() => {
+                           targetSection.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }, 100);
+                    }
+                });
+            });
+
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const parentSection = this.parentElement;
+                    parentSection.classList.toggle('expanded');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
