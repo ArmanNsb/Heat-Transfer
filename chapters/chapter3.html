@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Workflow: Steady Heat Conduction</title>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+            displayMath: [['```math', '```']],
+            processEscapes: true
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+             transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 45%;
+            position: relative;
+        }
+        
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .decision::after { 
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+        
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector::after {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+
+        .section-header::after {
+            content: 'â–¼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+        
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <h1>Visual Workflow: Steady Heat Conduction</h1>
+
+    <div class="workflow-map">
+        <div class="workflow-node" data-target="sec-analogy">1. Foundations: The Thermal Resistance Analogy</div>
+        <div class="workflow-node" data-target="sec-network">2. Building the Network: Composite Walls & Contact Resistance</div>
+        <div class="workflow-node decision" data-target="sec-geometries"><span>3. Analyze System Geometry</span></div>
+        <div class="flow-branch">
+            <div class="branch-container">
+                <h3>Curved Geometries</h3>
+                <div class="workflow-node no-connector" data-target="sec-geometries">Cylinders & Spheres</div>
+            </div>
+            <div class="branch-container">
+                <h3>Complex Pathways</h3>
+                <div class="workflow-node no-connector" data-target="sec-geometries">Generalized Networks & Shape Factors</div>
+            </div>
+        </div>
+        <div class="rejoin-connector"></div>
+        <div class="workflow-node" data-target="sec-critical-radius">4. Key Design Insight: Critical Radius of Insulation</div>
+        <div class="workflow-node" data-target="sec-fins-intro">5. Heat Transfer Enhancement: Finned Surfaces</div>
+        <div class="workflow-node" data-target="sec-fin-math">6. Mathematical Analysis: The Fin Equation & Solutions</div>
+        <div class="workflow-node" data-target="sec-fin-performance">7. Performance Metrics: Fin Efficiency & Effectiveness</div>
+        <div class="workflow-node" data-target="sec-bioheat">8. Advanced Topics: Bioheat & Handbook Methods</div>
+    </div>
+
+    <div id="accordion-container">
+
+        <!-- Section 1: The Thermal Resistance Analogy -->
+        <section class="roadmap-section" id="sec-analogy">
+            <div class="section-header"><h2>1. Foundations: The Thermal Resistance Analogy</h2></div>
+            <div class="section-content">
+                <p>So far, we've used calculus to describe heat flow. Now, we're going to use a powerful analogy that turns complex heat transfer problems into simple circuits, just like the ones you learned about in basic physics. This is one of the most useful mental models you will have as a process engineer. The flow of heat is strikingly similar to the flow of electricity. We can create a direct one-to-one mapping.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> This is a fantastic section. We are now moving from the world of differential calculus into a much more intuitive and powerful framework for solving everyday problems: Thermal Resistance. This is a game-changer for practical engineering analysis. This concept simplifies our lives immensely.</i>
+                </div>
+                <h3>The Electrical Circuit Analogy ⚡</h3>
+                <p>We can map thermal quantities directly to electrical quantities:</p>
+                <ul>
+                    <li><b>Heat Transfer Rate (\KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE)</b> is like <b>Electric Current (\KATEX_INLINE_OPEN I \KATEX_INLINE_CLOSE)</b>. It represents the FLOW of energy.</li>
+                    <li><b>Temperature Difference (\KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE)</b> is like <b>Voltage Difference (\KATEX_INLINE_OPEN \Delta V \KATEX_INLINE_CLOSE)</b>. It represents the DRIVING FORCE.</li>
+                    <li><b>Thermal Resistance (\KATEX_INLINE_OPEN R_{th} \KATEX_INLINE_CLOSE)</b> is like <b>Electrical Resistance (\KATEX_INLINE_OPEN R \KATEX_INLINE_CLOSE)</b>. It represents the OPPOSITION to flow.</li>
+                </ul>
+                <p>Remember Ohm's Law for electricity? \KATEX_INLINE_OPEN \Delta V = I \cdot R \KATEX_INLINE_CLOSE. We can write the exact same law for heat transfer: \KATEX_INLINE_OPEN \Delta T = \dot{Q} \cdot R_{th} \KATEX_INLINE_CLOSE. For our purposes, we almost always rearrange it to solve for the heat flow, which is what we care about.</p>
+                <h3>The "Thermal Ohm's Law"</h3>
+                <p>This simple equation is our new powerhouse. Instead of solving a differential equation for every problem, we can now do three things:</p>
+                <ol>
+                    <li>Figure out the thermal resistance (\KATEX_INLINE_OPEN R_{th} \KATEX_INLINE_CLOSE) for each component in our system (like a wall).</li>
+                    <li>Figure out the total temperature difference (\KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE) across the whole system.</li>
+                    <li>Divide them to find the heat transfer rate (\KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE).</li>
+                </ol>
+                ```math
+                    \dot{Q} = \frac{\Delta T}{R_{th}}
+                ```
+                <h3>Thermal Resistance for Conduction (Plane Wall)</h3>
+                <p>This is the first entry in our library. It is derived directly from the standard steady-state conduction equation \KATEX_INLINE_OPEN \dot{Q} = kA(T_1-T_2)/L \KATEX_INLINE_CLOSE.</p>
+                ```math
+                    R_{th, cond} = \frac{L}{kA}
+                ```
+                <p>Where:</p>
+                <ul>
+                    <li>\KATEX_INLINE_OPEN L \KATEX_INLINE_CLOSE: Thickness of the wall (the distance the heat travels) [m]</li>
+                    <li>\KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE: Thermal conductivity of the wall material [W/m·K]</li>
+                    <li>\KATEX_INLINE_OPEN A \KATEX_INLINE_CLOSE: Area of the wall normal to heat flow [m²]</li>
+                    <li>Units: K/W or °C/W</li>
+                </ul>
+                <div class="rule-of-thumb">
+                    <b>Key Concept Reminder:</b> This resistance concept is valid for steady, one-dimensional heat transfer. For a plane wall with constant \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE, the temperature profile \KATEX_INLINE_OPEN T(x) \KATEX_INLINE_CLOSE is a straight line (linear). 📈
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Building the Network -->
+        <section class="roadmap-section" id="sec-network">
+            <div class="section-header"><h2>2. Building the Network: Composite Walls & Contact Resistance</h2></div>
+            <div class="section-content">
+                <h3>Surface Resistances: Convection and Radiation</h3>
+                <p>In any real system, heat doesn't just stop at a wall's surface. It has to be transferred to the wall from a fluid and from the wall to another fluid. This is where convection and radiation come in, each adding their own resistance to the network.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> In 99% of plant problems, the main bottleneck—the largest resistance—is convection at the surface. Conduction through a metal pipe wall is usually very fast (low resistance). It's getting the heat from the fluid into the pipe wall, or from the pipe wall into the surrounding air, that controls the overall rate of heat transfer.</i>
+                </div>
+                <h4>Convection Resistance (\KATEX_INLINE_OPEN R_{conv} \KATEX_INLINE_CLOSE)</h4>
+                <p>This represents the opposition to heat transfer between a solid surface and a moving fluid. A powerful fan (high \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) leads to low resistance, while still air (low \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) leads to high resistance.</p>
+                ```math
+                    R_{conv} = \frac{1}{hA_s}
+                ```
+                <h4>Radiation Resistance (\KATEX_INLINE_OPEN R_{rad} \KATEX_INLINE_CLOSE)</h4>
+                <p>This represents opposition to heat transfer via electromagnetic waves. It's highly non-linear, but we can linearize it by defining a radiation heat transfer coefficient, \KATEX_INLINE_OPEN h_{rad} \KATEX_INLINE_CLOSE.</p>
+                ```math
+                    R_{rad} = \frac{1}{h_{rad}A_s}
+                ```
+                <p>Where \KATEX_INLINE_OPEN h_{rad} = \epsilon\sigma(T_s^2 + T_{surr}^2)(T_s + T_{surr}) \KATEX_INLINE_CLOSE. Temperatures must be absolute (K or R).</p>
+
+                <h3>Composite Systems: Multilayer Plane Walls</h3>
+                <p>We can model a complete heat transfer problem as a circuit of thermal resistances. For heat transfer through a plane wall with convection on both sides, the total resistance is the sum of the series resistors. Think of heat wanting to travel from a hot fluid on one side of a wall to a cold fluid on the other. For the heat, this journey is like an obstacle course.</p>
+                <div class="rule-of-thumb">
+                    <b>Engineer's Rule of Thumb:</b> This concept takes a complex, multi-step heat transfer problem and turns it into a simple \KATEX_INLINE_OPEN \dot{Q} = \Delta T / R_{total} \KATEX_INLINE_CLOSE calculation. It's a fundamental tool for practical design and analysis, allowing you to calculate heat flow using only easily measured bulk fluid temperatures (\KATEX_INLINE_OPEN T_{\infty1} \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN T_{\infty2} \KATEX_INLINE_CLOSE).
+                </div>
+                <h4>Total Resistance for a Single-Layer Wall:</h4>
+                ```math
+                    R_{total} = R_{conv,1} + R_{wall} + R_{conv,2} = \frac{1}{h_1 A} + \frac{L}{kA} + \frac{1}{h_2 A}
+                ```
+                <h4>For a Multi-Layer (Composite) Wall:</h4>
+                <p>You just add the conductive resistance for each additional layer. For a two-layer wall:</p>
+                ```math
+                    R_{total} = \frac{1}{h_1 A} + \frac{L_1}{k_1 A} + \frac{L_2}{k_2 A} + \frac{1}{h_2 A}
+                ```
+                <h3>Real-World Effect: Thermal Contact Resistance</h3>
+                <p>So far, we've treated surfaces pressed together as a seamless connection. In reality, even smooth surfaces are microscopically rough. When pressed together, only the "peaks" actually touch, creating tiny, trapped pockets of air in the "valleys." This creates an additional resistance.</p>
+                <div class="insight">
+                    <i><b>Physical Insight (A Highway with Potholes):</b> Think of heat as cars on a highway. The interface between two materials is like a section riddled with potholes. The solid-to-solid contact points are smooth patches. The air-filled gaps are potholes that slow traffic dramatically. This "pothole section" creates an extra resistance, \KATEX_INLINE_OPEN R_c \KATEX_INLINE_CLOSE, causing a sudden temperature drop at the interface.</i>
+                </div>
+                <p>Thermal Contact Resistance (\KATEX_INLINE_OPEN R_c \KATEX_INLINE_CLOSE) is defined for a unit area, with units of \KATEX_INLINE_OPEN \text{m}^2\cdot\text{K/W} \KATEX_INLINE_CLOSE. To get the total resistance for your component, divide by the interface area:</p>
+                ```math
+                    R_{c,interface} = \frac{R_c}{A}
+                ```
+                <p>This resistance is then simply added in series to your network. Factors influencing contact resistance include interface pressure, surface roughness, and interstitial fluids (like thermal grease).</p>
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> Thermal contact resistance is a "real-world tax" on heat transfer.
+                    <ul>
+                        <li>It is <b>significant</b> for good conductors (metals), like in cooling a CPU. Ignoring it leads to wrong answers.</li>
+                        <li>It is often <b>negligible</b> for poor conductors (insulators), where the insulation's resistance is already massive.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Geometries -->
+        <section class="roadmap-section" id="sec-geometries">
+            <div class="section-header"><h2>3. Expanding Geometries: Cylinders, Spheres & Complex Paths</h2></div>
+            <div class="section-content">
+                <h3>Heat Conduction in Cylinders and Spheres</h3>
+                <p>We're moving from flat plane walls to the curved geometries of pipes and vessels. The core concept of thermal resistance remains the same, but our formulas must adjust to account for the changing area for heat transfer.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> In a cylinder or sphere, the area for heat transfer is no longer constant; it increases with radius (\KATEX_INLINE_OPEN A = 2\pi r L \KATEX_INLINE_CLOSE for a cylinder). This changing area is the key difference from a plane wall and is why the resistance formula changes from a simple \KATEX_INLINE_OPEN L/kA \KATEX_INLINE_CLOSE to a logarithmic term for cylinders.</i>
+                </div>
+                <h4>Formulas for Conductive Resistance</h4>
+                <p><b>Cylindrical Layer (e.g., a pipe):</b></p>
+                ```math
+                    R_{cyl} = \frac{\ln(r_2/r_1)}{2\pi L k}
+                ```
+                <p><b>Spherical Layer (e.g., a storage tank):</b></p>
+                ```math
+                    R_{sph} = \frac{r_2 - r_1}{4\pi r_1 r_2 k}
+                ```
+                <h4>Resistance Network for a Composite Pipe/Sphere</h4>
+                <p>The network is still a simple series circuit. For a single-layer hollow cylinder with convection inside and out:</p>
+                ```math
+                    R_{total} = R_{conv,1} + R_{cyl} + R_{conv,2} = \frac{1}{h_1 A_1} + \frac{\ln(r_2/r_1)}{2\pi L k} + \frac{1}{h_2 A_2}
+                ```
+                <div class="rule-of-thumb">
+                    <b>Design Implication (CRITICAL):</b> Note that the inner and outer surface areas, \KATEX_INLINE_OPEN A_1 \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN A_2 \KATEX_INLINE_CLOSE, are different!
+                    <ul>
+                        <li>For a cylinder: \KATEX_INLINE_OPEN A_1 = 2\pi r_1 L \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN A_2 = 2\pi r_2 L \KATEX_INLINE_CLOSE.</li>
+                        <li>For a sphere: \KATEX_INLINE_OPEN A_1 = 4\pi r_1^2 \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN A_2 = 4\pi r_2^2 \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+                </div>
+                <p>For multilayered cylinders and spheres, you simply add the resistance of each additional layer in series.</p>
+
+                <h3>Generalized Thermal Resistance Networks</h3>
+                <p>Sometimes, heat has a choice of routes. This introduces parallel and combined series-parallel networks. For example, in a house wall with wood studs and insulation side-by-side, heat has two parallel paths it can take.</p>
+                <h4>Parallel Resistance</h4>
+                <p>The reciprocal of the total resistance is the sum of the reciprocals of the individual resistances.</p>
+                ```math
+                    \frac{1}{R_{total}} = \frac{1}{R_1} + \frac{1}{R_2} + \dots
+                ```
+                <p>For two resistors in parallel:</p>
+                ```math
+                    R_{total} = \frac{R_1 R_2}{R_1 + R_2}
+                ```
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> This is a practical tool for getting "good enough" answers for complex shapes without full FEA software. A classic example is calculating heat loss through a wall with steel studs, which act as "thermal bridges" (low resistance paths) in parallel with the high-resistance insulation. This 1D approximation is fast, easy, and usually gives acceptable results.
+                </div>
+
+                <h3>Heat Transfer in Common Configurations (Conduction Shape Factor)</h3>
+                <p>For complex 2-D and 3-D problems like a pipe buried underground, solving the full equations is difficult. The Conduction Shape Factor (\KATEX_INLINE_OPEN S \KATEX_INLINE_CLOSE) is an elegant handbook solution that bundles all the complex geometry into a single value.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> The Shape Factor, \KATEX_INLINE_OPEN S \KATEX_INLINE_CLOSE, is like a pre-calculated "difficulty score" for the geometric maze that heat must navigate. Once you look up \KATEX_INLINE_OPEN S \KATEX_INLINE_CLOSE in a table for your specific configuration, the problem becomes simple again.</i>
+                </div>
+                <h4>Governing Equation</h4>
+                <p>The heat transfer is calculated directly using the shape factor:</p>
+                ```math
+                    \dot{Q} = S k (T_1 - T_2)
+                ```
+                <p>The corresponding thermal resistance is:</p>
+                ```math
+                    R_{conduction} = \frac{1}{S k}
+                ```
+                <p>This method is only for steady-state conduction between two isothermal surfaces.</p>
+            </div>
+        </section>
+
+        <!-- Section 4: Critical Radius -->
+        <section class="roadmap-section" id="sec-critical-radius">
+            <div class="section-header"><h2>4. Key Design Insight: Critical Radius of Insulation</h2></div>
+            <div class="section-content">
+                <p>Our intuition says adding insulation always reduces heat loss. For a flat wall, this is true. However, for curved surfaces (cylinders and spheres), there is a fascinating exception where adding insulation can actually <b>increase</b> heat loss.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> When you add insulation to a pipe, you are doing two things at once:
+                        <ol>
+                            <li>You <b>add conduction resistance</b> (\KATEX_INLINE_OPEN R_{cond} \KATEX_INLINE_CLOSE increases), which tends to <i>decrease</i> heat transfer.</li>
+                            <li>You <b>increase the outer surface area</b> (\KATEX_INLINE_OPEN A_2 \KATEX_INLINE_CLOSE increases), which <i>decreases</i> the convection resistance (\KATEX_INLINE_OPEN R_{conv} = 1/hA_2 \KATEX_INLINE_CLOSE) and tends to <i>increase</i> heat transfer.</li>
+                        </ol>
+                    These two effects fight against each other. If the benefit from the increased surface area is greater than the penalty from the added material, total heat transfer will increase. You've accidentally made your insulation act like a radiator fin!
+                    </i>
+                </div>
+                <p>The critical radius (\KATEX_INLINE_OPEN r_{cr} \KATEX_INLINE_CLOSE) is the outer radius where these two competing effects are perfectly balanced, and the heat transfer is at its maximum.</p>
+                <h3>Formulas for Critical Radius</h3>
+                <p><b>For a Cylinder:</b></p>
+                ```math
+                    r_{cr, cyl} = \frac{k}{h}
+                ```
+                <p><b>For a Sphere:</b></p>
+                ```math
+                    r_{cr, sph} = \frac{2k}{h}
+                ```
+                <p>Where \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE is the thermal conductivity of the <i>insulation</i>, and \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is the convection coefficient of the <i>surrounding fluid</i>.</p>
+
+                <h3>The Three Regimes of Insulation</h3>
+                <ul>
+                    <li>If the pipe's outer radius \KATEX_INLINE_OPEN r_2 < r_{cr} \KATEX_INLINE_CLOSE: Adding insulation <b>increases</b> heat transfer.</li>
+                    <li>If \KATEX_INLINE_OPEN r_2 = r_{cr} \KATEX_INLINE_CLOSE: Heat transfer is at its absolute <b>maximum</b>.</li>
+                    <li>If \KATEX_INLINE_OPEN r_2 > r_{cr} \KATEX_INLINE_CLOSE: Adding insulation <b>decreases</b> heat transfer (the normal, expected behavior).</li>
+                </ul>
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b>
+                    <ul>
+                        <li><b>For Insulating Pipes:</b> In most industrial settings (steam pipes, etc.), the critical radius is very small (often < 1 cm). Since pipes are almost always larger than this, any insulation you add will be in the \KATEX_INLINE_OPEN r_2 > r_{cr} \KATEX_INLINE_CLOSE regime, so adding insulation always helps.</li>
+                        <li><b>For Cooling Electronics:</b> This effect is used to an advantage. The plastic coating on a very thin electrical wire (\KATEX_INLINE_OPEN r_1 < r_{cr} \KATEX_INLINE_CLOSE) acts as both an electrical insulator and a heat transfer enhancement surface, maximizing heat dissipation to keep the wire cool.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Fins Intro -->
+        <section class="roadmap-section" id="sec-fins-intro">
+            <div class="section-header"><h2>5. Heat Transfer Enhancement: Finned Surfaces</h2></div>
+            <div class="section-content">
+                <p>This section focuses on a powerful method to increase the heat transfer rate, \KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE, when you can't easily change the temperatures (\KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE) or the fluid flow (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE). The solution: dramatically increase the surface area (\KATEX_INLINE_OPEN A \KATEX_INLINE_CLOSE) by adding fins.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> Fins are like "spreading the arms and legs" of a hot surface to give it a much larger area to dissipate heat into the surrounding fluid. However, for a fin to work, heat must first conduct from the base to the tip. This means the tip of the fin will always be cooler than the base. A well-designed fin balances adding area with using a high-conductivity material to get the heat out to that new area efficiently.</i>
+                </div>
+                <h3>The Fundamental Principle</h3>
+                <p>Fins are used to enhance the rate of heat transfer from a surface based on Newton's Law of Cooling:</p>
+                ```math
+                    \dot{Q} = h A_s (T_s - T_\infty)
+                ```
+                <p>The primary mechanism of fins is to increase the total surface area for convection, \KATEX_INLINE_OPEN A_s \KATEX_INLINE_CLOSE.</p>
+                <h3>Ideal Fin Characteristics</h3>
+                To be effective, a fin should:
+                <ul>
+                    <li>Be made of a highly conductive material (high \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE).</li>
+                    <li>Have a large surface area (e.g., many thin fins).</li>
+                </ul>
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> Fins are most effective when there is a mismatch in convection coefficients. A classic example is an air-cooled heat exchanger.
+                    <ul>
+                        <li><b>Inside tubes:</b> Hot liquid (high \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Outside tubes:</b> Ambient air (low \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE).</li>
+                    </ul>
+                    The air-side convection is the bottleneck. Therefore, we add fins to the <b>outside</b> (the air side) to increase \KATEX_INLINE_OPEN A \KATEX_INLINE_CLOSE and compensate for the low \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE.
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 6: Fin Math -->
+        <section class="roadmap-section" id="sec-fin-math">
+            <div class="section-header"><h2>6. Mathematical Analysis: The Fin Equation & Solutions</h2></div>
+            <div class="section-content">
+                <h3>The Fin Equation</h3>
+                <p>To predict the temperature profile along a fin, we perform a microscopic energy balance on an infinitesimally small slice of the fin. The principle is: Energy Conducted In = Energy Conducted Out + Energy Convected Away.</p>
+                <div class="insight">
+                    <i><b>Physical Insight (A Leaky Garden Hose):</b> Imagine heat as water flowing into a leaky hose. The water flowing into a small slice (conduction in) must equal the water flowing out the other end (conduction out) plus the water leaking from the sides of the slice (convection). This balance gives rise to a governing differential equation.</i>
+                </div>
+                <p>This balance results in a second-order differential equation. For a fin of constant cross-sectional area \KATEX_INLINE_OPEN A_c \KATEX_INLINE_CLOSE, this is the <b>Fin Equation</b>:</p>
+                ```math
+                    \frac{d^2\theta}{dx^2} - m^2\theta = 0
+                ```
+                <p>Where \KATEX_INLINE_OPEN \theta(x) = T(x) - T_\infty \KATEX_INLINE_CLOSE is the "temperature excess," and \KATEX_INLINE_OPEN m \KATEX_INLINE_CLOSE is the critical fin parameter:</p>
+                ```math
+                    m = \sqrt{\frac{hp}{kA_c}}
+                ```
+                <p>Here, \KATEX_INLINE_OPEN p \KATEX_INLINE_CLOSE is the perimeter of the fin's cross-section. The general solution is \KATEX_INLINE_OPEN \theta(x) = C_1 e^{mx} + C_2 e^{-mx} \KATEX_INLINE_CLOSE, where the constants \KATEX_INLINE_OPEN C_1 \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN C_2 \KATEX_INLINE_CLOSE are found using boundary conditions.</p>
+
+                <h3>Solutions for Specific Cases</h3>
+                <h4>Case 1: Infinitely Long Fin</h4>
+                <p>Assumes the fin is so long its tip reaches ambient temperature (\KATEX_INLINE_OPEN T_{tip} = T_\infty \KATEX_INLINE_CLOSE).</p>
+                <ul>
+                    <li><b>Temperature Profile:</b> \KATEX_INLINE_OPEN \frac{T(x) - T_\infty}{T_{base} - T_\infty} = e^{-mx} \KATEX_INLINE_CLOSE</li>
+                    <li><b>Heat Transfer Rate:</b> \KATEX_INLINE_OPEN \dot{Q}_{long\_fin} = \sqrt{hpkA_c} (T_{base} - T_\infty) \KATEX_INLINE_CLOSE</li>
+                </ul>
+
+                <h4>Case 2: Adiabatic (Insulated) Tip Fin</h4>
+                <p>Assumes no heat is lost from the tip (\KATEX_INLINE_OPEN \dot{Q}_{tip} = 0 \KATEX_INLINE_CLOSE). This is an excellent approximation for most long, thin fins.</p>
+                <ul>
+                    <li><b>Temperature Profile:</b> \KATEX_INLINE_OPEN \frac{T(x) - T_\infty}{T_{base} - T_\infty} = \frac{\cosh[m(L-x)]}{\cosh(mL)} \KATEX_INLINE_CLOSE</li>
+                    <li><b>Heat Transfer Rate:</b> \KATEX_INLINE_OPEN \dot{Q}_{adiabatic\_tip} = \sqrt{hpkA_c} (T_{base} - T_\infty) \tanh(mL) \KATEX_INLINE_CLOSE</li>
+                </ul>
+                
+                <h4>Case 3 & 4: Specified Temperature & Convection from Tip</h4>
+                <p>These cases are more physically realistic but result in more complex formulas. The case with convection from the tip is the most accurate model.</p>
+                
+                <div class="rule-of-thumb">
+                    <b>The Practical Shortcut: Corrected Fin Length (\KATEX_INLINE_OPEN L_c \KATEX_INLINE_CLOSE)</b>
+                    <p>To get the accuracy of the complex convection-tip model with the simplicity of the adiabatic model, we use a "corrected length." We pretend the fin is slightly longer to account for the heat loss from the tip, and then use the simple adiabatic formulas.</p>
+                    <p><b>Corrected Length Formula:</b> \KATEX_INLINE_OPEN L_c = L + A_c / p \KATEX_INLINE_CLOSE</p>
+                    <ul>
+                        <li>For a rectangular fin of thickness t: \KATEX_INLINE_OPEN L_c = L + t/2 \KATEX_INLINE_CLOSE</li>
+                        <li>For a cylindrical fin of diameter D: \KATEX_INLINE_OPEN L_c = L + D/4 \KATEX_INLINE_CLOSE</li>
+                    </ul>
+                    <p><b>How to Use:</b> Calculate \KATEX_INLINE_OPEN L_c \KATEX_INLINE_CLOSE and use it in place of \KATEX_INLINE_OPEN L \KATEX_INLINE_CLOSE in the adiabatic tip equations. For example:</p>
+                    ```math
+                        \dot{Q}_{corrected} = \sqrt{hpkA_c}(T_b - T_\infty) \tanh(m L_c)
+                    ```
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 7: Fin Performance -->
+        <section class="roadmap-section" id="sec-fin-performance">
+            <div class="section-header"><h2>7. Performance Metrics: Fin Efficiency & Effectiveness</h2></div>
+            <div class="section-content">
+                <h3>Fin Efficiency (\KATEX_INLINE_OPEN \eta_{fin} \KATEX_INLINE_CLOSE)</h3>
+                <p>Fin efficiency answers the question: <b>"How well is my fin performing compared to a perfect, imaginary fin?"</b> A "perfect" fin would have infinite thermal conductivity, so its entire surface would be at the base temperature.</p>
+                ```math
+                    \eta_{fin} = \frac{\dot{Q}_{fin}}{\dot{Q}_{fin, max}} = \frac{\text{Actual heat transfer rate}}{\text{Ideal heat transfer rate (if entire fin were at } T_{base})}
+                ```
+                <p>Once you know the efficiency (from a formula or chart), you can calculate the actual heat transfer simply:</p>
+                ```math
+                    \dot{Q}_{fin} = \eta_{fin} \dot{Q}_{fin, max} = \eta_{fin} h A_{fin} (T_{base} - T_\infty)
+                ```
+                <p>For a common straight rectangular or pin fin (using the corrected length):</p>
+                ```math
+                    \eta_{fin} = \frac{\tanh(mL_c)}{mL_c}
+                ```
+                
+                <h3>Fin Effectiveness (\KATEX_INLINE_OPEN \varepsilon_{fin} \KATEX_INLINE_CLOSE)</h3>
+                <p>Fin effectiveness answers a more fundamental business question: <b>"Was adding this fin a good idea in the first place?"</b> It compares the heat transfer with the fin to the heat transfer from the bare surface without the fin.</p>
+                ```math
+                    \varepsilon_{fin} = \frac{\dot{Q}_{fin}}{\dot{Q}_{no fin}} = \frac{\text{Heat transfer rate with fin}}{\text{Heat transfer rate from the base area before fin was added}}
+                ```
+                <ul>
+                    <li>\KATEX_INLINE_OPEN \varepsilon_{fin} < 1 \KATEX_INLINE_CLOSE: The fin acts as insulation and makes things worse.</li>
+                    <li>\KATEX_INLINE_OPEN \varepsilon_{fin} = 1 \KATEX_INLINE_CLOSE: The fin does nothing.</li>
+                    <li>\KATEX_INLINE_OPEN \varepsilon_{fin} > 1 \KATEX_INLINE_CLOSE: The fin enhances heat transfer. A value > 2 is generally needed to justify the cost.</li>
+                </ul>
+                <div class="rule-of-thumb">
+                    <b>Design Implication: When to Use Fins</b>
+                    <p>The effectiveness formula for a long fin, \KATEX_INLINE_OPEN \varepsilon_{long\_fin} = \sqrt{kp/hA_c} \KATEX_INLINE_CLOSE, tells you everything:</p>
+                    <ul>
+                        <li><b>Use when \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is low.</b> Effectiveness is proportional to \KATEX_INLINE_OPEN 1/\sqrt{h} \KATEX_INLINE_CLOSE. This is why fins are used for gases (air) and not for boiling liquids.</li>
+                        <li><b>Use high-\KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE materials.</b></li>
+                        <li><b>Use thin, slender shapes</b> (high perimeter-to-area ratio, \KATEX_INLINE_OPEN p/A_c \KATEX_INLINE_CLOSE).</li>
+                    </ul>
+                </div>
+
+                <h3>Proper Length of a Fin</h3>
+                <p>The concept of diminishing returns is crucial. The far end of a long fin is nearly the same temperature as the air, so it contributes almost nothing to heat transfer. Making the fin longer just adds cost and weight for no significant gain. The proper length is where adding more fin stops being a good investment.</p>
+                <p>The performance relative to an infinite fin is given by \KATEX_INLINE_OPEN \tanh(mL_c) \KATEX_INLINE_CLOSE. A common design upper limit is \KATEX_INLINE_OPEN mL_c \approx 2 \KATEX_INLINE_CLOSE, which achieves ~96% of an infinite fin's performance.</p>
+            </div>
+        </section>
+
+        <!-- Section 8: Advanced Topics -->
+        <section class="roadmap-section" id="sec-bioheat">
+            <div class="section-header"><h2>8. Advanced Topics: Bioheat & Handbook Methods</h2></div>
+            <div class="section-content">
+                <h3>The Bioheat Transfer Equation</h3>
+                <p>This is an application of the heat conduction equation to living tissue. It's our familiar heat equation with extra source terms to account for the unique physics of biological systems.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> A piece of tissue is like a catalytic packed-bed reactor. The tissue is the solid packing. The blood is the fluid flowing through, arriving at arterial temperature (\KATEX_INLINE_OPEN T_a \KATEX_INLINE_CLOSE) and exchanging heat as it "perfuses" through the tissue. We add source terms for this perfusion and for the heat generated by the cells' metabolism.</i>
+                </div>
+                <p>The Pennes Bioheat Equation adds two source terms to the standard conduction equation:</p>
+                <ul>
+                    <li><b>Metabolic Heat Generation (\KATEX_INLINE_OPEN \dot{e}_m \KATEX_INLINE_CLOSE):</b> Heat released by cellular chemical reactions.</li>
+                    <li><b>Perfusion Heat Transfer (\KATEX_INLINE_OPEN \dot{e}_p \KATEX_INLINE_CLOSE):</b> Heat exchange between blood and tissue. \KATEX_INLINE_OPEN \dot{e}_p = \dot{\omega} \rho_b c_b (T_a - T) \KATEX_INLINE_CLOSE.</li>
+                </ul>
+                <p>Amazingly, the final steady-state, 1-D equation can be rearranged into a familiar form:</p>
+                ```math
+                    \frac{d^2\theta}{dx^2} - B^2\theta = 0
+                ```
+                <p>This is identical in form to the <b>fin equation</b>. This means all the solution methods learned for fins can be directly applied to solve for temperature profiles in living tissue, which is critical for designing medical devices and therapeutic treatments.</p>
+
+                <div class="rule-of-thumb">
+                    <b>Application Note:</b> This section is a reminder of the power of our fundamental equations. By adding appropriate source terms, the core heat diffusion equation can be adapted to model incredibly complex systems, from furnace walls to human tissue. The mathematical solution techniques often remain the same.
+                </div>
+            </div>
+        </section>
+        
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const workflowNodes = document.querySelectorAll('.workflow-node');
+        const sections = document.querySelectorAll('.roadmap-section');
+        const sectionHeaders = document.querySelectorAll('.section-header');
+
+        const collapseAllSections = () => {
+            sections.forEach(section => {
+                section.classList.remove('expanded');
+            });
+        };
+
+        workflowNodes.forEach(node => {
+            node.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const targetSection = document.getElementById(targetId);
+
+                if (targetSection) {
+                    const isExpanded = targetSection.classList.contains('expanded');
+                    
+                    if (!isExpanded) {
+                        collapseAllSections();
+                    }
+
+                    targetSection.classList.toggle('expanded');
+                    
+                    setTimeout(() => {
+                       targetSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 100);
+                }
+            });
+        });
+
+        sectionHeaders.forEach(header => {
+            header.addEventListener('click', function () {
+                const parentSection = this.parentElement;
+                parentSection.classList.toggle('expanded');
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
