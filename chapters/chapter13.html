@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Dashboard: Radiative Heat Transfer</title>
+    
+    <!-- MathJax Configuration -->
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+        displayMath: [['```math', '```']]
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- CSS (Embedded as requested) -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+             transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 45%;
+            position: relative;
+        }
+
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .decision::after { 
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector::after {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+
+        .section-header::after {
+            content: 'â–¼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+        
+        .insight i {
+            color: var(--text-secondary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>Interactive Workflow: Radiative Heat Transfer</h1>
+
+        <!-- Part A: The Visual Workflow Map -->
+        <div class="workflow-map">
+            <div class="workflow-node" data-target="sec-view-factor">
+                <strong>1. Foundations: The View Factor</strong>
+                <br><small>Quantifying the Geometry of Radiation</small>
+            </div>
+            <div class="workflow-node" data-target="sec-view-factor-relations">
+                <strong>2. Calculation Toolkit: View Factor Relations</strong>
+                <br><small>Rules to Solve the Geometric Puzzle</small>
+            </div>
+            <div class="workflow-node" data-target="sec-black-surfaces">
+                <strong>3. First Application: Blackbody Heat Transfer</strong>
+                <br><small>Connecting Geometry and Temperature</small>
+            </div>
+            <div class="workflow-node" data-target="sec-gray-surfaces">
+                <strong>4. Real-World Model: Diffuse, Gray Surfaces</strong>
+                <br><small>Accounting for Reflection with Resistance Networks</small>
+            </div>
+            <div class="workflow-node decision" data-target="sec-solving-methods">
+                <span><strong>5. How to Solve the Network?</strong></span>
+            </div>
+            <div class="flow-branch">
+                <div class="branch-container">
+                    <h3>Simple Enclosures (2-3 Surfaces)</h3>
+                    <div class="workflow-node no-connector" data-target="sec-solving-methods"><strong>Network Method</strong><br><small>Intuitive Circuit-Based Approach</small></div>
+                </div>
+                <div class="branch-container">
+                    <h3>Complex Enclosures (N > 3 Surfaces)</h3>
+                    <div class="workflow-node no-connector" data-target="sec-solving-methods"><strong>Matrix Method</strong><br><small>Systematic Method for Solvers</small></div>
+                </div>
+            </div>
+            <div class="rejoin-connector"></div>
+            <div class="workflow-node" data-target="sec-special-cases">
+                <strong>6. Practical Applications & Special Cases</strong>
+                <br><small>Radiation Shields & Measurement Errors</small>
+            </div>
+            <div class="workflow-node" data-target="sec-participating-gases">
+                <strong>7. Advanced Topic: Participating Gases</strong>
+                <br><small>Radiation Exchange with Emitting/Absorbing Media</small>
+            </div>
+        </div>
+
+        <!-- Part B: The Detailed Accordion Sections -->
+        <div id="accordion-container">
+
+            <!-- Section 1: View Factor -->
+            <section class="roadmap-section" id="sec-view-factor">
+                <div class="section-header">
+                    <h2>1. Foundations: The View Factor (13-1)</h2>
+                </div>
+                <div class="section-content">
+                    <p>This topic might seem purely mathematical at first, but understanding the view factor is fundamental to solving real-world radiation problems. At its heart, the view factor (\KATEX_INLINE_OPEN F_{ij} \KATEX_INLINE_CLOSE) is simply a number that answers the question: "Of all the radiant energy leaving surface 'i', what percentage of it actually hits surface 'j' directly?"</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: Spotlight Analogy</b><br>
+                        Imagine you are lighting a stage. You have a spotlight (Surface 1) pointed at an actor (Surface 2). The view factor, \KATEX_INLINE_OPEN F_{1 \to 2} \KATEX_INLINE_CLOSE, is the fraction of all the light leaving the spotlight's lens that lands directly on the actor. If you move the actor to the side, they are no longer in the main beam of light, so the view factor decreases. If a piece of scenery moves between the light and the actor, the direct view factor becomes zero. It's all about geometry and line-of-sight.</i>
+                    </div>
+                     <div class="insight">
+                        <i><b>Physical Insight: Furnace Analogy 🏭</b><br>
+                        Consider a combustion furnace with flames (Surface 1) and process tubes lining the walls (Surface 2). As an engineer, you need to know how much of the immense energy radiated by the flames is actually intercepted by the tubes to heat the fluid inside. The view factor \KATEX_INLINE_OPEN F_{\text{flames} \to \text{tubes}} \KATEX_INLINE_CLOSE is the critical first step in that calculation. It tells you how "well" the tubes are positioned to "see" the flames. A poor geometric layout (a low view factor) means you're wasting fuel because the radiant energy is hitting refractory walls instead of your process tubes.</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: Why this matters to an engineer.</b><br>
+                        Conduction and convection require physical contact or a fluid medium. Radiation is different; it's energy traveling at the speed of light in straight lines. The view factor is our tool to account for the geometry of this line-of-sight travel. It helps us solve critical problems like:
+                        <ul>
+                            <li><b>Equipment Design:</b> How do we arrange heating elements in an oven to ensure a product gets heated evenly? How big and how close should the tubes be to the flames in a fired heater?</li>
+                            <li><b>Safety Analysis:</b> If a pipe carrying molten metal ruptures, how much heat will radiate onto a nearby control panel or an operator's station? The view factor helps determine if a protective shield is needed. ⚙️</li>
+                            <li><b>Energy Efficiency:</b> In any high-temperature process, you want the maximum amount of radiant energy to go from the source to the target. Optimizing the geometry to maximize the view factor is key to improving efficiency and saving money.</li>
+                        </ul>
+                        The big takeaway is that the view factor isolates the effect of geometry from all other factors like temperature and surface material properties (which we'll deal with later). It's the first and most fundamental piece of the radiation puzzle.
+                    </div>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>Definition</h4>
+                    <p><b>View Factor (\KATEX_INLINE_OPEN F_{ij} \KATEX_INLINE_CLOSE):</b> The fraction of radiation leaving surface i that strikes surface j directly. It is a dimensionless quantity ranging from 0 to 1.</p>
+                    <ul>
+                        <li>\KATEX_INLINE_OPEN F_{ij} = 0 \KATEX_INLINE_CLOSE: Surface i cannot see surface j at all.</li>
+                        <li>\KATEX_INLINE_OPEN F_{ij} = 1 \KATEX_INLINE_CLOSE: Surface j completely encloses surface i. All radiation from i must hit j.</li>
+                    </ul>
+
+                    <h4>Governing Principles (The Rules of the Game)</h4>
+                    <ul>
+                        <li><b>Geometric Quantity:</b> The view factor depends ONLY on the size, shape, distance, and orientation of the surfaces. It is independent of temperature and surface properties (like emissivity).</li>
+                        <li><b>Assumptions:</b> The concept relies on two key assumptions:
+                            <ul>
+                                <li><b>Diffuse Surfaces:</b> Energy leaves the surface equally in all directions.</li>
+                                <li><b>Non-participating Medium:</b> The medium between the surfaces (e.g., air, vacuum) does not absorb, emit, or scatter radiation.</li>
+                            </ul>
+                        </li>
+                        <li><b>Self-View Factor (\KATEX_INLINE_OPEN F_{ii} \KATEX_INLINE_CLOSE):</b> The fraction of radiation from a surface that strikes itself.
+                            <ul>
+                                <li>For plane (flat) or convex surfaces, \KATEX_INLINE_OPEN F_{ii} = 0 \KATEX_INLINE_CLOSE. They cannot see themselves.</li>
+                                <li>For concave surfaces, \KATEX_INLINE_OPEN F_{ii} > 0 \KATEX_INLINE_CLOSE. They can "see" themselves.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    
+                    <h4>Your Engineering Toolkit (Key Formulas)</h4>
+                    <p><b>The Reciprocity Rule:</b> This is your most powerful tool for finding an unknown view factor when another is known. It relates two view factors to their respective areas.</p>
+                    ```math
+                    A_i F_{ij} = A_j F_{ji}
+                    ```
+                    <p><i>Utility:</i> It is often easy to determine the view factor from a small object to a large one (e.g., \KATEX_INLINE_OPEN F_{\text{small}\to\text{large}} \approx 1 \KATEX_INLINE_CLOSE). The reciprocity rule makes it simple to then find the view factor from the large object to the small one.</p>
+
+                    <p><b>The Summation Rule:</b> For an enclosure made of N surfaces, all the energy fractions leaving a single surface i must sum to 1.</p>
+                    ```math
+                    \sum_{j=1}^{N} F_{ij} = 1
+                    ```
+                    <p>Example (3 surfaces): \KATEX_INLINE_OPEN F_{i1} + F_{i2} + F_{i3} = 1 \KATEX_INLINE_CLOSE. This includes the self-view term \KATEX_INLINE_OPEN F_{ii} \KATEX_INLINE_CLOSE.</p>
+                    
+                    <p><b>The General Integral Form:</b> This is the formal definition. It's important to recognize it, but you will almost never solve it by hand in practice. You'll use charts or pre-calculated formulas.</p>
+                    ```math
+                    F_{ij} = \frac{1}{A_i} \int_{A_i} \int_{A_j} \frac{\cos\theta_i \cos\theta_j}{\pi r^2} dA_j dA_i
+                    ```
+                </div>
+            </section>
+
+            <!-- Section 2: View Factor Relations -->
+            <section class="roadmap-section" id="sec-view-factor-relations">
+                <div class="section-header">
+                    <h2>2. Calculation Toolkit: View Factor Relations (13-2)</h2>
+                </div>
+                <div class="section-content">
+                    <p>This is the heart of practical view factor analysis. Mastering these relationships will save you an incredible amount of time and effort by turning complex calculations into a logical puzzle.</p>
+                    <div class="insight">
+                        <i><b>Physical Insight: Sudoku Analogy</b><br>
+                        Think of yourself as a detective investigating where all the radiant energy in an enclosure is going. You have N suspects (surfaces), which means \KATEX_INLINE_OPEN N^2 \KATEX_INLINE_CLOSE potential interactions to track. Calculating each one from scratch using those complicated integrals is like interviewing every single person for every single possible event—it's inefficient and unnecessary. The "View Factor Relations" are your investigative toolkit, a set of logical rules that let you deduce most of the answers once you've found a few key clues. A view factor problem is like a Sudoku puzzle. You don't guess every number. You start with the given numbers (the easy-to-find view factors from charts), and then you use logical rules (Summation, Reciprocity, Symmetry) to fill in the rest of the grid without any more direct calculation.</i>
+                    </div>
+                    <p>Let's look at the tools in your kit:</p>
+                    <ul>
+                        <li><b>Reciprocity (The Two-Way Street):</b> It's often much easier to calculate the view factor from a small object to a large one. Imagine a tiny thermocouple bead (Surface 1) inside a massive industrial furnace (Surface 2). It's obvious the furnace completely surrounds the bead, so \KATEX_INLINE_OPEN F_{12} = 1 \KATEX_INLINE_CLOSE. But what's the view factor from the huge furnace to the tiny bead, \KATEX_INLINE_OPEN F_{21} \KATEX_INLINE_CLOSE? Instead of a massive calculation, reciprocity lets you just flip it: \KATEX_INLINE_OPEN A_{1}F_{12} = A_{2}F_{21} \KATEX_INLINE_CLOSE. Easy.</li>
+                        <li><b>Summation (The Energy Audit 📈):</b> This is the fundamental law of conservation. All energy leaving a surface must go somewhere. It either hits another surface in the enclosure or it hits itself. The summation rule is your "sanity check" or "energy balance." If you add up all the view factors from a single surface and they don't equal 1, you've made a mistake in your analysis.</li>
+                        <li><b>Superposition & Symmetry (Divide and Conquer):</b> These are efficiency tools. Is your heater wall made of identical panels? Symmetry says you only need to calculate the view factors for one. Need to know the heat flux to just the superheater section of your boiler tubes, not the whole wall? Superposition lets you break down the larger geometry and find the view factor to just the part you care about.</li>
+                        <li><b>Crossed-Strings Method (The Clever Shortcut ⚙️):</b> This is a brilliant and elegant trick for a very common industrial scenario: long, uniform cross-sections. Think of rows of pipes in a rack, heating elements in a long oven, or cooling channels in an extrusion process. Instead of complex 3D math, this method lets you draw a 2D picture of the cross-section and use the lengths of imaginary "strings" to find the view factor. It's a powerful simplification for 2D problems.</li>
+                    </ul>
+                     <div class="rule-of-thumb">
+                        <b>Design Implication:</b> In the real world, you'll never use the integral formula. You will always use a combination of charts and these four rules to solve radiation problems. Mastering this logical process is the key to performing thermal analysis efficiently and accurately.
+                    </div>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <p>This is your practical toolkit for solving any view factor problem.</p>
+                    <h4>The Four Fundamental Rules</h4>
+                    <p><b>1. The Reciprocity Rule:</b> Relates two view factors to their respective areas.</p>
+                    <ul>
+                        <li><b>Principle:</b> Flips the perspective of the view factor calculation.</li>
+                        <li><b>Formula:</b> ```math A_i F_{ij} = A_j F_{ji} ```</li>
+                        <li><b>Best Use:</b> Finding \KATEX_INLINE_OPEN F_{\text{large}\to\text{small}} \KATEX_INLINE_CLOSE after easily determining \KATEX_INLINE_OPEN F_{\text{small}\to\text{large}} \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+                    <p><b>2. The Summation Rule:</b> The sum of view factors from one surface in an enclosure to all surfaces of that enclosure (including itself) is one.</p>
+                    <ul>
+                        <li><b>Principle:</b> Conservation of energy—all radiated energy is accounted for.</li>
+                        <li><b>Formula:</b> For an N-surface enclosure: ```math \sum_{j=1}^{N} F_{ij} = 1 ```</li>
+                        <li><b>Best Use:</b> Finding the last unknown view factor from a surface once all others are known.</li>
+                    </ul>
+                    <p><b>3. The Superposition Rule:</b> The view factor to a combined surface is the sum of the view factors to its parts.</p>
+                    <ul>
+                        <li><b>Principle:</b> Additive nature of view factors from a single source.</li>
+                        <li><b>Formula:</b> ```math F_{i\to(j+k)} = F_{i\to j} + F_{i\to k} ```</li>
+                        <li><b>Best Use:</b> Analyzing a component of a larger surface for which you don't have a direct chart.</li>
+                    </ul>
+                    <p><b>4. The Symmetry Rule:</b> Two identical surfaces oriented identically with respect to a third surface have the same view factor from that third surface.</p>
+                    <ul>
+                        <li><b>Principle:</b> Geometry dictates the view factor. Identical geometries give identical results.</li>
+                        <li><b>Formula:</b> If j and k are symmetric about i: \KATEX_INLINE_OPEN F_{i\to j} = F_{i\to k} \KATEX_INLINE_CLOSE</li>
+                        <li><b>Best Use:</b> Drastically reducing the number of initial calculations in symmetric systems (e.g., a square furnace).</li>
+                    </ul>
+
+                    <h4>Special Tool: The Crossed-Strings Method</h4>
+                    <ul>
+                        <li><b>Application:</b> For 2D geometries (infinitely long in one direction).</li>
+                        <li><b>Method:</b>
+                            <ol>
+                                <li>Draw the 2D cross-section of the surfaces.</li>
+                                <li>Identify the endpoints of the two surfaces of interest (i and j).</li>
+                                <li>Imagine strings stretched tautly between the endpoints.</li>
+                            </ol>
+                        </li>
+                        <li><b>Formula:</b></li>
+                    </ul>
+                    ```math
+                    F_{i\to j} = \frac{\sum(\text{Lengths of Crossed Strings}) - \sum(\text{Lengths of Uncrossed Strings})}{2 \times (\text{Length of Surface i})}
+                    ```
+                    <ul>
+                        <li>"Crossed strings" connect an endpoint of i to the opposite endpoint of j.</li>
+                        <li>"Uncrossed strings" connect an endpoint of i to the nearest endpoint of j.</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Section 3: Black Surfaces -->
+            <section class="roadmap-section" id="sec-black-surfaces">
+                <div class="section-header">
+                    <h2>3. First Application: Blackbody Heat Transfer (13-3)</h2>
+                </div>
+                <div class="section-content">
+                    <p>Now we connect the geometry (view factor) to the engine of radiation (temperature) to calculate the actual heat transfer rate (\KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE). We start with the simplest possible case: black surfaces.</p>
+                    <p>Think of a black surface as a perfect sponge for radiation—it absorbs 100% of everything that hits it. It also has no "mirror" quality; there is zero reflection. This no-reflection rule is a massive simplification that makes the initial analysis straightforward.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: Two-Way Conversation Analogy</b><br>
+                        Imagine two people (Surface 1 and Surface 2) in a soundproof room with no echoes (the black surface assumption).
+                        <ul>
+                            <li>Person 1 is speaking loudly (emitting energy \KATEX_INLINE_OPEN A_{1}\sigma T_{1}^{4} \KATEX_INLINE_CLOSE). A certain fraction of this sound goes directly to Person 2 (determined by \KATEX_INLINE_OPEN F_{12} \KATEX_INLINE_CLOSE).</li>
+                            <li>Simultaneously, Person 2 is speaking softly (emitting \KATEX_INLINE_OPEN A_{2}\sigma T_{2}^{4} \KATEX_INLINE_CLOSE). A fraction of their sound hits Person 1 (determined by \KATEX_INLINE_OPEN F_{21} \KATEX_INLINE_CLOSE).</li>
+                        </ul>
+                        The net heat transfer (\KATEX_INLINE_OPEN \dot{Q}_{1 \to 2} \KATEX_INLINE_CLOSE) is the net flow of conversation. It's the total energy Person 2 receives from Person 1, minus the total energy Person 1 receives from Person 2.
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: Why this matters to an engineer. 🏭</b><br>
+                        This is the foundational building block for all radiation calculations. While no real surface is a perfect blackbody, many materials in high-temperature environments (like the inside of a furnace, heavily oxidized metals, or specialized coatings) have very high emissivities and can be approximated as black surfaces for a quick, often conservative, estimate of heat transfer. This calculation gives you a baseline or "upper limit" for the amount of radiative heat moving between components.
+                    </div>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>Core Principle</h4>
+                    <p>Net heat transfer between two black surfaces is the difference between what surface i sends to j and what surface j sends back to i.</p>
+                    
+                    <h4>Key Assumption</h4>
+                    <p>Surfaces are blackbodies: emissivity (\KATEX_INLINE_OPEN \varepsilon \KATEX_INLINE_CLOSE) = 1, absorptivity (\KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE) = 1, reflectivity (\KATEX_INLINE_OPEN \rho \KATEX_INLINE_CLOSE) = 0.</p>
+
+                    <h4>Essential Formulas</h4>
+                    <p><b>Net Heat Transfer between Two Black Surfaces (1 and 2):</b></p>
+                    ```math
+                    \dot{Q}_{1 \to 2} = A_1 F_{12} \sigma (T_1^4 - T_2^4)
+                    ```
+                    <p>Where \KATEX_INLINE_OPEN A_1 \KATEX_INLINE_CLOSE is the area of surface 1, \KATEX_INLINE_OPEN F_{12} \KATEX_INLINE_CLOSE is the view factor from 1 to 2, \KATEX_INLINE_OPEN \sigma \KATEX_INLINE_CLOSE is the Stefan-Boltzmann constant, and temperatures are in Kelvin. A positive result means net heat flow is from 1 to 2.</p>
+                    
+                    <p><b>Net Heat Transfer from One Black Surface (i) in an N-Surface Enclosure:</b></p>
+                    ```math
+                    \dot{Q}_{i} = \sum_{j=1}^{N} \left[ A_i F_{ij} \sigma (T_i^4 - T_j^4) \right]
+                    ```
+                    <p>This is simply summing the net exchange between surface i and every other surface in the enclosure.</p>
+                </div>
+            </section>
+            
+            <!-- Section 4: Gray Surfaces -->
+            <section class="roadmap-section" id="sec-gray-surfaces">
+                <div class="section-header">
+                    <h2>4. Real-World Model: Diffuse, Gray Surfaces (13-4)</h2>
+                </div>
+                <div class="section-content">
+                    <p>Blackbody radiation is a perfect theoretical starting point, but in the real world, almost nothing is a perfect blackbody. This section is key to making radiation analysis useful for actual industrial equipment. The previous sections on blackbodies are like learning how a perfect, frictionless engine would work. Now, we're adding the complexities of reality—specifically, that surfaces aren't perfect absorbers/emitters; they also reflect.</p>
+                    <p>The core problem this section solves is: How do we account for radiation that's bouncing around inside an enclosure, like a furnace or an oven, before it gets absorbed?</p>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: The Radiation Network Analogy</b><br>
+                        To handle this, we introduce a brilliant concept: the Radiation Network Analogy. Think of it like a simple electrical circuit.
+                        <ul>
+                            <li>Heat Flow (\KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE) is like the <b>Current (I)</b>. It's what we want to calculate.</li>
+                            <li>Temperature Potential (\KATEX_INLINE_OPEN E_b = \sigma T^4 \KATEX_INLINE_CLOSE) is like the <b>Voltage (V)</b>. A hotter surface has a higher "radiation voltage" and wants to push heat out.</li>
+                            <li>Resistances (\KATEX_INLINE_OPEN R \KATEX_INLINE_CLOSE) are the obstacles that get in the way of the heat flow.</li>
+                        </ul>
+                        What's new here is that we now have two different types of resistance:
+                        <ol>
+                            <li><b>Surface Resistance ⚙️:</b> This is a property of the material itself. Imagine a hot steel pipe (at temperature T). Its ability to radiate heat is driven by its "voltage" (\KATEX_INLINE_OPEN E_b = \sigma T^4 \KATEX_INLINE_CLOSE). However, if the pipe is polished and shiny (low emissivity, \KATEX_INLINE_OPEN \varepsilon \KATEX_INLINE_CLOSE), it has a hard time actually emitting that energy. It's like having a corroded terminal on a battery; the power is there, but it can't get out easily. This "difficulty" is the surface resistance. A perfect blackbody (\KATEX_INLINE_OPEN \varepsilon = 1 \KATEX_INLINE_CLOSE) has zero surface resistance—it's a perfect emitter.</li>
+                            <li><b>Space Resistance 🏭:</b> This resistance has nothing to do with the material and everything to do with geometry. Imagine two plates inside a furnace. Even if they are both perfect blackbodies, they can only exchange heat if they can "see" each other. The space resistance represents how difficult it is for radiation leaving surface 1 to actually reach surface 2. It's determined by the area and the view factor (F). If two surfaces are far apart or oriented poorly, they have a high space resistance, like a very long, thin wire in a circuit.</li>
+                        </ol>
+                        By modeling our furnace, boiler, or oven as a network of these temperature "voltages" and surface/space "resistances," we can solve for the heat flow (the "current") between all the parts. This is an incredibly powerful tool for a design engineer.</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: Why this matters.</b><br>
+                        When you're designing or troubleshooting a furnace, you need to know the heat load on the process tubes. That heat comes directly from the burners but also from the hot refractory walls, which are reflecting and re-radiating energy. This network model allows you to calculate the total heat flux to the product, ensuring it's heated correctly without overheating, and to properly size the insulation (the reradiating surfaces).
+                    </div>
+                    
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>Fundamental Assumptions</h4>
+                    <ul>
+                        <li><b>Gray Surface:</b> Radiation properties (\KATEX_INLINE_OPEN \varepsilon, \alpha, \rho \KATEX_INLINE_CLOSE) are constant and do not depend on the wavelength of radiation.</li>
+                        <li><b>Diffuse Surface:</b> Radiation is emitted and reflected equally in all directions.</li>
+                        <li><b>Opaque Surface:</b> No radiation is transmitted through the material (Transmissivity \KATEX_INLINE_OPEN \tau = 0 \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Isothermal Surface:</b> Each surface is at a uniform temperature.</li>
+                    </ul>
+                    
+                    <h4>Key Definitions</h4>
+                    <ul>
+                        <li><b>Irradiation (G):</b> The total radiation energy incident on (arriving at) a surface per unit area (\KATEX_INLINE_OPEN \text{W/m}^2 \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Radiosity (J):</b> The total radiation energy leaving a surface per unit area (\KATEX_INLINE_OPEN \text{W/m}^2 \KATEX_INLINE_CLOSE). It's the sum of what's emitted and what's reflected.</li>
+                    </ul>
+                    ```math
+                    J = (\text{Emitted Radiation}) + (\text{Reflected Radiation})
+                    ```
+                    ```math
+                    J_i = \varepsilon_i E_{b,i} + \rho_i G_i
+                    ```
+
+                    <h4>The Radiation Network Components</h4>
+                    <p><b>Potential (Driving Force):</b> The emissive power of a theoretical blackbody at the surface's temperature.</p>
+                    ```math
+                    E_b = \sigma T^4 \quad (\text{Units: W/m}^2)
+                    ```
+                    <p><b>Surface Resistance (\KATEX_INLINE_OPEN R_i \KATEX_INLINE_CLOSE):</b> The resistance to heat leaving a surface due to its non-ideal emissivity.</p>
+                    ```math
+                    R_i = \frac{1 - \varepsilon_i}{A_i \varepsilon_i}
+                    ```
+                    <p>For a blackbody (\KATEX_INLINE_OPEN \varepsilon_i = 1 \KATEX_INLINE_CLOSE), \KATEX_INLINE_OPEN R_i = 0 \KATEX_INLINE_CLOSE.</p>
+                    <p><b>Space Resistance (\KATEX_INLINE_OPEN R_{i \to j} \KATEX_INLINE_CLOSE):</b> The geometric resistance to heat transfer between two surfaces.</p>
+                    ```math
+                    R_{i \to j} = \frac{1}{A_i F_{i \to j}}
+                    ```
+                    <p>Note: Due to the reciprocity rule, \KATEX_INLINE_OPEN A_i F_{i \to j} = A_j F_{j \to i} \KATEX_INLINE_CLOSE.</p>
+                    
+                    <h4>Governing Equations (Ohm's Law Analogy)</h4>
+                    <p><b>Net Heat Transfer from a Surface (\KATEX_INLINE_OPEN \dot{Q}_i \KATEX_INLINE_CLOSE):</b> This is the "current" flowing from the temperature potential (\KATEX_INLINE_OPEN E_{b,i} \KATEX_INLINE_CLOSE) through the surface resistance (\KATEX_INLINE_OPEN R_i \KATEX_INLINE_CLOSE) to the radiosity node (\KATEX_INLINE_OPEN J_i \KATEX_INLINE_CLOSE).</p>
+                    ```math
+                    \dot{Q}_i = \frac{E_{b,i} - J_i}{R_i}
+                    ```
+                    <p><b>Net Heat Transfer between two Surfaces (\KATEX_INLINE_OPEN \dot{Q}_{i \to j} \KATEX_INLINE_CLOSE):</b> This is the "current" flowing between two radiosity nodes (\KATEX_INLINE_OPEN J_i \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN J_j \KATEX_INLINE_CLOSE) through the space resistance (\KATEX_INLINE_OPEN R_{i \to j} \KATEX_INLINE_CLOSE).</p>
+                    ```math
+                    \dot{Q}_{i \to j} = \frac{J_i - J_j}{R_{i \to j}}
+                    ```
+
+                    <h4>Special Case: Reradiating Surface</h4>
+                    <p>A surface that is perfectly insulated or has zero net heat transfer (\KATEX_INLINE_OPEN \dot{Q}_i = 0 \KATEX_INLINE_CLOSE). It radiates all the energy it receives. For a reradiating surface, \KATEX_INLINE_OPEN J_i = E_{b,i} = \sigma T_i^4 \KATEX_INLINE_CLOSE. In a network diagram, there is no surface resistance "branch" for a reradiating surface because no net current flows through it. Its node \KATEX_INLINE_OPEN J_i \KATEX_INLINE_CLOSE simply serves to connect the space resistances from other surfaces.</p>
+                </div>
+            </section>
+            
+            <!-- Section 5: Solving Methods -->
+            <section class="roadmap-section" id="sec-solving-methods">
+                <div class="section-header">
+                    <h2>5. How to Solve the Network?</h2>
+                </div>
+                <div class="section-content">
+                    <p>We've established our powerful analogy: heat transfer is a circuit. We have voltages (\KATEX_INLINE_OPEN E_b \KATEX_INLINE_CLOSE), currents (\KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE), and two kinds of resistors (surface and space). Now, the big question is: How do we actually solve the circuit? This section presents two ways to think about it, but they are really two sides of the same coin.</p>
+                    
+                    <div class="insight">
+                        <i><b>Insight: The "Direct" or "Matrix" Method ⚙️</b><br>
+                        This is the brute-force, systematic way. You write an energy balance equation for every single surface in your enclosure. Each equation says, "The net energy leaving this surface must equal the sum of the energy it exchanges with all other surfaces." This gives you a big set of linear equations. 
+                        <b>Analogy:</b> Imagine you're a traffic engineer analyzing a complex city grid with many intersections. You could stand at every single intersection and write an equation: "Cars coming in = Cars going out." You'd end up with a massive list of equations that describes the whole system. You then hand this list to a powerful computer (like MATLAB or a modern solver) to figure out the traffic flow on every street. It's robust and works for any number of surfaces, but you lose the intuitive feel.</i>
+                    </div>
+
+                    <div class="insight">
+                        <i><b>Insight: The "Network" Method</b><br>
+                        This is the more visual, intuitive approach based on our circuit analogy. You physically draw the circuit diagram and use basic circuit laws (like Kirchhoff's Current Law: the sum of currents entering a node is zero) to solve for the unknowns.
+                        <b>Analogy:</b> Instead of writing equations for every intersection, you draw a map of the city's main arteries. You can see how the major highways connect and then use simple rules (like "the flow from Highway A to B goes through this interchange") to solve for the traffic on those main routes. It’s fantastic for simple systems because you can see the path the "current" (heat) has to take.</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: Why this matters to an engineer. 🏭</b><br>
+                        In a real plant, you'll encounter both simple and complex scenarios.
+                        <ul>
+                            <li><b>Simple Case (Two-Surface Enclosure):</b> Think of a steam pipe running through a large, cold room. The pipe is surface 1, and the entire room acts as surface 2. This is a classic two-surface problem. You can quickly sketch the network (Surface Res. 1 -> Space Res. -> Surface Res. 2) and use the simple formula to calculate heat loss from the pipe to the room. This is crucial for insulation calculations.</li>
+                            <li><b>Complex Case (Three-or-more-Surface Enclosure):</b> Imagine a reforming furnace. You have the hot burner flames/gases (surface 1), the cooler process tubes (surface 2), and the hot refractory walls (surface 3). The walls don't generate heat, but they absorb it from the flame and re-radiate it to the tubes. To find the total heat load on your process tubes, you must account for the contribution from the walls. This is a three-surface problem where you need to draw the full network and solve the system of equations. Getting this right is the difference between meeting production targets and melting your tubes.</li>
+                        </ul>
+                        The key takeaway is that for simple geometries (2 or 3 surfaces), the network method is a fantastic mental and calculation tool. For anything more complex (e.g., a detailed furnace model with 10+ surfaces), you let the computer handle the "direct method" algebra.
+                    </div>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>Problem-Solving Approaches</h4>
+                    <p><b>Direct (Matrix) Method:</b> Best for \KATEX_INLINE_OPEN N > 3 \KATEX_INLINE_CLOSE surfaces and computer solvers.</p>
+                    <ul>
+                        <li>For surfaces with a specified heat rate \KATEX_INLINE_OPEN \dot{Q}_i \KATEX_INLINE_CLOSE (like an insulated wall where \KATEX_INLINE_OPEN \dot{Q}_i = 0 \KATEX_INLINE_CLOSE), use: ```math \dot{Q}_i = A_i \sum_j [F_{i \to j} (J_i - J_j)] ```</li>
+                        <li>For surfaces with a specified temperature \KATEX_INLINE_OPEN T_i \KATEX_INLINE_CLOSE, use: ```math \sigma T_i^4 = J_i + \frac{1-\varepsilon_i}{\varepsilon_i} \sum_j [F_{i \to j} (J_i - J_j)] ```</li>
+                    </ul>
+                    <p><b>Network Method:</b> Intuitive and best for 2 or 3 surfaces.</p>
+                    <ol>
+                        <li><b>Step 1:</b> Draw a node for each surface's blackbody emissive power (\KATEX_INLINE_OPEN E_{b,i} = \sigma T_i^4 \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Step 2:</b> Draw a node for each surface's radiosity (\KATEX_INLINE_OPEN J_i \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Step 3:</b> Connect each \KATEX_INLINE_OPEN E_{b,i} \KATEX_INLINE_CLOSE to its \KATEX_INLINE_OPEN J_i \KATEX_INLINE_CLOSE with the surface resistance \KATEX_INLINE_OPEN R_i = (1-\varepsilon_i)/(A_i\varepsilon_i) \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Step 4:</b> Connect every \KATEX_INLINE_OPEN J_i \KATEX_INLINE_CLOSE to every other \KATEX_INLINE_OPEN J_j \KATEX_INLINE_CLOSE with a space resistance \KATEX_INLINE_OPEN R_{i \to j} = 1/(A_iF_{i \to j}) \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Step 5:</b> Solve the circuit using an energy balance (sum of currents = 0) at each J node.</li>
+                    </ol>
+
+                    <h4>Key Formulas for Simple Enclosures</h4>
+                    <p><b>Two-Surface Enclosure (e.g., pipe in a large room, two parallel plates):</b> The resistances are in series. Simply add them up.</p>
+                    ```math
+                    \dot{Q}_{12} = \frac{E_{b1} - E_{b2}}{R_{\text{total}}} = \frac{\sigma(T_1^4 - T_2^4)}{R_1 + R_{12} + R_2}
+                    ```
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: Two-Surface Heat Transfer 📈</b><br>
+                        This formula is a workhorse for many practical estimates.
+                        ```math
+                        \dot{Q}_{12} = \frac{\sigma(T_1^4 - T_2^4)}{\frac{1-\varepsilon_1}{A_1\varepsilon_1} + \frac{1}{A_1F_{12}} + \frac{1-\varepsilon_2}{A_2\varepsilon_2}}
+                        ```
+                        <b>Common Simplification:</b> For a small object (1) inside a large enclosure (2), \KATEX_INLINE_OPEN A_1 \ll A_2 \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN F_{12} \approx 1 \KATEX_INLINE_CLOSE. The \KATEX_INLINE_OPEN A_2 \KATEX_INLINE_CLOSE term becomes negligible.
+                    </div>
+
+                    <p><b>Three-Surface Enclosure:</b> No single simplified formula. You must solve the system of equations. The core principle is an energy balance at each radiosity node (\KATEX_INLINE_OPEN J_1, J_2, J_3 \KATEX_INLINE_CLOSE).</p>
+                    <p>At Node 1: ```math \frac{E_{b1} - J_1}{R_1} + \frac{J_2 - J_1}{R_{12}} + \frac{J_3 - J_1}{R_{13}} = 0 ```</p>
+                    <p>(Write similar equations for Nodes 2 and 3). This gives you 3 linear equations to solve for the 3 unknown radiosities (\KATEX_INLINE_OPEN J_1, J_2, J_3 \KATEX_INLINE_CLOSE).</p>
+                </div>
+            </section>
+            
+            <!-- Section 6: Special Cases -->
+            <section class="roadmap-section" id="sec-special-cases">
+                <div class="section-header">
+                    <h2>6. Practical Applications & Special Cases (13-5)</h2>
+                </div>
+                <div class="section-content">
+                    <p>We've built the radiation network model, and now we're using it to solve common engineering challenges. Think of this as moving from analyzing a circuit to actively designing with it. This section covers two very practical, real-world applications of radiation theory: one is a design solution (shields), and the other is a common measurement problem.</p>
+                    
+                    <h3>1. Radiation Shields: The Reflective "Thermos" Layer</h3>
+                    <p>The core problem a radiation shield solves is: How do I stop two objects from exchanging heat when I can't fill the space between them with insulation? This is common in vacuums (like space applications or vacuum furnaces) where you can't rely on blocking convection.</p>
+                    <div class="insight">
+                        <i><b>Physical Insight: The "Space Blanket" Analogy</b><br>
+                        Think of an emergency "space blanket." It's incredibly thin, yet it keeps you warm. It's not thick insulation; it's a low-emissivity (highly reflective) surface. It works by reflecting your body's thermal radiation right back at you. A radiation shield is just an engineered version of this. Now imagine building a thermos (a Dewar flask). The vacuum between the inner and outer walls stops convection and conduction. The silvered, reflective coating on the glass is the radiation shield that stops the final mode of heat transfer.</i>
+                    </div>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: How it works in our circuit model. 📈</b><br>
+                        By inserting a shield between two surfaces, you are essentially breaking one large "space resistance" and replacing it with three new resistances in series:
+                        <ol>
+                            <li>The space resistance from surface 1 to the shield.</li>
+                            <li>The shield's own surface resistance (which is high because \KATEX_INLINE_OPEN \varepsilon \KATEX_INLINE_CLOSE is low).</li>
+                            <li>The space resistance from the shield to surface 2.</li>
+                        </ol>
+                        Just like in an electrical circuit, adding more resistance in series drastically cuts down the current (the heat flow, \KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE). The more shields you add, the more resistors you put in the path, and the less heat gets through. In a high-temperature vacuum furnace, you need to keep the heat focused on the product and prevent the outer shell from getting dangerously hot. You can't fill the vacuum gap with fiberglass. Instead, you line the furnace with multiple, thin, polished molybdenum or tungsten sheets. These are your radiation shields, and they are critical for both energy efficiency and safety.
+                    </div>
+                    
+                    <h4>Key Formulas for Radiation Shields</h4>
+                    <p><b>For Two Large Parallel Plates:</b></p>
+                    <p>No Shield:</p>
+                    ```math
+                    \frac{\dot{Q}_{12}}{A} = \frac{\sigma(T_1^4 - T_2^4)}{\frac{1}{\varepsilon_1} + \frac{1}{\varepsilon_2} - 1}
+                    ```
+                    <p>With 1 Shield (emissivity \KATEX_INLINE_OPEN \varepsilon_3 \KATEX_INLINE_CLOSE):</p>
+                    ```math
+                    \frac{\dot{Q}_{12}}{A} = \frac{\sigma(T_1^4 - T_2^4)}{\left(\frac{1}{\varepsilon_1} + \frac{1}{\varepsilon_2} - 1\right) + \left(\frac{1}{\varepsilon_{3,1}} + \frac{1}{\varepsilon_{3,2}} - 1\right)}
+                    ```
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: N Shields</b><br>
+                        With N shields (all emissivities equal, \KATEX_INLINE_OPEN \varepsilon \KATEX_INLINE_CLOSE):
+                        ```math
+                        \dot{Q}_{\text{N shields}} = \frac{1}{N+1} \dot{Q}_{\text{no shield}}
+                        ```
+                        This is a crucial rule of thumb: 1 shield cuts heat transfer in half, 2 shields cut it to one-third, etc.
+                    </div>
+
+                    <h3>2. The Radiation Effect: Why Your Thermocouple Might Be Lying</h3>
+                    <p>This is a classic instrumentation problem that bites junior engineers all the time. The problem is: The temperature sensor you're using isn't just talking to the fluid; it's also talking to the walls around it.</p>
+                    <div class="insight">
+                        <i><b>Physical Insight: Freezer with a Hairdryer Analogy</b><br>
+                        Imagine you are standing in a large walk-in freezer, but someone is blowing warm air on you with a hairdryer. You are the "thermocouple." The hairdryer (convection) is trying to warm you up to the air temperature. But the cold freezer walls (radiation) are constantly pulling heat away from you. You won't feel as warm as the air from the hairdryer, nor will you be as cold as the walls. You'll reach an equilibrium temperature somewhere in between. Your skin's temperature is the "indicated temperature," and it's not the true air temperature.</i>
+                    </div>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The Physics and Why it Matters ⚙️</b><br>
+                        A thermocouple sensor reaches a steady temperature when the energy it gains equals the energy it loses: <b>Heat Gained from Fluid (Convection) = Heat Lost to Walls (Radiation)</b>. This is hugely important for process control and safety. If you're measuring the temperature of hot flue gas (say, 800°C) in a cooler metal duct (walls at 300°C), your thermocouple will read significantly lower than 800°C because it's radiating heat to the cold duct walls. If your process controller thinks the gas is only 750°C, it might increase the firing rate, potentially overheating and damaging downstream equipment. Knowing how to correct for this error, or better yet, prevent it, is a vital skill.
+                    </div>
+
+                    <h4>Key Formulas for Temperature Measurement</h4>
+                    <p><b>The Energy Balance Equation:</b></p>
+                    ```math
+                    \dot{Q}_{\text{conv}} = \dot{Q}_{\text{rad}}
+                    ```
+                    ```math
+                    h A (T_f - T_{th}) = \varepsilon \sigma A (T_{th}^4 - T_w^4)
+                    ```
+                    (Note: The area A of the sensor cancels out)
+                    <p><b>The Correction Formula (to find the true fluid temperature):</b></p>
+                    ```math
+                    T_f = T_{th} + \frac{\varepsilon\sigma(T_{th}^4 - T_w^4)}{h}
+                    ```
+                    <ul>
+                        <li>\KATEX_INLINE_OPEN T_f \KATEX_INLINE_CLOSE: True Fluid Temperature (what you want to know)</li>
+                        <li>\KATEX_INLINE_OPEN T_{th} \KATEX_INLINE_CLOSE: Thermometer/Sensor Reading (what you measure)</li>
+                        <li>\KATEX_INLINE_OPEN T_w \KATEX_INLINE_CLOSE: Surrounding Wall Temperature</li>
+                        <li>\KATEX_INLINE_OPEN \varepsilon \KATEX_INLINE_CLOSE: Emissivity of the sensor</li>
+                        <li>\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE: Convection heat transfer coefficient</li>
+                    </ul>
+                    <p><b>How to Minimize Measurement Error:</b> Use a shield around the sensor, lower sensor emissivity (\KATEX_INLINE_OPEN \varepsilon \KATEX_INLINE_CLOSE) by using a polished thermocouple, or increase the convection coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) by ensuring high fluid velocity.</p>
+                </div>
+            </section>
+            
+            <!-- Section 7: Participating Gases -->
+            <section class="roadmap-section" id="sec-participating-gases">
+                <div class="section-header">
+                    <h2>7. Advanced Topic: Participating Gases (13-6)</h2>
+                </div>
+                <div class="section-content">
+                    <p>So far, the space between our surfaces has been invisible and non-participating. Now, we're dealing with a space that's not empty—it's filled with hot, glowing gas. This is the reality inside any furnace, boiler, or combustion chamber. The core problem this section solves is fundamental: How do we calculate heat transfer when the gas itself (like flue gas) is hot enough to glow and radiate energy?</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: The Colored Fog Analogy</b><br>
+                        Up until now, we've treated gases like \KATEX_INLINE_OPEN N_2 \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN O_2 \KATEX_INLINE_CLOSE as perfectly transparent, like clean air. But the products of combustion—water vapor (\KATEX_INLINE_OPEN H_2O \KATEX_INLINE_CLOSE) and carbon dioxide (\KATEX_INLINE_OPEN CO_2 \KATEX_INLINE_CLOSE)—are different. At high temperatures, these "participating gases" absorb and emit thermal radiation very effectively. Think of it this way:
+                        <ul>
+                            <li><b>Non-participating Gas (\KATEX_INLINE_OPEN N_2 \KATEX_INLINE_CLOSE):</b> Like a perfectly clean pane of glass. Radiation from a hot wall passes right through it to a cold wall.</li>
+                            <li><b>Participating Gas (\KATEX_INLINE_OPEN CO_2/H_2O \KATEX_INLINE_CLOSE):</b> Like a thick, colored fog. It blocks radiation passing through it (absorption), but if the fog itself is hot, it will glow and emit its own radiation in all directions (emission).</li>
+                        </ul>
+                        This changes everything. We are no longer dealing with just surface-to-surface exchange. We now have surface-to-gas and gas-to-surface exchange. This is a volumetric phenomenon—the entire cloud of gas is participating. 🏭</i>
+                    </div>
+
+                    <div class="insight">
+                        <i><b>Insight: The Hottel Charts "Cookbook" Analogy</b><br>
+                        A gas's ability to emit and absorb radiation is incredibly complex. Calculating this from first principles is nearly impossible for practical engineering. So, engineers in the 1930s, led by H.C. Hottel, developed a brilliant empirical method: the Hottel Charts.
+                        Think of the Hottel charts as a detailed "cookbook" for a very complex recipe. You don't need to understand the molecular physics (the "food science"). You just need to follow the steps precisely:
+                        <ol>
+                            <li>Measure your "ingredients": Gas temperature (\KATEX_INLINE_OPEN T_g \KATEX_INLINE_CLOSE), surface temperature (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE), partial pressures (\KATEX_INLINE_OPEN P_w, P_c \KATEX_INLINE_CLOSE), and total pressure (\KATEX_INLINE_OPEN P \KATEX_INLINE_CLOSE).</li>
+                            <li>Characterize your "baking dish": Determine the "Mean Beam Length" (L) from a table, which turns any geometry (a cube, a cylinder) into an equivalent hemisphere.</li>
+                            <li>Look up the properties in the cookbook (the charts) using these parameters.</li>
+                            <li>Combine them using the given recipe (the formulas) to get the final heat transfer.</li>
+                        </ol>
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: Why this matters.</b><br>
+                        This is not academic. This is how you design and operate fired heaters, boilers, and reformers. You need to know how much heat the hot flue gas will deliver to the process tubes. Is the flame radiating enough heat? Are the refractory walls getting too hot? Answering these questions requires understanding and applying the principles of gas radiation.
+                    </div>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>Fundamental Concepts</h4>
+                    <ul>
+                        <li><b>Participating Gases:</b> Asymmetric molecules like \KATEX_INLINE_OPEN H_2O, CO_2, SO_2 \KATEX_INLINE_CLOSE absorb and emit radiation. Symmetric molecules like \KATEX_INLINE_OPEN N_2, O_2 \KATEX_INLINE_CLOSE do not (at normal engineering temps).</li>
+                        <li><b>Mean Beam Length (L):</b> An effective path length that characterizes the geometry of the gas volume. It allows us to use Hottel's hemispherical charts for any shape. L is typically found from a table (e.g., for a cube of side a, L = 0.66a).</li>
+                        <li><b>Emissivity vs. Absorptivity:</b>
+                            <ul>
+                                <li>Gas Emissivity (\KATEX_INLINE_OPEN \varepsilon_g \KATEX_INLINE_CLOSE) depends on the gas's own temperature (\KATEX_INLINE_OPEN T_g \KATEX_INLINE_CLOSE).</li>
+                                <li>Gas Absorptivity (\KATEX_INLINE_OPEN \alpha_g \KATEX_INLINE_CLOSE) depends on the gas's temperature (\KATEX_INLINE_OPEN T_g \KATEX_INLINE_CLOSE) AND the temperature of the radiation source (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE). This is because gases are "non-gray" (picky) emitters/absorbers.</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <h4>The Hottel Chart Procedure to find Gas Properties</h4>
+                    <p><b>1. Calculate Parameters:</b></p>
+                    <ul>
+                        <li>Find the Mean Beam Length L for your geometry.</li>
+                        <li>Determine the partial pressures \KATEX_INLINE_OPEN P_c \KATEX_INLINE_CLOSE (for CO₂) and \KATEX_INLINE_OPEN P_w \KATEX_INLINE_CLOSE (for H₂O).</li>
+                        <li>You'll need the gas temperature \KATEX_INLINE_OPEN T_g \KATEX_INLINE_CLOSE and surface temperature \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+                    <p><b>2. Determine Gas Emissivity (\KATEX_INLINE_OPEN \varepsilon_g \KATEX_INLINE_CLOSE) at \KATEX_INLINE_OPEN T_g \KATEX_INLINE_CLOSE:</b></p>
+                    <ul>
+                        <li>Calculate \KATEX_INLINE_OPEN P_c L \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN P_w L \KATEX_INLINE_CLOSE.</li>
+                        <li>Use \KATEX_INLINE_OPEN T_g \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN P_c L \KATEX_INLINE_CLOSE to read \KATEX_INLINE_OPEN \varepsilon_{c,1\text{atm}} \KATEX_INLINE_CLOSE from the CO₂ chart (Fig. 13-37b).</li>
+                        <li>Use \KATEX_INLINE_OPEN T_g \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN P_w L \KATEX_INLINE_CLOSE to read \KATEX_INLINE_OPEN \varepsilon_{w,1\text{atm}} \KATEX_INLINE_CLOSE from the H₂O chart (Fig. 13-37a).</li>
+                        <li>Find pressure correction factors \KATEX_INLINE_OPEN C_c \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN C_w \KATEX_INLINE_CLOSE (Fig. 13-38).</li>
+                        <li>Find the overlap correction \KATEX_INLINE_OPEN \Delta\varepsilon \KATEX_INLINE_CLOSE using \KATEX_INLINE_OPEN T_g, P_c L, \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN P_w L \KATEX_INLINE_CLOSE (Fig. 13-39).</li>
+                        <li><b>Final Formula:</b> ```math \varepsilon_g = C_c\varepsilon_{c,1\text{atm}} + C_w\varepsilon_{w,1\text{atm}} - \Delta\varepsilon ```</li>
+                    </ul>
+                    <p><b>3. Determine Gas Absorptivity (\KATEX_INLINE_OPEN \alpha_g \KATEX_INLINE_CLOSE) for radiation from a surface at \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE:</b></p>
+                    <ul>
+                        <li>The procedure is the same, but you must modify the inputs to the charts.</li>
+                        <li>Use the surface temperature \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE as your temperature input.</li>
+                        <li>Use modified pressure-length products: \KATEX_INLINE_OPEN P_c L (T_s/T_g) \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN P_w L (T_s/T_g) \KATEX_INLINE_CLOSE.</li>
+                        <li>Read the emissivities from the charts using these modified values to get \KATEX_INLINE_OPEN \alpha_c \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \alpha_w \KATEX_INLINE_CLOSE.</li>
+                        <li>Find the overlap correction \KATEX_INLINE_OPEN \Delta\alpha \KATEX_INLINE_CLOSE at temperature \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Final Formula:</b> ```math \alpha_g = \alpha_c + \alpha_w - \Delta\alpha ```</li>
+                    </ul>
+
+                    <h4>Net Heat Transfer Calculation</h4>
+                    <p>The fundamental equation for net radiation exchange between a gas and a surrounding <b>black</b> surface of area \KATEX_INLINE_OPEN A_s \KATEX_INLINE_CLOSE:</p>
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: Gas-to-Surface Heat Transfer 📈</b><br>
+                        ```math
+                        \dot{Q}_{\text{net}} = A_s \sigma (\varepsilon_g T_g^4 - \alpha_g T_s^4)
+                        ```
+                        <ul>
+                            <li>\KATEX_INLINE_OPEN \varepsilon_g T_g^4 \KATEX_INLINE_CLOSE = Energy emitted by the gas and absorbed by the surface.</li>
+                            <li>\KATEX_INLINE_OPEN \alpha_g T_s^4 \KATEX_INLINE_CLOSE = Energy emitted by the surface and absorbed by the gas.</li>
+                        </ul>
+                        For a <b>Gray Surface</b> (with emissivity \KATEX_INLINE_OPEN \varepsilon_s > 0.7 \KATEX_INLINE_CLOSE), Hottel suggests a useful approximation:
+                        ```math
+                        \dot{Q}_{\text{net,gray}} \approx \left( \frac{\varepsilon_s + 1}{2} \right) \dot{Q}_{\text{net,black}}
+                        ```
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- JavaScript (Embedded as requested) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const workflowNodes = document.querySelectorAll('.workflow-node');
+            const sections = document.querySelectorAll('.roadmap-section');
+            const sectionHeaders = document.querySelectorAll('.section-header');
+
+            const collapseAllSections = () => {
+                sections.forEach(section => {
+                    section.classList.remove('expanded');
+                });
+            };
+
+            workflowNodes.forEach(node => {
+                node.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+
+                    if (targetSection) {
+                        const isExpanded = targetSection.classList.contains('expanded');
+                        
+                        if (!isExpanded) {
+                            collapseAllSections();
+                        }
+
+                        targetSection.classList.toggle('expanded');
+                        
+                        setTimeout(() => {
+                           targetSection.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }, 100);
+                    }
+                });
+            });
+
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const parentSection = this.parentElement;
+                    parentSection.classList.toggle('expanded');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
