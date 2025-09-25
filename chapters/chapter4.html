@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Workflow: Transient Heat Conduction</title>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+            displayMath: [['```math', '```']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+             transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 45%;
+            position: relative;
+        }
+
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .decision::after { 
+            content: 'â†“';
+            position: absolute;
+            bottom: -65px; /* Adjusted for the rotated shape */
+            left: 50%;
+            transform: translateX(-50%) rotate(-45deg);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector::after {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+
+        .section-header h2 {
+           margin:0;
+           padding:0;
+           border:none;
+           font-size: 1.5rem;
+        }
+
+        .section-header::after {
+            content: 'â–¼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+        .insight i {
+           color: var(--text-secondary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>Visual Workflow: Transient Heat Conduction</h1>
+
+        <div class="workflow-map">
+            <div class="workflow-node" data-target="sec-lumped-analysis">
+                <h3>1. Lumped System Analysis</h3>
+                <span>Start with the simplest model: uniform internal temperature.</span>
+            </div>
+            
+            <div class="workflow-node decision" data-target="sec-biot-criteria">
+                <span>
+                    <h3>Decision Point</h3>
+                    Is Lumped Analysis valid?<br/>
+                    <b>Calculate Biot Number</b>
+                </span>
+            </div>
+
+            <div class="workflow-node" data-target="sec-spatial-effects">
+                <h3>2. Conduction with Spatial Effects</h3>
+                <span>When Bi > 0.1, analyze internal temperature gradients.</span>
+            </div>
+            
+            <div class="workflow-node" data-target="sec-nondimensional-solution">
+                <h3>3. Nondimensionalization & Exact Solution</h3>
+                <span>Build the universal mathematical model.</span>
+            </div>
+            
+            <div class="workflow-node" data-target="sec-approximate-solutions">
+                <h3>4. Approximate & Graphical Solutions</h3>
+                <span>Use practical tools like Heisler Charts for quick answers.</span>
+            </div>
+            
+            <div class="workflow-node" data-target="sec-semi-infinite">
+                <h3>5. Special Case: Semi-Infinite Solids</h3>
+                <span>Model heat transfer in massive objects or at surfaces.</span>
+            </div>
+
+            <div class="workflow-node" data-target="sec-contact">
+                <h3>6. Application: Contact of Two Solids</h3>
+                <span>Predict interface temperature when two materials touch.</span>
+            </div>
+
+            <div class="workflow-node" data-target="sec-multidimensional">
+                <h3>7. Advanced Technique: Multidimensional Systems</h3>
+                <span>Combine 1D solutions to solve for real 3D objects.</span>
+            </div>
+        </div>
+
+        <div id="accordion-container">
+            <!-- Section 1: Lumped System Analysis -->
+            <section id="sec-lumped-analysis" class="roadmap-section">
+                <div class="section-header"><h2>1. Lumped System Analysis</h2></div>
+                <div class="section-content">
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>Welcome to your first look at transient heat transfer. The concept of Lumped System Analysis is our starting point because it's the simplest case, and it's a real workhorse for quick engineering estimates.</p>
+                    <p>The name "lumped" says it all: we decide to treat an entire object as a single "lump" where the temperature is completely uniform. We're making a deliberate simplification by assuming the temperature inside the object is the same everywhere, from the very center to the outer surface. This means the temperature is only a function of time, T(t).</p>
+                    <div class="insight">
+                        <i>
+                        <b>Physical Insight: The "Why" for a Process Engineer</b><br>
+                        Think about a thermocouple, that little metal bead we use to measure temperature in a pipe or reactor. When you put it into a hot fluid, you want it to give you a reading quickly. Because the thermocouple bead is tiny and made of metal (which conducts heat very well), it heats up almost instantaneously and uniformly. It behaves as a perfect lumped system. Its response time is a classic lumped system problem, and understanding this is critical for process control. If your sensor's response is too slow, you can't control your process effectively! Conversely, the textbook's example of a large roast is perfect. The outside gets cooked while the inside is still raw. The temperature is NOT uniform. That's a non-lumped system, which we'll tackle later.
+                        </i>
+                    </div>
+                    <p>The entire analysis in this section stems from a simple energy balance: "The rate at which heat enters the object from its surroundings is equal to the rate at which the object's internal energy increases."</p>
+                    <p>The equation \KATEX_INLINE_OPEN hA_s(T_{\infty} – T)dt = mc_p dT \KATEX_INLINE_CLOSE is just the mathematical version of that sentence, where \KATEX_INLINE_OPEN hA_s(T_{\infty} – T) \KATEX_INLINE_CLOSE is the heat entering via convection (Newton's Law of Cooling) and \KATEX_INLINE_OPEN mc_p dT \KATEX_INLINE_CLOSE is the change in the object's stored energy. By solving this, we get a powerful equation that predicts the temperature of the "lump" at any given time.</p>
+                    
+                    <h3>Industrial Analogy: Charging a Small Air Tank</h3>
+                    <p>Imagine you have a small, portable air tank and you connect it to a large, high-pressure air supply line in the plant.</p>
+                    <ul>
+                        <li>The pressure in the large supply line is your surrounding temperature (\KATEX_INLINE_OPEN T_{\infty} \KATEX_INLINE_CLOSE)—it's constant and doesn't change.</li>
+                        <li>The initial low pressure in your tank is your initial temperature (\KATEX_INLINE_OPEN T_i \KATEX_INLINE_CLOSE).</li>
+                        <li>The pressure inside your small tank is the lumped temperature, \KATEX_INLINE_OPEN T(t) \KATEX_INLINE_CLOSE. It changes with time, but we assume it's the same everywhere inside the small tank.</li>
+                        <li>The size of the valve and hose connecting them is like the convection coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE) and surface area (\KATEX_INLINE_OPEN A_s \KATEX_INLINE_CLOSE)—it determines how fast the air can get in.</li>
+                        <li>The volume of the tank is like its mass and specific heat (\KATEX_INLINE_OPEN m c_p \KATEX_INLINE_CLOSE)—it's the capacity that needs to be filled.</li>
+                    </ul>
+                    <p>Just like the air tank, the pressure rises very quickly at first and then slows down as it gets closer to the supply line pressure. This is the exact same exponential behavior described by the equations in this section.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: Key Formulas</b>
+                        <p>This is the core information you need for an exam.</p>
+                        <h4>1. The Fundamental Assumption</h4>
+                        <p>The temperature of the object is spatially uniform at any instant in time. \KATEX_INLINE_OPEN T = T(t) \KATEX_INLINE_CLOSE. This is valid when internal conduction resistance is much smaller than external convection resistance.</p>
+                        
+                        <h4>2. The Governing Equation for Temperature</h4>
+                        <p>This formula predicts the temperature of the object at any time \KATEX_INLINE_OPEN t \KATEX_INLINE_CLOSE.</p>
+                        ````math
+                        \frac{T(t) - T_{\infty}}{T_i - T_{\infty}} = e^{-bt}
+                        ````
+                        Where \KATEX_INLINE_OPEN T(t) \KATEX_INLINE_CLOSE is temperature at time \KATEX_INLINE_OPEN t \KATEX_INLINE_CLOSE, \KATEX_INLINE_OPEN T_{\infty} \KATEX_INLINE_CLOSE is surrounding fluid temperature, and \KATEX_INLINE_OPEN T_i \KATEX_INLINE_CLOSE is initial temperature.
+
+                        <h4>3. The Time Constant Exponent (b)</h4>
+                        <p>The term \KATEX_INLINE_OPEN b \KATEX_INLINE_CLOSE dictates how fast the temperature change occurs. A larger \KATEX_INLINE_OPEN b \KATEX_INLINE_CLOSE means faster heating or cooling.</p>
+                        ````math
+                        b = \frac{h A_s}{\rho V c_p}
+                        ````
+                        The Time Constant is \KATEX_INLINE_OPEN \tau = 1/b \KATEX_INLINE_CLOSE. It has units of time (seconds) and represents the time for the initial temperature difference to decay by about 63%. A small time constant means a fast response.
+
+                        <h4>4. Heat Transfer Calculations</h4>
+                        <p>Instantaneous Rate of Heat Transfer at time \KATEX_INLINE_OPEN t \KATEX_INLINE_CLOSE (W):</p>
+                        ````math
+                        \dot{Q}(t) = h A_s [T(t) - T_{\infty}]
+                        ````
+                        <p>Total Heat Transferred from \KATEX_INLINE_OPEN t=0 \KATEX_INLINE_CLOSE to time \KATEX_INLINE_OPEN t \KATEX_INLINE_CLOSE (J):</p>
+                        ````math
+                        Q = m c_p [T(t) - T_i]
+                        ````
+                        <p>Maximum Possible Heat Transfer (J):</p>
+                        ````math
+                        Q_{max} = m c_p [T_{\infty} - T_i]
+                        ````
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Biot Criteria -->
+            <section id="sec-biot-criteria" class="roadmap-section">
+                <div class="section-header"><h2>Decision: Criteria for Lumped System Analysis (The Biot Number)</h2></div>
+                <div class="section-content">
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>Alright, we've established that Lumped System Analysis is a powerful shortcut. Now, we're acting as the gatekeeper, deciding which problems get to use that shortcut. This section gives us our one and only key to the gate: the <strong>Biot Number</strong>.</p>
+                    <p>Think of a hot object cooling down as a logistics operation. The goal is to move "heat packages" from the very center of the object out into the surrounding air or fluid. This operation has two distinct stages:</p>
+                    <ul>
+                        <li><strong>Internal Logistics (Conduction):</strong> Moving the heat packages from inside the object to the surface. The efficiency of this stage is determined by the object's thermal conductivity (\KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE).</li>
+                        <li><strong>External Shipping (Convection):</strong> Loading the heat packages from the surface onto the "trucks" of the surrounding fluid. The efficiency of this stage is determined by the convection coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE).</li>
+                    </ul>
+                    <p>The Biot number simply asks: "Which part of our logistics operation is the bottleneck?"</p>
+                    ````math
+                    Bi = \frac{\text{Resistance to Conduction within the Body}}{\text{Resistance to Convection at the Surface}} = \frac{L_c/k}{1/h} = \frac{h L_c}{k}
+                    ````
+                    <div class="insight">
+                        <i>
+                        <b>Physical Insight: The "Why" for a Process Engineer</b><br>
+                        Every time you face a transient heat transfer problem, you must first calculate the Biot number. It's not optional. It is the fundamental diagnostic step that dictates your entire problem-solving strategy. It tells you whether you can use a 5-minute calculation (Lumped System) or if you need to prepare for a more involved analysis (Heisler Charts, numerical software) to get a trustworthy answer. It's the difference between a quick, confident estimate and a fundamentally flawed one.
+                        </i>
+                    </div>
+
+                    <h3>Industrial Analogy: A Grain Silo</h3>
+                    <p>Imagine you have a giant silo full of grain that you need to empty.</p>
+                    <ul>
+                        <li>The grain is the heat.</li>
+                        <li>The silo itself is the object.</li>
+                        <li><strong>Internal Logistics (1/k):</strong> How quickly can the grain flow from the top and center of the silo down to the outlet chute at the bottom? If the grain is dry and flows easily (\KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE is high), this internal resistance is low. If the grain is clumpy and wet (\KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE is low), it flows slowly and creates a bottleneck inside.</li>
+                        <li><strong>External Shipping (1/h):</strong> The size of the outlet chute and the speed of the conveyor belt that carries the grain away. A tiny chute and slow belt (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is low) is a major bottleneck (high external resistance). A huge chute and a high-speed belt (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is high) means you can ship the grain out almost instantly (low external resistance).</li>
+                    </ul>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: Interpreting the Biot Number</b>
+                        <p><b>Low Biot Number (\KATEX_INLINE_OPEN Bi \le 0.1 \KATEX_INLINE_CLOSE) → "Lumped System"</b><br>
+                        This is a silo of very flowy, dry grain (high \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE) emptying through a tiny little chute (low \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE). The grain can get to the chute much faster than the chute can remove it. The "level" of grain in the silo will go down almost perfectly flat and uniform. The whole silo acts as one "lump" because the bottleneck is the exit, not the internal flow. <b>The temperature throughout the solid is uniform.</b></p>
+                        
+                        <p><b>High Biot Number (\KATEX_INLINE_OPEN Bi > 0.1 \KATEX_INLINE_CLOSE) → Spatial Effects</b><br>
+                        This is a silo of clumpy, wet grain (low \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE) emptying onto a massive, high-speed conveyor belt (high \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE). The conveyor can take away grain much faster than it can flow to the chute. A cone-shaped depression will form inside the silo. The grain level at the center will be much lower than at the walls. The grain level is not uniform. <b>You must account for internal temperature gradients.</b></p>
+                    </div>
+
+                    <h3>Some Remarks on Heat Transfer in Lumped Systems</h3>
+                    <p>This section is all about building a solid mental model for the competition happening during heat transfer. Consider quenching a newly forged steel part to harden it.</p>
+                    <div class="insight">
+                        <i>
+                        <b>Physical Insight: Product Quality and Integrity</b><br>
+                        This moves beyond just saving calculation time and into product quality and integrity. If you have a situation with a high Biot number (e.g., a large part with moderate k, quenched in agitated brine with a very high h), the surface will cool and shrink extremely rapidly while the core is still hot and expanded. This massive internal temperature difference creates enormous thermal stresses, which can cause the part to warp, or even crack. Understanding this "competition" allows you to control a process. Maybe you choose a different quenching fluid (to change h), or you change the process temperature to ensure the part cools more uniformly, preventing failure. You are no longer just calculating a time; you are ensuring the physical integrity of your product.
+                        </i>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 3: Spatial Effects -->
+            <section id="sec-spatial-effects" class="roadmap-section">
+                <div class="section-header"><h2>2. Transient Conduction with Spatial Effects</h2></div>
+                <div class="section-content">
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>This section introduces what happens when the Biot number is high (\KATEX_INLINE_OPEN Bi > 0.1 \KATEX_INLINE_CLOSE). We can no longer pretend the temperature inside an object is uniform. We have to face the reality of temperature gradients—where the temperature varies from point to point inside the object.</p>
+                    <p>Think about this practically. The lumped system was like calculating how long it takes for a can of soda to cool in the fridge, assuming the whole can is at one temperature. This new approach is like asking: "After 10 minutes, what is the exact temperature 1 cm in from the can's surface versus the temperature at the very center?"</p>
+                    
+                    <h3>Analogy: Cooking a Thick, Frozen Turkey 🦃</h3>
+                    <p>This is the perfect real-world scenario for what the textbook describes.</p>
+                    <ul>
+                        <li><strong>Initial State (\KATEX_INLINE_OPEN t=0 \KATEX_INLINE_CLOSE):</strong> You take a turkey out of the freezer. It's at a uniform, frozen temperature (\KATEX_INLINE_OPEN T_i \KATEX_INLINE_CLOSE). This is your starting point.</li>
+                        <li><strong>The Process Begins:</strong> You place it in a hot oven. The oven has a constant air temperature (\KATEX_INLINE_OPEN T_{\infty} \KATEX_INLINE_CLOSE) and a certain ability to transfer heat to the turkey's skin (the convection coefficient, \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE).</li>
+                        <li><strong>Early Times (\KATEX_INLINE_OPEN t \KATEX_INLINE_CLOSE is small):</strong> The first thing to heat up is the skin. It gets hot fast! But the heat hasn't had time to travel deep into the turkey yet. If you could measure it, you'd find a very steep temperature gradient: hot skin, cool meat just below, and a still-frozen core. The temperature at the center hasn't changed at all yet.</li>
+                        <li><strong>Mid-Times (\KATEX_INLINE_OPEN t \KATEX_INLINE_CLOSE is moderate):</strong> The "wave" of heat is now moving steadily from the skin towards the center. The skin is still the hottest part, but the center is no longer frozen; it's starting to warm up. The overall temperature profile is a curve, highest at the surface and lowest at the center. 📈</li>
+                        <li><strong>Late Times (\KATEX_INLINE_OPEN t \rightarrow \infty \KATEX_INLINE_CLOSE):</strong> After many hours, the heat has penetrated everywhere. The temperature gradient gets flatter and flatter until the entire turkey—from the skin to the core—reaches the same temperature as the oven (\KATEX_INLINE_OPEN T_{\infty} \KATEX_INLINE_CLOSE). It's now in thermal equilibrium.</li>
+                    </ul>
+                    
+                    <div class="insight">
+                        <i>
+                        <b>Physical Insight: The "Why" for a Process Engineer</b><br>
+                        This is critically important in processes where the internal temperature profile, not just the average temperature, dictates the outcome.
+                        <ul>
+                            <li><strong>Food Safety & Sterilization:</strong> When you're sterilizing a can of soup in a retort (a giant industrial pressure cooker), you must ensure that the very center of the can (the "cold spot") reaches a specific temperature for a specific duration to kill all bacteria like Clostridium botulinum. Simply knowing the surface temperature is useless and dangerous. You need to model \KATEX_INLINE_OPEN T(r=0, t) \KATEX_INLINE_CLOSE.</li>
+                            <li><strong>Materials Processing:</strong> When annealing a large steel billet, the rate of cooling throughout the entire object determines its final grain structure and mechanical properties (like strength and ductility). Cooling the surface too quickly while the core is still hot can create internal stresses that lead to cracks. You need to predict and control the full \KATEX_INLINE_OPEN T(x, t) \KATEX_INLINE_CLOSE profile.</li>
+                            <li><strong>Chemical Reactions:</strong> In a large polymer or catalyst pellet where an exothermic reaction is occurring, you need to ensure the center doesn't get too hot and cause a thermal runaway or deactivate the catalyst. You need to know the maximum temperature, which will be at the center (\KATEX_INLINE_OPEN T(r=0, t) \KATEX_INLINE_CLOSE).</li>
+                        </ul>
+                        This method solves the problem of needing to know the temperature at a specific point inside an object at a specific time, which is a much more common and critical engineering challenge than just finding an average temperature.
+                        </i>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 4: Nondimensionalization & Exact Solution -->
+            <section id="sec-nondimensional-solution" class="roadmap-section">
+                <div class="section-header"><h2>3. Nondimensionalization & Exact Solution</h2></div>
+                <div class="section-content">
+                    <h3>The Core Concept: Nondimensionalization</h3>
+                    <p>So, we've accepted that for many real-world problems (\KATEX_INLINE_OPEN Bi > 0.1 \KATEX_INLINE_CLOSE), temperature is not uniform. To find the temperature at any point, at any time, we need to solve a partial differential equation (PDE). The textbook is blunt: solving these directly is a nightmare of infinite series and complex math.</p>
+                    <p>So, what do clever engineers do when faced with a nightmare problem? They change the rules of the game. That's what <strong>nondimensionalization</strong> is. It's a way to transform a specific, messy problem into a clean, universal one.</p>
+                    
+                    <h3>Analogy: The Universal Blueprint 📐</h3>
+                    <p>Instead of making a custom blueprint for every single slab, you create one master blueprint that works for any slab. This master blueprint isn't in meters or degrees Celsius; it's in dimensionless ratios.</p>
+                    <ul>
+                        <li><strong>Dimensionless Temperature (θ):</strong> Instead of tracking the actual temperature T, you track "the fraction of cooling left to do." θ starts at 1 (100% of the temperature difference exists) and ends at 0 (0% of the difference is left; it's reached equilibrium).
+                        ````math
+                        \theta(x, t) = \frac{T(x, t) - T_{\infty}}{T_i - T_{\infty}}
+                        ````
+                        </li>
+                        <li><strong>Dimensionless Position (X):</strong> Instead of tracking the position \KATEX_INLINE_OPEN x \KATEX_INLINE_CLOSE in meters, you track the "fraction of the way from the center to the edge." X goes from 0 (center) to 1 (surface).
+                        ````math
+                        X = \frac{x}{L}
+                        ````
+                        </li>
+                        <li><strong>Dimensionless Time (Fourier Number, τ):</strong> This is the most brilliant one. Instead of tracking time \KATEX_INLINE_OPEN t \KATEX_INLINE_CLOSE in seconds, you track a ratio that represents the "progress of heat penetration." The Fourier number (\KATEX_INLINE_OPEN \tau = \alpha t / L^2 \KATEX_INLINE_CLOSE) compares the rate of heat conduction to the rate of energy storage.
+                        ````math
+                        \tau = \frac{\alpha t}{L^2} \quad \text{(also called Fo)}
+                        ````
+                        </li>
+                    </ul>
+                    <div class="insight">
+                        <i>
+                        <b>The "Aha!" Moment</b><br>
+                        By making these transformations, all the specific, messy parameters of your problem (\KATEX_INLINE_OPEN L, k, \alpha, h \KATEX_INLINE_CLOSE) get bundled up into just ONE dimensionless group you already know: the <strong>Biot Number (Bi)</strong>. You now have a universal solution where \KATEX_INLINE_OPEN \theta \KATEX_INLINE_CLOSE is a function of only \KATEX_INLINE_OPEN X, \tau, \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN Bi \KATEX_INLINE_CLOSE.
+                        </i>
+                    </div>
+
+                    <h3>The Exact Solution: Separation of Variables</h3>
+                    <p>The method to solve the now-dimensionless PDE is called "Separation of Variables." It assumes the final solution is a product of a function that only depends on position and a function that only depends on time.
+                    The math shows that the temperature shape inside the wall is a cosine wave, and the way it fades over time is an exponential decay. The problem is that a single cosine wave can't match the initial condition (a perfectly flat temperature profile). To fix this, we add an infinite number of smaller, faster-fading cosine waves as "corrections." This leads to the "infinite series" solution.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: The Exact and Practical Equations</b>
+                        <h4>1. The Big Scary Equation (and what its parts REALLY mean)</h4>
+                        <p>For a plane wall, the exact solution is:</p>
+                        ````math
+                        \theta(X, \tau) = \sum_{n=1}^{\infty} A_n e^{-\lambda_n^2 \tau} \cos(\lambda_n X)
+                        ````
+                        <ul>
+                            <li>\KATEX_INLINE_OPEN \sum \KATEX_INLINE_CLOSE: Just means "add up a bunch of terms."</li>
+                            <li>\KATEX_INLINE_OPEN A_n \KATEX_INLINE_CLOSE: A starting-strength coefficient for each term. You get this from a table.</li>
+                            <li>\KATEX_INLINE_OPEN e^{-\lambda_n^2 \tau} \KATEX_INLINE_CLOSE: The Fading Part. This makes each term decay over time (\KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE).</li>
+                            <li>\KATEX_INLINE_OPEN \cos(\lambda_n X) \KATEX_INLINE_CLOSE: The Shape Part. This gives the temperature profile inside the wall.</li>
+                            <li>\KATEX_INLINE_OPEN \lambda_n \KATEX_INLINE_CLOSE: The "Secret Code" Numbers (eigenvalues). These are special numbers that depend on your Biot number. You look them up in a table.</li>
+                        </ul>
+
+                        <h4>2. The Practical "Hero" Equation: The One-Term Approximation</h4>
+                        <p><b>Rule: Use this when the dimensionless time \KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE is greater than 0.2 (\KATEX_INLINE_OPEN \tau > 0.2 \KATEX_INLINE_CLOSE).</b></p>
+                        <p>After a very short amount of time (\KATEX_INLINE_OPEN \tau > 0.2 \KATEX_INLINE_CLOSE), all the "correction" terms for \KATEX_INLINE_OPEN n=2, 3, 4... \KATEX_INLINE_CLOSE have decayed to basically zero. They vanish! So, as practicing engineers, we have a fantastic shortcut: We only need to calculate the first term.</p>
+                        ````math
+                        \theta(X, \tau) \approx A_1 e^{-\lambda_1^2 \tau} \cos(\lambda_1 X)
+                        ````
+                        <p><b>How to Use It:</b></p>
+                        <ol>
+                            <li>Calculate your Biot number (\KATEX_INLINE_OPEN Bi = hL/k \KATEX_INLINE_CLOSE).</li>
+                            <li>Go to the table in your book for "transient conduction coefficients for a plane wall."</li>
+                            <li>Look up the \KATEX_INLINE_OPEN \lambda_1 \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN A_1 \KATEX_INLINE_CLOSE values that correspond to your Biot number.</li>
+                            <li>Calculate your Fourier number (\KATEX_INLINE_OPEN \tau = \alpha t/L^2 \KATEX_INLINE_CLOSE).</li>
+                            <li>Plug \KATEX_INLINE_OPEN \lambda_1, A_1, \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE into the simple equation above to find the temperature at any position \KATEX_INLINE_OPEN X \KATEX_INLINE_CLOSE and time \KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE.</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 5: Approximate & Graphical Solutions -->
+            <section id="sec-approximate-solutions" class="roadmap-section">
+                <div class="section-header"><h2>4. Approximate & Graphical Solutions (Heisler Charts)</h2></div>
+                <div class="section-content">
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>The previous section gave us an exact, but monstrously complex, infinite series solution. Engineers needed a better way. They created two fantastic shortcuts that are both based on that "One-Term Approximation" we talked about (the idea that after \KATEX_INLINE_OPEN \tau > 0.2 \KATEX_INLINE_CLOSE, only the first term of the series matters).</p>
+                    
+                    <h3>Analogy: Pre-Calculator Math 🧮</h3>
+                    <p>Before pocket calculators, people used log tables or trig tables. Someone did the incredibly hard calculations once and published the answers in a big book. Engineers could then just look up their numbers in the table to get an answer in seconds. That is exactly what the Heisler & Gröber charts are. <strong>The Heisler charts are a graphical calculator for the one-term approximation.</strong></p>
+                    
+                    <div class="card">
+                    They are a set of tools designed to answer three distinct questions:
+                    <ol>
+                        <li><strong>Chart 1 (Centerline Temperature):</strong> "What is the temperature at the very center of my object right now?" This is the anchor point for everything else.</li>
+                        <li><strong>Chart 2 (Position Correction):</strong> "Okay, I know the center temperature. What's the temperature at any other position?" This chart gives a ratio to correct the centerline temperature.</li>
+                        <li><strong>Chart 3 (Gröber Chart - Heat Transfer):</strong> "How much total heat energy has my object lost or gained so far?" This is critical for sizing heating or cooling systems.</li>
+                    </ol>
+                    </div>
+
+                    <div class="insight">
+                        <i>
+                        <b>Physical Insight: The "Why" for a Process Engineer</b><br>
+                        These are your primary "back-of-the-envelope" tools for transient heat transfer problems. If a computer simulation tells you a steel billet will cool in 10 seconds, but your quick calculation on a Heisler chart suggests it should take 10 minutes, you know something is wrong with the simulation setup. These charts and the one-term approximation allow you to:
+                        <ul>
+                            <li>Quickly estimate process times: "How long do I need to leave these parts in the quench tank?"</li>
+                            <li>Verify computer models: "Does this simulation result make physical sense?"</li>
+                            <li>Perform initial design calculations: "Roughly how much energy will my cooling water system need to absorb per hour?"</li>
+                        </ul>
+                        They solve the problem of needing reliable, fast answers without getting bogged down in complex mathematics.
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: Heisler & Gröber Charts Workflow</b>
+                        
+                        <h4>1. The Golden Rule: Check the Fourier Number First!</h4>
+                        <p>All of these approximate methods (one-term equations and Heisler/Gröber charts) are <strong>ONLY valid for \KATEX_INLINE_OPEN \tau > 0.2 \KATEX_INLINE_CLOSE</strong>. If \KATEX_INLINE_OPEN \tau < 0.2 \KATEX_INLINE_CLOSE, the process is in its initial moments, and these tools will be inaccurate.</p>
+
+                        <h4>2. Calculate Dimensionless Numbers:</h4>
+                        <p>Biot Number: \KATEX_INLINE_OPEN Bi = hL/k \KATEX_INLINE_CLOSE or \KATEX_INLINE_OPEN hr_o/k \KATEX_INLINE_CLOSE (Use characteristic length L or \KATEX_INLINE_OPEN r_o \KATEX_INLINE_CLOSE, NOT V/A).</p>
+                        <p>Fourier Number: \KATEX_INLINE_OPEN \tau = \alpha t/L^2 \KATEX_INLINE_CLOSE or \KATEX_INLINE_OPEN \alpha t/r_o^2 \KATEX_INLINE_CLOSE.</p>
+                        
+                        <h4>3. Find Centerline Temperature (\KATEX_INLINE_OPEN T_o \KATEX_INLINE_CLOSE):</h4>
+                        <p>Go to the first chart. Find your \KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE on the x-axis. Move up to the curve that matches your \KATEX_INLINE_OPEN 1/Bi \KATEX_INLINE_CLOSE. Read \KATEX_INLINE_OPEN \theta_o = (T_o - T_{\infty}) / (T_i - T_{\infty}) \KATEX_INLINE_CLOSE on the y-axis. Solve for \KATEX_INLINE_OPEN T_o \KATEX_INLINE_CLOSE.</p>
+                        
+                        <h4>4. Find Temperature at Another Location (\KATEX_INLINE_OPEN T \KATEX_INLINE_CLOSE at \KATEX_INLINE_OPEN x \KATEX_INLINE_CLOSE or \KATEX_INLINE_OPEN r \KATEX_INLINE_CLOSE):</h4>
+                        <p>Go to the second chart. Find your position (\KATEX_INLINE_OPEN x/L \KATEX_INLINE_CLOSE or \KATEX_INLINE_OPEN r/r_o \KATEX_INLINE_CLOSE) on the x-axis. Move up to the curve that matches your \KATEX_INLINE_OPEN 1/Bi \KATEX_INLINE_CLOSE. Read the ratio \KATEX_INLINE_OPEN \theta/\theta_o = (T - T_{\infty}) / (T_o - T_{\infty}) \KATEX_INLINE_CLOSE on the y-axis. Solve for \KATEX_INLINE_OPEN T \KATEX_INLINE_CLOSE.</p>
+                        
+                        <h4>5. Find Total Heat Transferred (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE):</h4>
+                        <p>Go to the third chart (Gröber chart). Calculate \KATEX_INLINE_OPEN Bi^2\tau \KATEX_INLINE_CLOSE. Find your \KATEX_INLINE_OPEN Bi \KATEX_INLINE_CLOSE on the x-axis. Move up to the curve that matches your \KATEX_INLINE_OPEN Bi^2\tau \KATEX_INLINE_CLOSE. Read the fraction \KATEX_INLINE_OPEN Q/Q_{max} \KATEX_INLINE_CLOSE on the y-axis. Calculate \KATEX_INLINE_OPEN Q_{max} = m c_p (T_{\infty} - T_i) \KATEX_INLINE_CLOSE. Calculate \KATEX_INLINE_OPEN Q = (Q/Q_{max}) \times Q_{max} \KATEX_INLINE_CLOSE.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 6: Semi-Infinite Solids -->
+            <section id="sec-semi-infinite" class="roadmap-section">
+                <div class="section-header"><h2>5. Special Case: Semi-Infinite Solids</h2></div>
+                <div class="section-content">
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>This chapter introduces the Semi-Infinite Solid. This sounds abstract, but it's a model for any massive object where the heat transfer on one surface doesn't have enough time to be affected by the other surfaces.</p>
+                    <p>Think of it this way: If you light a small campfire on a massive, frozen lake, the heat will start melting the ice directly underneath. The ice 10 feet away, or 100 feet away, has no idea the fire even exists. For the short time the fire is burning, from the perspective of the patch of ice right under the flame, the lake is effectively "infinitely" deep and "infinitely" wide. The far shore and the bottom of the lake are irrelevant. That's a semi-infinite solid.</p>
+                    <p>The key idea here is that the problem doesn't have a defined thickness like \KATEX_INLINE_OPEN L \KATEX_INLINE_CLOSE or \KATEX_INLINE_OPEN r_o \KATEX_INLINE_CLOSE. The only length scale is the penetration depth, which grows with time. This is why the old method (Separation of Variables) fails and a new mathematical trick is needed: the <strong>similarity variable</strong> (\KATEX_INLINE_OPEN \eta = x / \sqrt{4\alpha t} \KATEX_INLINE_CLOSE). This clever variable combines position (\KATEX_INLINE_OPEN x \KATEX_INLINE_CLOSE) and time (\KATEX_INLINE_OPEN t \KATEX_INLINE_CLOSE) into a single "progress" variable. It basically asks: "How far are you from the surface, relative to how far the heat wave has had time to travel?"</p>
+
+                    <div class="insight">
+                        <i>
+                        <b>Physical Insight: The "Why" for a Process Engineer 🔥</b><br>
+                        This model is your go-to for any process involving surface treatments or interactions with massive bodies.
+                        <ul>
+                            <li><strong>Case Hardening/Quenching:</strong> When you plunge a hot, thick steel axle into an oil bath, you're trying to rapidly cool and harden the outer surface. The heat doesn't have time to escape from the deep core of the axle during the quench. So, to analyze the critical surface temperature, you model the axle as a semi-infinite solid.</li>
+                            <li><strong>Laser/Flame Heating:</strong> If you use a laser to treat a metal surface, the energy is deposited in a tiny layer over a fraction of a second. The rest of the component is unaffected. This is a perfect semi-infinite solid problem.</li>
+                            <li><strong>Geothermal Energy & Civil Engineering 🌍:</strong> When designing ground-source heat pumps or assessing how deeply the ground will freeze in winter to protect pipes, engineers model the Earth as a semi-infinite solid, with the surface conditions changing with the seasons.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: Toolkit for Semi-Infinite Problems</b>
+                        <h4>1. When to Use the Model</h4>
+                        <p>For thick objects where heat transfer at one surface is not affected by other surfaces during the time of interest. Think: Short-duration, high-intensity surface processes (quenching, laser heating) or very large objects (the ground).</p>
+                        
+                        <h4>2. The Mathematical Tools</h4>
+                        <p><strong>Similarity Variable (\KATEX_INLINE_OPEN \eta \KATEX_INLINE_CLOSE):</strong></p>
+                        ````math
+                        \eta = \frac{x}{\sqrt{4\alpha t}}
+                        ````
+                        <p><strong>Error Functions (erf, erfc):</strong> The core of the solution. You look these up in a table based on your calculated \KATEX_INLINE_OPEN \eta \KATEX_INLINE_CLOSE. Know these limits: \KATEX_INLINE_OPEN \text{erfc}(0) = 1 \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \text{erfc}(\infty) = 0 \KATEX_INLINE_CLOSE.</p>
+                        
+                        <h4>3. The Four Key Boundary Conditions & Their Solutions</h4>
+                        <ul>
+                            <li><strong>Case 1: Constant Surface Temperature (\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE)</strong><br>Scenario: Condensation, melting, or very high convection on the surface.<br>Solution:
+                            ````math
+                            \frac{T(x,t) - T_i}{T_s - T_i} = \text{erfc}\left( \frac{x}{\sqrt{4\alpha t}} \right)
+                            ````
+                            </li>
+                            <li><strong>Case 2: Constant Surface Heat Flux (\KATEX_INLINE_OPEN \dot{q}_s \KATEX_INLINE_CLOSE)</strong><br>Scenario: Radiant heater, electrical resistance heater on the surface. Solution involves exp(...) and erfc(...).</li>
+                            <li><strong>Case 3: Convection at the Surface (\KATEX_INLINE_OPEN h, T_{\infty} \KATEX_INLINE_CLOSE)</strong><br>Scenario: The most common engineering case. Cooling in air, quenching in a fluid. Solution involves two erfc terms and an exp term.</li>
+                            <li><strong>Case 4: Instant Energy Pulse (\KATEX_INLINE_OPEN e_s \KATEX_INLINE_CLOSE)</strong><br>Scenario: Laser pulse, electrical discharge. Solution is a Gaussian (exp(-x²)) profile that spreads out over time.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 7: Contact of Two Solids -->
+            <section id="sec-contact" class="roadmap-section">
+                <div class="section-header"><h2>6. Application: Contact of Two Semi-Infinite Solids</h2></div>
+                <div class="section-content">
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>This section tackles a simple question: When two big objects at different temperatures touch, what is the temperature right at the point of contact? Your first instinct might be that it's the simple average, but this is only true if the materials are identical. When materials are different, the interface temperature is the result of a "thermal tug-of-war."</p>
+
+                    <h3>Analogy: The Thermal Tug-of-War 🤝</h3>
+                    <p>Imagine touching two objects at the same room temperature, wood and metal. The metal feels much colder. Why? It's not about temperature, it's about who wins the thermal tug-of-war for heat from your hand. The "strength" in this analogy is a combined material property called <strong>thermal effusivity</strong>, which is \KATEX_INLINE_OPEN \sqrt{k\rho c_p} \KATEX_INLINE_CLOSE.</p>
+                    <ul>
+                        <li><strong>Your Hand vs. Wood:</strong> Wood has low thermal effusivity. It's weak. It cannot effectively pull heat out of you, so the contact temperature stays close to your skin's temperature. It doesn't feel cold.</li>
+                        <li><strong>Your Hand vs. Metal:</strong> Metal has high thermal effusivity. It's very strong. It yanks heat out of your hand with ease, pulling the contact temperature down close to its own initial temperature. It feels cold.</li>
+                    </ul>
+
+                    <div class="insight">
+                        <i>
+                        <b>Physical Insight: The "Why" for a Process Engineer 🌡️</b><br>
+                        This concept is crucial for material selection, safety, and process design.
+                        <ul>
+                            <li><strong>Safety & Ergonomics:</strong> This is why the handle of a hot metal pot is often coated in plastic or wood. Even if the whole pot is 90°C, the metal handle (high \KATEX_INLINE_OPEN \sqrt{k\rho c_p} \KATEX_INLINE_CLOSE) would instantly feel dangerously hot, while the plastic handle (low \KATEX_INLINE_OPEN \sqrt{k\rho c_p} \KATEX_INLINE_CLOSE) would feel much cooler at the moment of contact.</li>
+                            <li><strong>Welding and Brazing:</strong> When joining two different metals, the instantaneous interface temperature determines how the weld pool forms and solidifies. This model helps predict the initial thermal shock at the joint.</li>
+                            <li><strong>Thermal Spray Coating:</strong> When you spray hot ceramic particles onto a cool metal substrate, the interface temperature can determine if the coating will adhere properly or if the thermal shock will cause it to crack and fail.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: Calculating Interface Temperature</b>
+                        <h4>The Core Principle</h4>
+                        <p>When two semi-infinite solids (A and B) touch, the point of contact instantly reaches a single, constant equilibrium temperature, \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE. This is because the heat flux out of the hotter body must equal the heat flux into the colder body at the interface.</p>
+                        
+                        <h4>The Key Property: Thermal Effusivity \KATEX_INLINE_OPEN \sqrt{k\rho c_p} \KATEX_INLINE_CLOSE</h4>
+                        <p>This property governs a material's ability to exchange thermal energy at a surface. It represents its "thermal inertia" or "thermal strength" in the tug-of-war.</p>
+
+                        <h4>The Governing Equation</h4>
+                        <p>The interface temperature \KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE is a weighted average of the initial temperatures, weighted by their thermal effusivities.</p>
+                        ````math
+                        T_s = \frac{ \sqrt{(k\rho c_p)_A} T_{i,A} + \sqrt{(k\rho c_p)_B} T_{i,B} }{ \sqrt{(k\rho c_p)_A} + \sqrt{(k\rho c_p)_B} }
+                        ````
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 8: Multidimensional Systems -->
+            <section id="sec-multidimensional" class="roadmap-section">
+                <div class="section-header"><h2>7. Advanced Technique: Multidimensional Systems</h2></div>
+                <div class="section-content">
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>So far, we've dealt with "ideal" shapes: a wall that's infinitely wide, a cylinder that's infinitely long. But in a real plant, you deal with objects that have corners and ends, like short cylinders or rectangular bars. Heat escapes from all sides at once. This is a multidimensional problem. Solving the 2D or 3D transient heat equation from scratch is brutally difficult. But engineers found an elegant shortcut called the <strong>Product Solution</strong>.</p>
+                    <p>The main idea is this: if you can describe your complex 3D shape as the intersection of simpler 1D shapes, then you can find the solution by multiplying the solutions of those simple shapes.</p>
+                    
+                    <h3>Analogy: Overlapping Color Filters 🎨</h3>
+                    <p>Imagine you have a bright light source, representing the initial temperature difference (\KATEX_INLINE_OPEN T_i - T_\infty \KATEX_INLINE_CLOSE). You want to know how much light gets through a complex filter.</p>
+                    <ul>
+                        <li><strong>1D Solution (Infinite Cylinder):</strong> Finding the temperature in an infinite cylinder is like putting one gray filter over the light. The dimensionless temperature \KATEX_INLINE_OPEN \theta_{cyl} \KATEX_INLINE_CLOSE tells you the fraction of "light" (temperature difference) that's left. Maybe \KATEX_INLINE_OPEN \theta_{cyl} = 0.7 \KATEX_INLINE_CLOSE.</li>
+                        <li><strong>1D Solution (Plane Wall):</strong> Finding the temperature in an infinite wall is like using a different gray filter. Maybe \KATEX_INLINE_OPEN \theta_{wall} = 0.5 \KATEX_INLINE_CLOSE.</li>
+                        <li><strong>2D Solution (Short Cylinder):</strong> A short cylinder is the intersection of an infinite cylinder and a plane wall. To find the temperature, you just "stack" the filters. The total fraction of light that gets through is the product of the individual fractions.
+                        ````math
+                        \theta_{\text{short cyl}} = \theta_{\text{cyl}} \times \theta_{\text{wall}} = 0.7 \times 0.5 = 0.35
+                        ````
+                        </li>
+                    </ul>
+                    <p>The final dimensionless temperature in the 2D object is simply the product of the dimensionless temperatures of its 1D components.</p>
+                    
+                    <div class="insight">
+                        <i>
+                        <b>Physical Insight: The "Why" for a Process Engineer 🧱</b><br>
+                        This method vastly expands your toolkit. You are no longer limited to idealized infinite shapes. Suddenly, you can get a very good estimate for the temperature at the corner of a furnace brick, or the center of a short, cylindrical billet of steel being quenched. It allows for the analysis of realistic, finite shapes without immediately resorting to complex computer simulations.
+                        <br><br>
+                        <strong>Practical Example:</strong> You're pasteurizing cans of tomato sauce. The "cold spot" is at the geometric center (\KATEX_INLINE_OPEN x=0, r=0 \KATEX_INLINE_CLOSE). The product solution allows you to calculate \KATEX_INLINE_OPEN \theta_{\text{can center}} = \theta_{\text{wall center}} \times \theta_{\text{cyl center}} \KATEX_INLINE_CLOSE. You find the centerline solution for a plane wall (the can's height) and the centerline solution for an infinite cylinder (the can's diameter) using the Heisler charts or one-term formulas, and simply multiply them. It turns a 2D problem into two simple 1D problems.
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb: The Product Solution Method</b>
+                        <h4>1. The Product Solution for Temperature</h4>
+                        <p>The dimensionless temperature \KATEX_INLINE_OPEN \theta \KATEX_INLINE_CLOSE in a multidimensional system is the product of the dimensionless temperatures of the 1D systems that form it.</p>
+                        <p><strong>Short Cylinder</strong> (height 2L, radius \KATEX_INLINE_OPEN r_o \KATEX_INLINE_CLOSE):</p>
+                        ````math
+                        \theta(r, x, t)_{\text{short cyl}} = \theta(x, t)_{\text{wall}} \times \theta(r, t)_{\text{inf cyl}}
+                        ````
+                        <p><strong>Rectangular Bar</strong> (sides 2L₁, 2L₂):</p>
+                        ````math
+                        \theta(x, y, t)_{\text{bar}} = \theta(x, t)_{\text{wall 1}} \times \theta(y, t)_{\text{wall 2}}
+                        ````
+
+                        <h4>2. Critical Assumptions (MUST be met)</h4>
+                        <ul>
+                            <li>Initial temperature is uniform (\KATEX_INLINE_OPEN T_i \KATEX_INLINE_CLOSE).</li>
+                            <li>Convection conditions (\KATEX_INLINE_OPEN h, T_{\infty} \KATEX_INLINE_CLOSE) are the same and uniform on ALL surfaces.</li>
+                            <li>There is no internal heat generation.</li>
+                            <li>Material properties are constant.</li>
+                        </ul>
+
+                        <h4>3. Total Heat Transfer (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE) Calculation</h4>
+                        <p><strong>WARNING: You DO NOT multiply the heat transfer fractions. The formula is different.</strong></p>
+                        <p>For a 2D system composed of 1D systems 1 and 2:</p>
+                        ````math
+                        \left(\frac{Q}{Q_{max}}\right)_{\text{total}} = \left(\frac{Q}{Q_{max}}\right)_1 + \left(\frac{Q}{Q_{max}}\right)_2 \left[1 - \left(\frac{Q}{Q_{max}}\right)_1\right]
+                        ````
+                        This represents the heat loss from the first direction, plus the heat loss from the second direction, corrected for the heat that has already been removed by the first.
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const workflowNodes = document.querySelectorAll('.workflow-node');
+            const sections = document.querySelectorAll('.roadmap-section');
+            const sectionHeaders = document.querySelectorAll('.section-header');
+
+            const collapseAllSections = () => {
+                sections.forEach(section => {
+                    section.classList.remove('expanded');
+                });
+            };
+
+            workflowNodes.forEach(node => {
+                node.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+
+                    if (targetSection) {
+                        const isExpanded = targetSection.classList.contains('expanded');
+                        
+                        if (!isExpanded) {
+                            collapseAllSections();
+                        }
+
+                        targetSection.classList.toggle('expanded');
+                        
+                        setTimeout(() => {
+                           targetSection.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }, 100);
+                    }
+                });
+            });
+
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const parentSection = this.parentElement;
+                    parentSection.classList.toggle('expanded');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
