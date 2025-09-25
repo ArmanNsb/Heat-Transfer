@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Workflow: Fundamentals of Heat Transfer</title>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+            displayMath: [['```math', '```']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+             transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 30%;
+            position: relative;
+        }
+
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .decision::after { 
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+        
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 16.66%;
+            width: 66.66%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector::after {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+
+        .section-header::after {
+            content: 'â–¼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <h1>Visual Workflow: Fundamentals of Heat Transfer</h1>
+
+    <!-- Part A: The Visual Workflow Map -->
+    <div class="workflow-map">
+        <div class="workflow-node" data-target="sec-foundations">
+            <strong>1. Foundational Concepts</strong><br>
+            <small>Thermodynamics vs. Heat Transfer</small>
+        </div>
+        <div class="workflow-node" data-target="sec-approach">
+            <strong>2. The Engineer's Approach</strong><br>
+            <small>Problem Types & Modeling</small>
+        </div>
+        <div class="workflow-node" data-target="sec-energy-fundamentals">
+            <strong>3. Energy Fundamentals</strong><br>
+            <small>Forms of Energy & Transfer Mechanisms</small>
+        </div>
+        <div class="workflow-node" data-target="sec-first-law">
+            <strong>4. The Governing Law</strong><br>
+            <small>First Law & Steady-State Balance</small>
+        </div>
+        <div class="workflow-node decision" data-target="sec-modes-decision">
+            <span><strong>5. Decision:<br>How is Heat Transferred?</strong></span>
+        </div>
+        <div class="flow-branch">
+            <div class="branch-container">
+                <div class="workflow-node no-connector" data-target="sec-conduction">
+                    <strong>Conduction</strong><br>
+                    <small>Heat by Direct Contact</small>
+                </div>
+            </div>
+            <div class="branch-container">
+                <div class="workflow-node no-connector" data-target="sec-convection">
+                    <strong>Convection</strong><br>
+                    <small>Heat by Fluid Motion</small>
+                </div>
+            </div>
+            <div class="branch-container">
+                <div class="workflow-node no-connector" data-target="sec-radiation">
+                    <strong>Radiation</strong><br>
+                    <small>Heat by EM Waves</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Part B: The Detailed Accordion Sections -->
+    <div id="accordion-container">
+        
+        <section class="roadmap-section" id="sec-foundations">
+            <div class="section-header">
+                <h2>1. Foundational Concepts: Thermodynamics vs. Heat Transfer</h2>
+            </div>
+            <div class="section-content">
+                <p>Imagine you're at a huge arena. In one corner, wearing the robes of a wise old master, is Thermodynamics 🧠📜. In the other corner, wearing a tracksuit and holding a stopwatch, is Heat Transfer 🔥⏱️. They're not enemies, but they're in completely different sports.</p>
+                
+                <h3>Thermodynamics: The Destination Guru 🗺️</h3>
+                <p>Thermo is all about the big picture. It looks at your hot coffee (State 1: 90°C) and where it will eventually end up (State 2: room temperature, 25°C).</p>
+                <p>Thermo says: "I can tell you the total amount of energy your coffee must lose to reach room temperature. It will be exactly 'X' Joules. The path is irrelevant. Only the start and finish matter."</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> Thermodynamics is like planning a road trip by only looking at the starting city and the final destination on a map. It tells you the total distance, but nothing about the journey itself. It is a science of equilibrium states.</i>
+                </div>
+
+                <h3>Heat Transfer: The Speed Demon 🏎️</h3>
+                <p>Heat Transfer jumps into the action, yelling about the messy reality of the journey. H.T. cares about how fast things are happening right now.</p>
+                <p>Heat Transfer shouts: "Who cares about the total?! Will the coffee be drinkable in 10 minutes or 2 hours? We need the RATE! How many Joules are escaping per second? Is the cup ceramic or a fancy insulated thermos? That changes the speed!"</p>
+                 <div class="insight">
+                    <i><b>Physical Insight:</b> Heat Transfer is the GPS navigation for your road trip. It's concerned with your current speed (the rate), the traffic, and the type of road you're on. It answers the question, "How long will this take?" It is a science of non-equilibrium processes.</i>
+                </div>
+
+                <h3>The Core Conflict:</h3>
+                <ul>
+                    <li>Thermo deals with perfectly balanced, happy equilibrium states.</li>
+                    <li>Heat Transfer thrives in the chaos of non-equilibrium, the "in-between" where things are actively changing.</li>
+                </ul>
+
+                <h3>Heat's One Unbreakable Rule: The VIP Club Analogy</h3>
+                <p>Heat has a simple, non-negotiable rule: It always moves from the party to the parking lot. 🔥➡️🧊</p>
+                <ul>
+                    <li><b>High Temperature</b> = A crowded, noisy, exclusive VIP section. The energy is high!</li>
+                    <li><b>Low Temperature</b> = The quiet, empty street outside.</li>
+                </ul>
+                <div class="insight">
+                    <i><b>Physical Insight: The VIP Club.</b> Heat is like a bouncer systematically moving people (energy) out of the crowded club to the empty street to calm things down. It never works the other way around. The Temperature Difference (\KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE) is the driving force. A bigger difference is like a more chaotic club, forcing the bouncer to work faster, leading to a higher rate of heat transfer.</i>
+                </div>
+
+                <div class="rule-of-thumb">
+                    <b>Design Implication: Real-World Resume</b>
+                    <p>This isn't just theory. This is the science behind...</p>
+                    <ul>
+                        <li>🚶‍♀️ <b>Your Clothes:</b> You're a 37°C human furnace. Your clothes are insulation designed to slow down the rate at which you lose heat to the cold world.</li>
+                        <li>🍳 <b>Your Kitchen:</b> From your stove (designed for fast heat transfer) to your refrigerator (designed to pump heat out) to your thermos (designed for slow heat transfer).</li>
+                        <li>🏠 <b>Your Home:</b> Insulation in your walls is designed to minimize the rate of heat gain in summer ☀️ and heat loss in winter ❄️.</li>
+                        <li>🚗 <b>Your Car & Tech:</b> The radiator, the fan in your computer 💻, even the systems keeping a spacecraft 🚀 from burning up on re-entry are all masterpieces of Heat Transfer engineering.</li>
+                    </ul>
+                </div>
+
+                <h3>The Memorable Summary</h3>
+                <div class="card">
+                    <h4>🎯 FOCUS:</h4>
+                    <ul>
+                        <li><b>Thermodynamics:</b> Deals with the AMOUNT of energy transfer (Joules). Answers "How much?"</li>
+                        <li><b>Heat Transfer:</b> Deals with the RATE of energy transfer (Watts = Joules/second). Answers "How fast?"</li>
+                    </ul>
+                    <h4>⚖️ SYSTEM STATE:</h4>
+                    <ul>
+                        <li><b>Thermodynamics:</b> Analyzes systems at Equilibrium. It's concerned with the start and end points of a process.</li>
+                        <li><b>Heat Transfer:</b> Is inherently a Non-Equilibrium science. It describes the process while it is happening.</li>
+                    </ul>
+                    <h4>🚗 DRIVING FORCE:</h4>
+                    <ul>
+                        <li>The fundamental requirement for heat transfer is a <b>Temperature Difference (\KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE)</b>. No difference, no net heat transfer.</li>
+                        <li>The rate of heat transfer is proportional to the magnitude of the <b>Temperature Gradient</b> (the change in temperature over a distance). A steeper gradient means a faster rate.</li>
+                    </ul>
+                    <h4>📜 RELATIONSHIP TO LAWS:</h4>
+                    <ul>
+                        <li><b>1st Law of Thermo:</b> Sets the principle of energy conservation (energy in = energy out + accumulation). Heat Transfer obeys this law.</li>
+                        <li><b>2nd Law of Thermo:</b> Sets the DIRECTION of heat transfer (always from Hot to Cold). Heat Transfer quantifies the rate of this directed movement.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-approach">
+            <div class="section-header">
+                <h2>2. The Engineer's Approach: Problem Types & Modeling</h2>
+            </div>
+            <div class="section-content">
+                <p>So, we know what Heat Transfer is. Now, how do we use it without getting a massive headache? This section breaks down the two main jobs we do and the two main ways we can do them.</p>
+
+                <h3>Job #1: The "Rating" Problem (Playing Detective 🕵️‍♀️)</h3>
+                <p>Imagine you walk into a chemical plant and see a big, dusty heat exchanger just sitting there. Your boss comes over and says: "Hey, that's our old 'Shell-o-Matic 5000'. If we run our hot oil through it at 150°C and cooling water at 20°C, how much heat will it actually transfer? What's its performance?"</p>
+                <p>This is a <b>RATING</b> problem.</p>
+                <ul>
+                    <li><b>You have:</b> An existing piece of equipment. You know its size, its materials, its whole life story.</li>
+                    <li><b>You want to find:</b> The rate of heat transfer (\KATEX_INLINE_OPEN q \KATEX_INLINE_CLOSE) for a given set of conditions.</li>
+                </ul>
+
+                <h3>Job #2: The "Sizing" Problem (Playing Architect 🏗️)</h3>
+                <p>Now, imagine a different scenario. Your boss comes to you with a blueprint for a new process and says: "We need to cool down this stream of boiling toluene at a rate of 500 kilowatts. We'll use cooling water at 20°C. How big of a heat exchanger do we need to build? What size should it be?"</p>
+                <p>This is a <b>SIZING</b> problem.</p>
+                <ul>
+                    <li><b>You have:</b> A required rate of heat transfer (\KATEX_INLINE_OPEN q \KATEX_INLINE_CLOSE). You know the job that needs to be done.</li>
+                    <li><b>You want to find:</b> The size (e.g., area) of the equipment you need to buy or build.</li>
+                </ul>
+
+                <h3>The Two Paths to an Answer: The Lab vs. The Laptop</h3>
+                <h4>The Experimental Approach (The Lab Coat & Goggles Path 🧑‍🔬)</h4>
+                <ul>
+                    <li><b>What it is:</b> You build the actual thing (or use the existing one), hook up a bunch of sensors, run the experiment, and measure the results.</li>
+                    <li><b>The Good News 👍:</b> It's real! You're measuring the actual physical system. This is the ground truth, minus any small measurement errors.</li>
+                    <li><b>The Bad News 👎:</b> It's expensive 💰, it takes forever ⏳, and sometimes the thing you're testing doesn't even exist yet! You can't build a whole power plant just to "test" if your boiler design works.</li>
+                </ul>
+
+                <h4>The Analytical Approach (The Laptop & Coffee Path 💻☕)</h4>
+                <ul>
+                    <li><b>What it is:</b> You use the power of math! You create a mathematical model—a set of equations that represent the real-world problem.</li>
+                    <li><b>The Good News 👍:</b> It's fast, cheap, and you can test a hundred different designs before lunch.</li>
+                    <li><b>The Bad News 👎:</b> Your answer is only as good as your model. If your model is based on bad assumptions, your answer will be garbage. (This is the famous "Garbage In, Garbage Out" principle).</li>
+                </ul>
+                <div class="rule-of-thumb">
+                    <b>Engineer's Rule of Thumb: The Hybrid Approach</b>
+                    <p>The best approach is a hybrid! 🤝 You use the analytical method to narrow down your choices from infinity to just a few good ones, and then you use experiments to test and verify the best design. Analyze to design, experiment to verify.</p>
+                </div>
+
+                <h3>The Art of "Modeling": Good Enough is Perfect</h3>
+                <p>This is the most important skill for an engineer. A model is just a simplified version of reality that we can describe with math.</p>
+                <div class="insight">
+                    <i><b>Physical Insight: The Potato Analogy 🥔</b>
+                    <p><b>The Real Problem:</b> You want to know how long it takes to bake a lumpy, weirdly shaped potato in your oven.</p>
+                    <p><b>The Hyper-Complex Model:</b> You could 3D scan the potato, map its density variations, and run a supercomputer simulation of heat flowing through every nook and cranny. This would take forever and be ridiculously complex.</p>
+                    <p><b>The "Good Enough" Model:</b> You say, "You know what? A potato is kind of like a sphere. And it's mostly water." So, you model it as a perfect sphere made of pure water.</p>
+                    <p><b>The Result:</b> The answer you get from the simple sphere model is probably 95% correct and gives you a great estimate. It's the simplest model that yields adequate results. That's the goal!</p>
+                </i>
+                </div>
+                <div class="rule-of-thumb">
+                    <b>Design Implication: The Golden Rule of Modeling</b>
+                    <p>Don't build a Ferrari when a bicycle will do. Always choose the simplest model that gets the job done for the specific question you're asking. But be aware of its limitations! The "potato is a sphere" model is great for baking, but terrible for figuring out if it will roll smoothly down a hill. Always be aware of the assumptions made in your model, as the answer is only valid if the assumptions are.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-energy-fundamentals">
+            <div class="section-header">
+                <h2>3. Energy Fundamentals: Forms of Energy & Transfer Mechanisms</h2>
+            </div>
+            <div class="section-content">
+                <h3>Part 1: Forms of Energy</h3>
+                <p>At the highest level, we have Total Energy (\KATEX_INLINE_OPEN E \KATEX_INLINE_CLOSE). For a system like a cannonball, this includes macroscopic energies like kinetic energy (motion) and potential energy (height). But what about the energy it possesses when it's just sitting still on the ground? This is its Internal Energy (\KATEX_INLINE_OPEN U \KATEX_INLINE_CLOSE), the sum of all microscopic, unseen, molecular-level energies.</p>
+
+                <h4>Dissecting Internal Energy (\KATEX_INLINE_OPEN U \KATEX_INLINE_CLOSE)</h4>
+                <ul>
+                    <li><b>Sensible Energy:</b> The energy tied to the kinetic motion of molecules (vibration, rotation). This is the energy you can "sense" with a thermometer.</li>
+                    <li><b>Latent Energy:</b> The energy associated with the bonds between molecules. It's the energy required to change phase (e.g., melt ice) and is "hidden" because temperature doesn't change during the phase transition.</li>
+                    <li><b>Chemical & Nuclear Energy:</b> Energy stored in the bonds holding atoms together (chemical) or within the nucleus of an atom (nuclear).</li>
+                </ul>
+                
+                <div class="insight">
+                    <i><b>Physical Insight: The "Bouncer's Fee" Analogy for Enthalpy</b>
+                    <p>In chemical engineering, we almost always deal with flowing fluids. A packet of fluid has its own internal energy (\KATEX_INLINE_OPEN U \KATEX_INLINE_CLOSE). But to get into the pipe, it has to push the fluid ahead of it, doing work to make space. This "entry fee" is called flow work, represented by the \KATEX_INLINE_OPEN PV \KATEX_INLINE_CLOSE (Pressure × Volume) term.</p>
+                    <p><b>Enthalpy (\KATEX_INLINE_OPEN H \KATEX_INLINE_CLOSE)</b> is the "All-Inclusive Ticket": it's the sum of the fluid's own internal energy plus the energy it took to get into the flow (\KATEX_INLINE_OPEN H = U + PV \KATEX_INLINE_CLOSE). When you see enthalpy, think: "Internal energy for a flowing, open system."</p>
+                </i>
+                </div>
+
+                <h4>Specific Heats (\KATEX_INLINE_OPEN c_p \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN c_v \KATEX_INLINE_CLOSE)</h4>
+                <p>Specific heat is the energy needed to raise 1 kg of a substance by 1°C. The value depends on how you add the heat:</p>
+                <ul>
+                    <li><b>Constant Volume (\KATEX_INLINE_OPEN c_v \KATEX_INLINE_CLOSE):</b> Heating in a rigid, sealed tank. All energy added goes directly into increasing internal energy.</li>
+                    <li><b>Constant Pressure (\KATEX_INLINE_OPEN c_p \KATEX_INLINE_CLOSE):</b> Heating in a container with a movable piston. The substance expands and does work. You must supply energy to both increase the internal energy AND perform this expansion work.</li>
+                </ul>
+                <div class="rule-of-thumb">
+                    <b>Engineer's Rule of Thumb:</b>
+                    <p>\KATEX_INLINE_OPEN c_p \KATEX_INLINE_CLOSE is always greater than \KATEX_INLINE_OPEN c_v \KATEX_INLINE_CLOSE for gases because it accounts for both the internal energy increase and the expansion work. For incompressible substances like liquids and solids, volume change is negligible, so \KATEX_INLINE_OPEN c_p \approx c_v \KATEX_INLINE_CLOSE.</p>
+                </div>
+                
+                <h3>Part 2: Energy Transfer Mechanisms (Heat vs. Work)</h3>
+                <p>Energy can cross the boundary of a closed system in only two ways: as Heat (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE) or as Work (\KATEX_INLINE_OPEN W \KATEX_INLINE_CLOSE). Think of them as the only two doors into your system's "energy bank account."</p>
+                
+                <h4>Heat (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE): The Transfer Driven by Chaos</h4>
+                <p>The one and only requirement for an energy interaction to be called "Heat" is a <b>temperature difference (\KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE)</b>. It is the transfer of energy from a hotter body to a colder body, driven by the random collisions of molecules at the boundary.</p>
+                
+                <h4>Work (\KATEX_INLINE_OPEN W \KATEX_INLINE_CLOSE): The Organized Transfer of Energy</h4>
+                <p>If an energy transfer across the system boundary is <b>not caused by a temperature difference</b>, it is Work. Work is an organized, coherent energy transfer, such as a rotating shaft, a compressing piston, or an electrical current.</p>
+
+                <div class="insight">
+                    <i><b>Physical Insight: The "Money Transfer" Analogy</b>
+                    <p>Internal Energy (\KATEX_INLINE_OPEN U \KATEX_INLINE_CLOSE) and Enthalpy (\KATEX_INLINE_OPEN H \KATEX_INLINE_CLOSE) are <b>properties</b> of a system. They are like the balance in your bank account.</p>
+                    <p>Heat (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE) and Work (\KATEX_INLINE_OPEN W \KATEX_INLINE_CLOSE) are <b>processes</b>. They are energy in transit, like a wire transfer. You can't say "I have 50 dollars of wire transfer" in your wallet. You can only say "I received 50 dollars via a wire transfer." Similarly, a system doesn't "contain" heat; it receives energy via heat transfer, which increases its internal energy.</p>
+                </i>
+                </div>
+            </div>
+        </section>
+        
+        <section class="roadmap-section" id="sec-first-law">
+            <div class="section-header">
+                <h2>4. The Governing Law: First Law & Steady-State Balance</h2>
+            </div>
+            <div class="section-content">
+                <h3>The First Law of Thermodynamics</h3>
+                <p>At its heart, the First Law of Thermodynamics is simply the principle of <b>Conservation of Energy</b>. It is a strict accounting rule: energy cannot be created or destroyed, only converted from one form to another.</p>
+                
+                <div class="insight">
+                    <i><b>Physical Insight: The Bank Account Analogy</b>
+                    <p>Think of your system as a bank account. The total energy of the system (\KATEX_INLINE_OPEN E_{system} \KATEX_INLINE_CLOSE) is your account balance. \KATEX_INLINE_OPEN E_{in} \KATEX_INLINE_CLOSE represents deposits, and \KATEX_INLINE_OPEN E_{out} \KATEX_INLINE_CLOSE represents withdrawals.</p>
+                    <p>The fundamental relationship is self-evident: Deposits - Withdrawals = Change in Balance.</p>
+                    ```math
+                    E_{in} - E_{out} = \Delta E_{system}
+                    ```
+                    <p>This is the First Law. Every bit of energy must be accounted for.</p>
+                </i>
+                </div>
+
+                <h4>Energy In/Out vs. Energy Change</h4>
+                <ul>
+                    <li><b>How energy gets IN or OUT (\KATEX_INLINE_OPEN E_{in}, E_{out} \KATEX_INLINE_CLOSE):</b> Heat Transfer (\KATEX_INLINE_OPEN Q \KATEX_INLINE_CLOSE), Work (\KATEX_INLINE_OPEN W \KATEX_INLINE_CLOSE), and Mass Flow (\KATEX_INLINE_OPEN m \KATEX_INLINE_CLOSE) for open systems.</li>
+                    <li><b>How the system's energy CHANGES (\KATEX_INLINE_OPEN \Delta E_{system} \KATEX_INLINE_CLOSE):</b> The change in the sum of its parts, \KATEX_INLINE_OPEN \Delta E = \Delta U + \Delta KE + \Delta PE \KATEX_INLINE_CLOSE.</li>
+                </ul>
+
+                <h3>Application: The Steady-Flow Energy Balance</h3>
+                <p>In chemical engineering, many processes run continuously and unchangingly. This is called <b>steady-state</b>. For a steady-state system, properties do not change with time, so the change in the system's energy is zero (\KATEX_INLINE_OPEN dE_{system}/dt = 0 \KATEX_INLINE_CLOSE).</p>
+                
+                <div class="rule-of-thumb">
+                    <b>Design Implication: Steady-State Simplification</b>
+                    <p>For a steady-state system, the First Law simplifies beautifully to a simple balance. The rate of energy entering the system must exactly equal the rate of energy leaving.</p>
+                    ```math
+                    \dot{E}_{in} = \dot{E}_{out}
+                    ```
+                    <p>This is the fundamental principle for analyzing most continuous process equipment like heat exchangers, pumps, and turbines.</p>
+                </div>
+
+                <h4>The Engineer's Workhorse Equation</h4>
+                <p>For a typical device like a heat exchanger with one inlet and one outlet, no work, and negligible changes in kinetic and potential energy, the steady-flow energy balance simplifies to a very practical formula:</p>
+                ```math
+                \dot{Q} = \dot{m} (h_{out} - h_{in}) = \dot{m} \Delta h
+                ```
+                <p>Since for ideal gases and incompressible liquids \KATEX_INLINE_OPEN \Delta h \approx c_p \Delta T \KATEX_INLINE_CLOSE, we arrive at the most commonly used form:</p>
+                ```math
+                \dot{Q} = \dot{m} c_p \Delta T
+                ```
+                <div class="insight">
+                    <i><b>Physical Insight:</b> This equation is the bread and butter for calculating heat duties. It directly links the rate of heat transfer (\KATEX_INLINE_OPEN \dot{Q} \KATEX_INLINE_CLOSE) to the mass flow rate (\KATEX_INLINE_OPEN \dot{m} \KATEX_INLINE_CLOSE) and the temperature change (\KATEX_INLINE_OPEN \Delta T \KATEX_INLINE_CLOSE) of the fluid, using the fluid's specific heat (\KATEX_INLINE_OPEN c_p \KATEX_INLINE_CLOSE) as the conversion factor.</i>
+                </div>
+                
+                <h4>The Surface Energy Balance</h4>
+                <p>A surface has no thickness, no volume, and therefore no mass. It cannot store or accumulate energy. Therefore, for any surface, the rate of energy arriving must equal the rate of energy leaving. This is a powerful tool for finding an unknown temperature or heat flux at an interface where multiple modes of heat transfer converge.</p>
+                ```math
+                \dot{E}_{in} = \dot{E}_{out} \quad \text{(for a surface)}
+                ```
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-modes-decision">
+            <div class="section-header">
+                <h2>5. The Three Modes of Heat Transfer</h2>
+            </div>
+            <div class="section-content">
+                <p>We've established the rules of energy conservation. Now we must ask the central question of Heat Transfer: <b>How does the energy actually move from point A to point B?</b></p>
+                <p>The answer is that there are three fundamental mechanisms, or modes, by which heat is transferred. While they can occur simultaneously, we analyze them as distinct processes.</p>
+                <ul>
+                    <li><b>Conduction:</b> Transfer through direct molecular contact, with no bulk motion of the material.</li>
+                    <li><b>Convection:</b> Transfer between a surface and a moving fluid.</li>
+                    <li><b>Radiation:</b> Transfer by electromagnetic waves, requiring no medium.</li>
+                </ul>
+                <div class="insight">
+                    <i><b>Physical Insight: The Message Analogy</b>
+                    <ul>
+                        <li><b>Conduction</b> is like passing a note down a row of students sitting at their desks. The energy moves, but the material (the students) stays put.</li>
+                        <li><b>Convection</b> is one student getting up and walking the note across the room. The energy is carried by the bulk movement of a fluid (the student).</li>
+                        <li><b>Radiation</b> is like seeing a message on a giant screen from across the stadium. The energy travels as a wave, requiring no one to carry it.</li>
+                    </ul>
+                </i>
+                </div>
+                <p>The following sections detail the physics and governing equations for each of these three modes.</p>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-conduction">
+            <div class="section-header">
+                <h2>Mode 1: Conduction</h2>
+            </div>
+            <div class="section-content">
+                <p>Conduction is heat transfer through direct molecular contact. It's the transfer of energy by "touching," where energy cascades from one particle to the next with no bulk motion of the material itself.</p>
+                
+                <h3>Mechanisms of Conduction</h3>
+                <div class="insight">
+                    <i><b>Physical Insight: How it Works at the Atomic Level</b>
+                    <ul>
+                        <li><b>In Gases (Billiard Ball Analogy):</b> Fast-moving (hot) molecules collide with slow-moving (cold) molecules, transferring kinetic energy one collision at a time. It is chaotic and inefficient.</li>
+                        <li><b>In Solids (Newton's Cradle Analogy):</b> Atoms locked in a crystal lattice vibrate and pass this vibrational energy down the line to their neighbors through interatomic bonds. This is more orderly and effective than in gases.</li>
+                        <li><b>In Metals (Energy Superhighway):</b> In addition to lattice vibrations, metals have a sea of free-floating electrons. These electrons act as high-speed messengers, absorbing energy on the hot side and zipping through the material to deliver it to the cold side. This is why metals are excellent conductors.</li>
+                    </ul>
+                </i>
+                </div>
+
+                <h3>Fourier's Law of Heat Conduction</h3>
+                <p>The rate of heat conduction is described by Fourier's Law, which formalizes the intuitive ideas that heat flow increases with larger area and temperature difference, but decreases with greater thickness.</p>
+                <h4>Differential Form:</h4>
+                ```math
+                \dot{Q}_{cond} = -k A \frac{dT}{dx}
+                ```
+                <ul>
+                    <li>\KATEX_INLINE_OPEN \dot{Q}_{cond} \KATEX_INLINE_CLOSE: Rate of heat transfer by conduction (W).</li>
+                    <li>\KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE: Thermal Conductivity of the material (W/m·K).</li>
+                    <li>\KATEX_INLINE_OPEN A \KATEX_INLINE_CLOSE: Area normal (perpendicular) to the direction of heat flow (m²).</li>
+                    <li>\KATEX_INLINE_OPEN dT/dx \KATEX_INLINE_CLOSE: Temperature gradient (K/m). The negative sign ensures that heat flow is positive when temperature decreases along the positive x-direction.</li>
+                </ul>
+                <h4>Simplified Form (for a plane wall of thickness L):</h4>
+                ```math
+                \dot{Q}_{cond} = k A \frac{T_{hot} - T_{cold}}{L}
+                ```
+
+                <h3>Material Properties: Thermal Conductivity and Diffusivity</h3>
+                <h4>Thermal Conductivity (\KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE)</h4>
+                <p><b>Thermal Conductivity (\KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE)</b> is about <b>transferring</b> energy. It's a measure of a material's "energy superhighway." A high \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE means heat travels through it quickly and easily.</p>
+                <ul>
+                    <li><b>High \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE (Conductors):</b> Metals (Copper, Aluminum), Diamond.</li>
+                    <li><b>Low \KATEX_INLINE_OPEN k \KATEX_INLINE_CLOSE (Insulators):</b> Gases (Air), Fiberglass, Styrofoam.</li>
+                </ul>
+                <div class="rule-of-thumb">
+                    <b>Design Implication: Alloys</b>
+                    <p>Adding impurity atoms to a pure metal (creating an alloy) disrupts the perfect crystal lattice, acting like potholes on the "energy superhighway." This severely hinders the flow of both free electrons and lattice vibrations, meaning the thermal conductivity of an alloy is generally much lower than that of its pure metal constituents.</p>
+                </div>
+
+                <h4>Thermal Diffusivity (\KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE)</h4>
+                <p><b>Thermal Diffusivity (\KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE)</b> measures how quickly a material will react to a change in temperature. It's the ratio of how fast heat is conducted versus how much heat is stored.</p>
+                ```math
+                \alpha = \frac{k}{\rho c_p} = \frac{\text{Heat Conducted}}{\text{Heat Stored}}
+                ```
+                 <div class="insight">
+                    <i><b>Physical Insight: The Sponge vs. Pipe Analogy</b>
+                    <ul>
+                        <li><b>Low Diffusivity Material (e.g., Brick):</b> Like a path of dry sponges. It soaks up a lot of heat (high \KATEX_INLINE_OPEN \rho c_p \KATEX_INLINE_CLOSE) before it can pass any along. Heat propagates slowly.</li>
+                        <li><b>High Diffusivity Material (e.g., Silver):</b> Like a hollow pipe. It doesn't store much heat; it just lets it pass through. Heat propagates very quickly.</li>
+                    </ul>
+                </i>
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-convection">
+            <div class="section-header">
+                <h2>Mode 2: Convection</h2>
+            </div>
+            <div class="section-content">
+                <p>Convection is heat transfer between a solid surface and a moving fluid. It is a combination of two mechanisms: conduction at the surface and energy transport by the bulk motion of the fluid.</p>
+                <div class="insight">
+                    <i><b>Physical Insight: The Cleanup Crew</b>
+                    <p>Imagine a hot pipe. The thin, stagnant layer of fluid directly touching it gets heated by conduction. If this hot layer just sat there, heat transfer would grind to a halt. Convection occurs when the bulk fluid motion acts like a "cleanup crew," sweeping away the hot fluid from the surface and replacing it with fresh, cool fluid. This maintains a large temperature difference at the surface, allowing heat transfer to continue efficiently.</p>
+                </i>
+                </div>
+
+                <h3>Types of Convection</h3>
+                <ul>
+                    <li><b>Forced Convection:</b> The fluid is forced to move by an external source like a pump, fan, or agitator. This is controllable and highly effective.</li>
+                    <li><b>Natural (Free) Convection:</b> Fluid motion is caused by buoyancy forces. The fluid near the hot surface becomes less dense and rises, while cooler, denser fluid sinks to take its place, creating a natural circulation.</li>
+                    <li><b>Phase-Change Convection:</b> Boiling and condensation are extremely effective forms of convection due to the intense fluid motion caused by bubble formation or droplet condensation.</li>
+                </ul>
+
+                <h3>Newton's Law of Cooling</h3>
+                <p>The rate of convective heat transfer is calculated using Newton's Law of Cooling.</p>
+                ```math
+                \dot{Q}_{conv} = h A_s (T_s - T_\infty)
+                ```
+                <ul>
+                    <li>\KATEX_INLINE_OPEN \dot{Q}_{conv} \KATEX_INLINE_CLOSE: Rate of convection heat transfer (W).</li>
+                    <li>\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE: The convection heat transfer coefficient (W/m²·K).</li>
+                    <li>\KATEX_INLINE_OPEN A_s \KATEX_INLINE_CLOSE: The surface area over which the transfer occurs (m²).</li>
+                    <li>\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE: The temperature of the solid surface.</li>
+                    <li>\KATEX_INLINE_OPEN T_\infty \KATEX_INLINE_CLOSE: The temperature of the bulk fluid far away from the surface.</li>
+                </ul>
+
+                <div class="rule-of-thumb">
+                    <b>Engineer's Rule of Thumb: The Convection Coefficient (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE)</b>
+                    <p>The coefficient \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is the most critical and complex term. It is <b>not a material property</b> but an experimentally determined parameter that depends on fluid properties, velocity, and geometry. A higher \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE means more effective heat transfer.</p>
+                    <b>Hierarchy of Effectiveness (Typical \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE values):</b>
+                    <ol>
+                        <li>Boiling & Condensation (Highest \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE)</li>
+                        <li>Forced convection of liquids</li>
+                        <li>Forced convection of gases</li>
+                        <li>Natural convection of liquids</li>
+                        <li>Natural convection of gases (Lowest \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE)</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap-section" id="sec-radiation">
+            <div class="section-header">
+                <h2>Mode 3: Radiation</h2>
+            </div>
+            <div class="section-content">
+                <p>Radiation is the transfer of energy via electromagnetic waves. Unlike conduction and convection, it does <b>not</b> require an intervening medium and is fastest in a vacuum. Any matter with a temperature above absolute zero (0 K) emits thermal radiation.</p>
+                
+                <div class="rule-of-thumb">
+                    <b>Design Implication: Why Radiation Matters</b>
+                    <ul>
+                        <li><b>High-Temperature Processes:</b> In a fired heater or furnace, radiation is the primary mode of heat transfer from flames to process tubes.</li>
+                        <li><b>Energy Loss & Efficiency:</b> Hot, uninsulated equipment constantly radiates heat (and money) to its surroundings. Low-emissivity coatings can minimize these losses.</li>
+                        <li><b>Safety:</b> The intense heat you feel from a furnace without touching it is radiation. This radiant heat can cause severe burns, dictating safety barrier design.</li>
+                    </ul>
+                </div>
+
+                <h3>Stefan-Boltzmann Law</h3>
+                <p>The maximum possible rate of heat emission from an idealized surface (a "blackbody") is given by the Stefan-Boltzmann Law.</p>
+                ```math
+                \dot{Q}_{emit, max} = \sigma A_s T_s^4
+                ```
+                <p>For a real surface (a "gray body"), the actual emission is less than the maximum and is given by:</p>
+                ```math
+                \dot{Q}_{emit} = \epsilon \sigma A_s T_s^4
+                ```
+                <ul>
+                    <li>\KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE (Emissivity): A surface property between 0 and 1 that measures how effectively a surface radiates compared to a blackbody (\KATEX_INLINE_OPEN \epsilon = 1 \KATEX_INLINE_CLOSE for a blackbody). Dull, black surfaces have high emissivity; shiny, polished surfaces have low emissivity.</li>
+                    <li>\KATEX_INLINE_OPEN \sigma \KATEX_INLINE_CLOSE: The Stefan-Boltzmann constant (\KATEX_INLINE_OPEN 5.67 \times 10^{-8} \text{ W/m}^2\cdot\text{K}^4 \KATEX_INLINE_CLOSE).</li>
+                    <li>\KATEX_INLINE_OPEN T_s \KATEX_INLINE_CLOSE: <b>Absolute</b> surface temperature (in Kelvin or Rankine). This is crucial!</li>
+                </ul>
+                
+                <div class="insight">
+                    <i><b>Physical Insight: Kirchhoff's Law</b>
+                    <p>Kirchhoff's Law states that for a surface at a given temperature, its emissivity is equal to its absorptivity (\KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE). This means that <b>good emitters are also good absorbers</b>. A dull black surface (\KATEX_INLINE_OPEN \epsilon \approx 0.98 \KATEX_INLINE_CLOSE) is great at both radiating its own heat and absorbing heat radiated onto it. A shiny aluminum foil (\KATEX_INLINE_OPEN \epsilon \approx 0.07 \KATEX_INLINE_CLOSE) is terrible at both. This is why emergency blankets are shiny—to prevent your body from radiating its heat away.</p>
+                </i>
+                </div>
+
+                <h3>Net Radiation Heat Transfer</h3>
+                <p>In a real scenario, a surface is both emitting radiation and absorbing radiation from its surroundings. The net rate of heat transfer is the difference between these two. For a small surface completely enclosed by much larger surroundings, the net radiation is:</p>
+                ```math
+                \dot{Q}_{rad} = \epsilon \sigma A_s (T_s^4 - T_{surr}^4)
+                ```
+                
+                <h3>Combined Heat Transfer</h3>
+                <p>In many cases, convection and radiation occur simultaneously from a surface. The total heat transfer is the sum of the two.</p>
+                ```math
+                \dot{Q}_{total} = \dot{Q}_{conv} + \dot{Q}_{rad} = h_{conv} A_s (T_s - T_{surr}) + \epsilon \sigma A_s (T_s^4 - T_{surr}^4)
+                ```
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const workflowNodes = document.querySelectorAll('.workflow-node');
+        const sections = document.querySelectorAll('.roadmap-section');
+        const sectionHeaders = document.querySelectorAll('.section-header');
+
+        const collapseAllSections = () => {
+            sections.forEach(section => {
+                section.classList.remove('expanded');
+            });
+        };
+
+        workflowNodes.forEach(node => {
+            node.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const targetSection = document.getElementById(targetId);
+
+                if (targetSection) {
+                    const isExpanded = targetSection.classList.contains('expanded');
+                    
+                    if (!isExpanded) {
+                        collapseAllSections();
+                    }
+
+                    targetSection.classList.toggle('expanded');
+                    
+                    setTimeout(() => {
+                       targetSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 100);
+                }
+            });
+        });
+
+        sectionHeaders.forEach(header => {
+            header.addEventListener('click', function () {
+                const parentSection = this.parentElement;
+                parentSection.classList.toggle('expanded');
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
