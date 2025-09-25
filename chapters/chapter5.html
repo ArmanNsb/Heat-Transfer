@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Workflow: Numerical Methods in Heat Transfer</title>
+    
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+        displayMath: [['```math', '```']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+             transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 45%;
+            position: relative;
+        }
+        
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .decision::after { 
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector::after {
+            content: 'â†“';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+
+        .section-header::after {
+            content: 'â–¼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>Visual Workflow: Numerical Methods in Heat Transfer</h1>
+
+        <!-- Part A: The Visual Workflow Map -->
+        <div class="workflow-map">
+            <div class="workflow-node" data-target="sec-why-numerical">
+                1. Why Numerical Methods?
+            </div>
+            <div class="workflow-node" data-target="sec-finite-difference">
+                2. The Finite Difference Method
+            </div>
+            <div class="workflow-node" data-target="sec-1d-steady">
+                3. 1D Steady Conduction & The Energy Balance
+            </div>
+            <div class="workflow-node" data-target="sec-boundary-conditions">
+                4. Handling Boundary Conditions
+            </div>
+            <div class="workflow-node decision" data-target="sec-transient-intro">
+                <span>5. Key Decision:<br>Steady-State vs. Transient</span>
+            </div>
+            <div class="flow-branch">
+                <div class="branch-container">
+                    <h3>Steady-State Analysis</h3>
+                    <div class="workflow-node" data-target="sec-2d-steady">
+                        6a. 2D Steady Conduction
+                    </div>
+                    <div class="workflow-node no-connector" data-target="sec-irregular-boundaries">
+                        7a. Special Case: Irregular Boundaries
+                    </div>
+                </div>
+                <div class="branch-container">
+                    <h3>Transient Analysis</h3>
+                    <div class="workflow-node" data-target="sec-1d-transient">
+                        6b. 1D Transient Equations
+                    </div>
+                    <div class="workflow-node" data-target="sec-stability">
+                        7b. Explicit Method Stability Criterion
+                    </div>
+                     <div class="workflow-node no-connector" data-target="sec-2d-transient">
+                        8b. 2D Transient Conduction
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part B: The Detailed Accordion Sections -->
+        <div id="accordion-container">
+            
+            <!-- Section 1: Why Numerical Methods -->
+            <section id="sec-why-numerical" class="roadmap-section">
+                <div class="section-header">
+                    <h2>1. Why Numerical Methods?</h2>
+                </div>
+                <div class="section-content">
+                    <p>This chapter is where we transition from classical, foundational theory to how modern engineering problems are actually solved in practice. This introductory section is less about formulas and more about mindset, which is arguably more important.</p>
+                    
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>This section is all about one central question: Why do we need complicated computer methods when we've just learned how to find exact, elegant analytical solutions?</p>
+                    <p>The textbook's answer is simple: because the real world is messy. The perfect spheres, infinite cylinders, and flat walls we've been studying are the engineering equivalent of a physicist's "assume a spherical cow." They are fantastic for learning principles, but they rarely exist in a real plant.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: The Car Analogy 🚗</b>
+                        <br><b>Analytical Solution (Chapters 1-4):</b> This is like calculating the drag on a perfect sphere in a wind tunnel. You can use a beautiful, exact equation. The answer is precise and elegant. But... you haven't designed a car. You've solved a perfect, idealized problem.
+                        <br><b>Numerical Solution (Chapter 5 and beyond):</b> This is like taking a highly detailed 3D CAD model of a real car—with mirrors, wheels, door handles, and a weird spoiler—and trying to find the drag on it. There is no single equation for this complex shape. So, what do we do? We use a computer to break the car's surface into a million tiny, simple shapes (a "mesh"). The computer then solves a very simple, approximate version of the physics on each tiny square and adds up all the results. The final answer isn't "exact," but it's an incredibly good approximation for the real-world object.</i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication:</b> An approximate solution for a realistic model is far more valuable than an exact solution for an oversimplified model. 📈
+                    </div>
+
+                    <h3>Why does this matter to you as an engineer? 🏭</h3>
+                    <p>In your career, you will almost never solve a real-world heat transfer problem with an infinite series. You will use software that is built on the numerical methods introduced in this chapter, like FEA (Finite Element Analysis) or CFD (Computational Fluid Dynamics). This chapter teaches you to be a responsible and intelligent user of these powerful tools.</p>
+                    <ul>
+                        <li><b>It Solves Real Problems:</b> Need to find the temperature distribution in a complex pump casing with cooling fins and bolt holes? Analytical methods fail completely. A numerical method is your only option.</li>
+                        <li><b>It Allows for "What-Ifs":</b> Your boss asks, "What if we make the cooling fins 2 cm longer? And what if we change the material from cast iron to aluminum?" With a numerical model, you just change a few parameters and click "run." Doing this analytically would be impossible.</li>
+                        <li><b>It Builds Critical Thinking:</b> Knowing how the computer gets its answer stops you from treating it like a magic black box. You'll understand that the quality of your input (the "mesh," the boundary conditions) directly affects the quality of the output. It empowers you to question a result that looks wrong.</li>
+                    </ul>
+
+                    <h3>Key Takeaways: Analytical vs. Numerical Solutions</h3>
+                    <h4>1. Analytical Solutions (The "Classical" Way)</h4>
+                    <ul>
+                        <li><b>✅ Pros:</b> Exact for the given model, provides an equation that builds physical intuition.</li>
+                        <li><b>❌ Cons:</b> Limited to simple geometries, limited to simple physics (e.g., constant properties), mathematically difficult.</li>
+                    </ul>
+                    <h4>2. Numerical Solutions (The "Modern" Way)</h4>
+                    <ul>
+                        <li><b>✅ Pros:</b> Handles complex geometries, handles real-world physics (e.g., temperature-dependent properties), flexible for "what-if" scenarios.</li>
+                        <li><b>❌ Cons:</b> It's an approximation, can be a "black box" that hides insight, requires validation.</li>
+                    </ul>
+
+                    <div class="rule-of-thumb">
+                        <b>The Mentor's Golden Rule: ⚙️</b> A great engineer uses both. They use their knowledge of simple analytical solutions to perform "ballpark" or "sanity" checks on the results that come out of a complex numerical simulation.
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 2: Finite Difference Method -->
+            <section id="sec-finite-difference" class="roadmap-section">
+                <div class="section-header">
+                    <h2>2. Finite Difference Formulation of Differential Equations</h2>
+                </div>
+                <div class="section-content">
+                    <p>Now we get into the nuts and bolts of how numerical methods actually work. This section introduces the core mathematical trick that allows a computer—which can only do basic arithmetic—to solve calculus problems. It's a foundational concept.</p>
+                    
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>How do we turn a complex differential equation into simple algebra that a computer can handle? The answer is the <b>Finite Difference Method</b>.</p>
+                    <p>The core idea is brilliantly simple: Any smooth curve, if you zoom in far enough, looks like a straight line. Calculus (derivatives, integrals) is the language of smooth, continuous curves. Algebra is the language of discrete points and straight lines. The Finite Difference method is our translator.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: Building a Curve with Lego Bricks 🧱</b>
+                        <br>Imagine you have to build a large, smooth archway (the true temperature profile, \KATEX_INLINE_OPEN T(x) \KATEX_INLINE_CLOSE) using only small, straight Lego bricks (our finite difference approximations).
+                        <br><b>1. Discretization:</b> You decide on your brick size (\KATEX_INLINE_OPEN \Delta x \KATEX_INLINE_CLOSE) and lay out connection points, called <b>nodes</b>.
+                        <br><b>2. Approximation:</b> You connect the nodes with your straight bricks. The slope of each brick (\KATEX_INLINE_OPEN \Delta T / \Delta x \KATEX_INLINE_CLOSE) is an approximation of the true slope of the curve (\KATEX_INLINE_OPEN dT/dx \KATEX_INLINE_CLOSE) at that point.
+                        <br><b>3. The Result:</b> You get a Lego version of the arch. If you use tiny bricks (small \KATEX_INLINE_OPEN \Delta x \KATEX_INLINE_CLOSE), your Lego arch will be a very good approximation of the real one.</i>
+                    </div>
+
+                    <h3>Why does this matter to you as an engineer? 💻</h3>
+                    <p>This fundamental translation powers most thermal simulation software.</p>
+                    <ul>
+                        <li><b>It Turns Calculus into Algebra:</b> The heat equation \KATEX_INLINE_OPEN d^2T/dx^2 + \dot{e}/k = 0 \KATEX_INLINE_CLOSE is a differential equation. By substituting the finite difference approximation, it becomes \KATEX_INLINE_OPEN (T_{m-1} - 2T_m + T_{m+1})/\Delta x^2 + \dot{e}_m/k = 0 \KATEX_INLINE_CLOSE. This is just an algebraic equation!</li>
+                        <li><b>It Creates a System of Equations:</b> You apply this simple algebraic equation to every single internal "node" in your object. If you have 100 nodes, you get a system of 100 simple algebraic equations with 100 unknown temperatures.</li>
+                        <li><b>Computers are Kings at This:</b> Solving a huge system of linear algebraic equations is what computers were born to do. They can solve for thousands, or even millions, of unknown nodal temperatures incredibly fast using matrix algebra.</li>
+                    </ul>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>1. The Concept of Discretization</h4>
+                    <ul>
+                        <li><b>Domain:</b> The continuous physical object (e.g., a wall of thickness \KATEX_INLINE_OPEN L \KATEX_INLINE_CLOSE).</li>
+                        <li><b>Nodes:</b> A finite number of specific points \KATEX_INLINE_OPEN m = 0, 1, 2, ... M \KATEX_INLINE_CLOSE within the domain.</li>
+                        <li><b>Nodal Spacing (\KATEX_INLINE_OPEN \Delta x \KATEX_INLINE_CLOSE):</b> The distance between nodes. For a wall: \KATEX_INLINE_OPEN \Delta x = L/M \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Nodal Temperature (\KATEX_INLINE_OPEN T_m \KATEX_INLINE_CLOSE):</b> The unknown temperature at node \KATEX_INLINE_OPEN m \KATEX_INLINE_CLOSE. Our goal is to find these values.</li>
+                    </ul>
+
+                    <h4>2. The Finite Difference Approximations</h4>
+                    <p>First Derivative (Slope):</p>
+                    ```math
+                    \frac{dT}{dx} \approx \frac{T_{m+1} - T_{m-1}}{2\Delta x} \quad \text{(Central difference - most accurate)}
+                    ```
+                    <p>Second Derivative (Curvature) - <b>THE MOST IMPORTANT ONE:</b></p>
+                    ```math
+                    \frac{d^2T}{dx^2} \bigg|_m \approx \frac{T_{m+1} - 2T_m + T_{m-1}}{\Delta x^2}
+                    ```
+
+                    <h4>3. The Finite Difference Equation (for a 1D interior node)</h4>
+                    <p>Start with the heat equation: \KATEX_INLINE_OPEN d^2T/dx^2 + \dot{e}/k = 0 \KATEX_INLINE_CLOSE</p>
+                    <p>Substitute the approximation for the second derivative:</p>
+                    ```math
+                    \frac{T_{m-1} - 2T_m + T_{m+1}}{\Delta x^2} + \frac{\dot{e}_m}{k} = 0
+                    ```
+
+                    <h4>4. The Simplest Case: 1D Steady-State, No Heat Generation</h4>
+                    <p>If \KATEX_INLINE_OPEN \dot{e}=0 \KATEX_INLINE_CLOSE, the equation simplifies to: \KATEX_INLINE_OPEN T_{m-1} - 2T_m + T_{m+1} = 0 \KATEX_INLINE_CLOSE</p>
+                    <p>Rearranging gives:</p>
+                    ```math
+                    T_m = \frac{T_{m-1} + T_{m+1}}{2}
+                    ```
+                    <div class="insight">
+                        <i><b>Physical Insight:</b> For steady-state conduction with no heat generation, the temperature of any internal point is simply the arithmetic average of its two immediate neighbors. This makes perfect intuitive sense!</i>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 3: 1D Steady Conduction -->
+            <section id="sec-1d-steady" class="roadmap-section">
+                <div class="section-header">
+                    <h2>3. One-Dimensional Steady Heat Conduction (The Energy Balance Method)</h2>
+                </div>
+                <div class="section-content">
+                    <p>This section introduces a more physical and intuitive way to arrive at the same result we saw in the last section. The "Energy Balance Method" is the workhorse of practical numerical modeling because it's so flexible. The great news is that for simple cases, both methods give the exact same answer!</p>
+                    
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>The previous section was a purely mathematical approach. This section introduces the <b>Energy Balance Method</b>, which is a more physical, first-principles approach. It's less about abstract math and more about fundamental accounting.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: The Nodal Accountant 🧾</b>
+                        <br>Imagine your slab of steel is a long hallway of offices. Each office is a <b>control volume</b>, and the person at the desk is the <b>node</b> (\KATEX_INLINE_OPEN T_m \KATEX_INLINE_CLOSE). An accountant in each office enforces one rule for steady-state: <b>The net flow of money (heat) into the office must be zero.</b>
+                        <br>The accountant's ledger at Node m:
+                        <br>+ Money from left (\KATEX_INLINE_OPEN Q_{left} \KATEX_INLINE_CLOSE)
+                        <br>+ Money from right (\KATEX_INLINE_OPEN Q_{right} \KATEX_INLINE_CLOSE)
+                        <br>+ Money printed by machine (\KATEX_INLINE_OPEN E_{gen} \KATEX_INLINE_CLOSE)
+                        <br><b>Total = 0</b>
+                        <br><b>Important Convention:</b> We always assume heat flows INTO the node from all neighbors. If a neighbor is actually colder, the math automatically makes that term negative (a debit instead of a credit). This simplifies the setup immensely.</i>
+                    </div>
+
+                    <h3>Why does this matter to you as an engineer? 🛠️</h3>
+                    <p>The mathematical substitution method is fast, but it's brittle. The Energy Balance Method is robust and flexible. This is its true power.</p>
+                    <ul>
+                        <li><b>It handles complex boundaries easily:</b> What if the surface has convection, radiation, and a laser heat flux? A differential equation gets nightmarish. For the nodal accountant, it's easy! They just add three more lines to their ledger: \KATEX_INLINE_OPEN + Q_{convection} \KATEX_INLINE_CLOSE, \KATEX_INLINE_OPEN + Q_{radiation} \KATEX_INLINE_CLOSE, \KATEX_INLINE_OPEN + Q_{laser\_flux} \KATEX_INLINE_CLOSE.</li>
+                        <li><b>It's more intuitive:</b> Thinking in terms of energy flowing in and out of a small volume is often much easier and more physical than thinking about second derivatives.</li>
+                        <li><b>It's the foundation of all major simulation software:</b> Commercial FEA/CFD packages are all built on this fundamental principle of performing an energy balance on millions of tiny control volumes.</li>
+                    </ul>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>1. The Energy Balance Principle (Steady-State)</h4>
+                    <p>In words: For any control volume (element), the rate of energy entering plus the rate of energy generated must equal zero.</p>
+                    ```math
+                    \sum Q_{in} + E_{gen} = 0
+                    ```
+                    
+                    <h4>2. Discretization & Control Volumes</h4>
+                    <ul>
+                        <li><b>Nodes:</b> The points where we calculate the temperature \KATEX_INLINE_OPEN T_m \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Control Volume (Element):</b> The region surrounding a node.</li>
+                        <li><b>Interior Node (m):</b> The control volume extends from the midpoint (m-1/2) to (m+1/2). Its thickness is \KATEX_INLINE_OPEN \Delta x \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Boundary Node (e.g., 0):</b> The control volume is half-sized. It extends from the boundary 0 to the midpoint (1/2). Its thickness is \KATEX_INLINE_OPEN \Delta x / 2 \KATEX_INLINE_CLOSE. (This is a crucial detail!)</li>
+                    </ul>
+
+                    <h4>3. Formulating the Energy Terms for an Interior Node (m)</h4>
+                    <ul>
+                        <li>Heat Conduction from Left Neighbor (m-1): \KATEX_INLINE_OPEN Q_{left} = k A \frac{(T_{m-1} - T_m)}{\Delta x} \KATEX_INLINE_CLOSE</li>
+                        <li>Heat Conduction from Right Neighbor (m+1): \KATEX_INLINE_OPEN Q_{right} = k A \frac{(T_{m+1} - T_m)}{\Delta x} \KATEX_INLINE_CLOSE</li>
+                        <li>Heat Generation within the element: \KATEX_INLINE_OPEN E_{gen} = \dot{e}_m V_{element} = \dot{e}_m (A \Delta x) \KATEX_INLINE_CLOSE</li>
+                    </ul>
+                    
+                    <h4>4. The Final Equation (for a 1D Interior Node)</h4>
+                    <p>Putting it all together (\KATEX_INLINE_OPEN Q_{left} + Q_{right} + E_{gen} = 0 \KATEX_INLINE_CLOSE):</p>
+                    ```math
+                    kA\frac{T_{m-1}-T_m}{\Delta x} + kA\frac{T_{m+1}-T_m}{\Delta x} + \dot{e}_m A\Delta x = 0
+                    ```
+                    <p>Dividing by \KATEX_INLINE_OPEN kA \KATEX_INLINE_CLOSE and rearranging gives the simplified form, which is identical to the finite difference method result:</p>
+                    ```math
+                    \frac{T_{m-1} - 2T_m + T_{m+1}}{\Delta x^2} + \frac{\dot{e}_m}{k} = 0
+                    ```
+                </div>
+            </section>
+
+            <!-- Section 4: Boundary Conditions -->
+            <section id="sec-boundary-conditions" class="roadmap-section">
+                <div class="section-header">
+                    <h2>4. Handling Boundary Conditions</h2>
+                </div>
+                <div class="section-content">
+                    <p>This is a critical section. The interior nodes are easy and repetitive, but the boundary nodes are where the real physics of your specific problem comes into play. This is where the energy balance method truly shines.</p>
+                    
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>We need to define the rules for the special accountants at the front and back doors of the building—the Boundary Nodes. An internal accountant only talks to their neighbors inside. The accountant at Node 0 (the boundary) has only one internal neighbor (Node 1) but also has to deal with everything happening on the street outside.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: The "Shipping & Receiving" Accountant 📦</b>
+                        <br>Think of the boundary node (e.g., Node 0) as the "Shipping & Receiving" department. Their control volume is a half-sized office at the loading dock. Their energy balance ledger accounts for both internal transfers and external transactions.
+                        <br><b>Internal Transfer:</b> Heat from the next office over (Node 1): \KATEX_INLINE_OPEN Q_{from\_inside} = kA(T_1 - T_0)/\Delta x \KATEX_INLINE_CLOSE.
+                        <br><b>External Transaction (The Boundary Condition):</b> This is what happens at the loading dock door. It could be:
+                        <ul>
+                            <li><b>Specified Temperature:</b> The CEO sets a policy: \KATEX_INLINE_OPEN T_0 = 25^\circ C \KATEX_INLINE_CLOSE. It's a known value, no balance needed.</li>
+                            <li><b>Specified Heat Flux:</b> A delivery truck arrives with a fixed amount of energy (\KATEX_INLINE_OPEN q_0'' \KATEX_INLINE_CLOSE). This known value is added to the ledger. An insulated wall is a special case where \KATEX_INLINE_OPEN q_0'' = 0 \KATEX_INLINE_CLOSE.</li>
+                            <li><b>Convection:</b> The door is open to the outside air (\KATEX_INLINE_OPEN T_\infty \KATEX_INLINE_CLOSE). The transaction depends on the temperature difference and wind speed (\KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE). Add \KATEX_INLINE_OPEN Q_{conv} = hA(T_\infty - T_0) \KATEX_INLINE_CLOSE to the ledger.</li>
+                            <li><b>Radiation:</b> The dock faces another building (\KATEX_INLINE_OPEN T_{surr} \KATEX_INLINE_CLOSE). Add a complex term based on the fourth power of absolute temperatures.</li>
+                        </ul>
+                        </i>
+                    </div>
+
+                    <h3>Why does this matter to you as an engineer? 🏭</h3>
+                    <p>The boundary conditions define your entire problem. A steel beam cooling in still air behaves completely differently than the same beam being quenched in water. If you get the boundaries wrong, the entire solution will be meaningless. This section teaches you how to translate real-world physical situations into the algebraic equations the computer needs to solve.</p>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>1. The Foundation: Energy Balance on a Half-Volume</h4>
+                    <p>The Rule: \KATEX_INLINE_OPEN \sum Q_{in} + E_{gen} = 0 \KATEX_INLINE_CLOSE</p>
+                    <p>Key Detail: The control volume for a boundary node (e.g., node 0) is half the size: \KATEX_INLINE_OPEN V_{boundary} = A (\Delta x / 2) \KATEX_INLINE_CLOSE</p>
+                    <p>Generic Equation for Left Boundary (Node 0):</p>
+                    ```math
+                    Q_{surface} + Q_{conduction\_from\_node\_1} + E_{gen\_in\_half\_volume} = 0
+                    ```
+                    ```math
+                    Q_{surface} + kA\frac{T_1 - T_0}{\Delta x} + \dot{e}_0 A \frac{\Delta x}{2} = 0
+                    ```
+                    <p>Your job is to replace \KATEX_INLINE_OPEN Q_{surface} \KATEX_INLINE_CLOSE with the correct expression for the boundary condition.</p>
+                    
+                    <h4>2. The Boundary Condition Cheat Sheet (for Node 0)</h4>
+                    <ol>
+                        <li><b>Specified Temperature:</b> No equation needed. Simply set \KATEX_INLINE_OPEN T_0 = T_{given} \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Specified Heat Flux:</b> Replace \KATEX_INLINE_OPEN Q_{surface} \KATEX_INLINE_CLOSE with \KATEX_INLINE_OPEN q_0'' A \KATEX_INLINE_CLOSE.
+                        ```math
+                        q_0''A + kA\frac{T_1-T_0}{\Delta x} + \dot{e}_0A\frac{\Delta x}{2} = 0
+                        ```
+                        For an <b>Insulated Surface</b>, \KATEX_INLINE_OPEN q_0''=0 \KATEX_INLINE_CLOSE.
+                        </li>
+                        <li><b>Convection:</b> Replace \KATEX_INLINE_OPEN Q_{surface} \KATEX_INLINE_CLOSE with \KATEX_INLINE_OPEN hA(T_\infty - T_0) \KATEX_INLINE_CLOSE.
+                        ```math
+                        hA(T_\infty-T_0) + kA\frac{T_1-T_0}{\Delta x} + \dot{e}_0A\frac{\Delta x}{2} = 0
+                        ```
+                        </li>
+                        <li><b>Radiation:</b> Replace \KATEX_INLINE_OPEN Q_{surface} \KATEX_INLINE_CLOSE with \KATEX_INLINE_OPEN \epsilon\sigma A(T_{surr}^4 - T_0^4) \KATEX_INLINE_CLOSE.
+                        ```math
+                        \epsilon\sigma A(T_{surr}^4-T_0^4) + kA\frac{T_1-T_0}{\Delta x} + \dot{e}_0A\frac{\Delta x}{2} = 0
+                        ```
+                        <div class="rule-of-thumb"><b>CRITICAL:</b> All temperatures (\KATEX_INLINE_OPEN T_{surr}, T_0 \KATEX_INLINE_CLOSE) in the radiation term MUST be in absolute units (Kelvin or Rankine).</div>
+                        </li>
+                    </ol>
+                    <p>For the Right Boundary (Node M), the logic is identical. The "internal" conduction term comes from the left (\KATEX_INLINE_OPEN T_{M-1} \KATEX_INLINE_CLOSE). Just replace the subscripts.</p>
+                </div>
+            </section>
+            
+            <!-- Section 5: Transient Intro -->
+            <section id="sec-transient-intro" class="roadmap-section">
+                <div class="section-header">
+                    <h2>5. Introduction to Transient Heat Conduction</h2>
+                </div>
+                <div class="section-content">
+                    <p>We've mastered steady-state, where things are settled and unchanging. Now we're moving on to the more dynamic world of transient problems, where temperatures change over time. This section introduces the core concepts and the two main philosophical approaches to solving these problems numerically.</p>
+
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>In steady-state problems, we find the final, unchanging temperature at each node. In transient problems, we find the temperature at every node at every single step in time. We're not just finding the final destination; we're plotting the entire journey.</p>
+                    <p>To do this, we must discretize not only space (using \KATEX_INLINE_OPEN \Delta x \KATEX_INLINE_CLOSE) but also time (using a time step, \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE). We are essentially taking a series of snapshots of the temperature profile as it evolves.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: The Bucket Brigade 💧</b>
+                        <br>Imagine a line of people (nodes) passing buckets of water (heat). The initial state is that everyone is holding a full bucket (\KATEX_INLINE_OPEN T_m^0 = T_{initial} \KATEX_INLINE_CLOSE).
+                        <br><b>Time Step (\KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE):</b> The fire chief blows a whistle. Everyone has a set amount of time (\KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE) to pass some water.
+                        <br><b>The New Energy Balance:</b> The rule is no longer Energy In = 0. For a transient problem, the rule is: <b>(Energy In) - (Energy Out) = Change in Storage</b>. The "Change in Storage" term is \KATEX_INLINE_OPEN \rho V c_p (T_{new} - T_{old}) \KATEX_INLINE_CLOSE. This is the crucial new piece.
+                        </i>
+                    </div>
+
+                    <h3>The Explicit vs. Implicit Dilemma</h3>
+                    <p>When the whistle blows, how do you decide how much water to pass? Do you base your decision on:</p>
+                    <ol>
+                        <li>How full your neighbors' buckets were <b>before</b> the whistle blew?</li>
+                        <li>How full their buckets <b>will be after</b> this round of passing is over?</li>
+                    </ol>
+                    <p>This is the fundamental difference between the two methods:</p>
+                    <ul>
+                        <li><b>Explicit Method (Easy but potentially unstable):</b> "I will decide based on how full my neighbors' buckets were at the last whistle blow (time i)." This is easy! I know all the old values. I can directly calculate my own new water level (\KATEX_INLINE_OPEN T_m^{i+1} \KATEX_INLINE_CLOSE) without having to ask anyone else.</li>
+                        <li><b>Implicit Method (Difficult but unconditionally stable):</b> "I will decide based on the unknown water levels my neighbors will have at the next whistle blow (time i+1)." This is hard! My new water level depends on my neighbor's new water level, which depends on their neighbor's, and so on. We have to create a massive system of simultaneous equations involving all the unknown "new" temperatures and solve them all at once for every single time step.</li>
+                    </ul>
+
+                    <h3>Why does this matter to you as an engineer? ⏱️</h3>
+                    <p>This is a fundamental choice you (or the software you're using) must make when solving any transient problem.</p>
+                    <ul>
+                        <li>The <b>Explicit method</b> is simple and computationally "cheap" per time step. However, if your time step \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE is too large, the calculations can "blow up" with wild oscillations. It has a strict <b>stability criterion</b>.</li>
+                        <li>The <b>Implicit method</b> is more work per time step. However, it is <b>unconditionally stable</b>. You can take very large time steps without the solution blowing up. It will always converge to a physically reasonable answer.</li>
+                    </ul>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>1. Discretization in Time</h4>
+                    <ul>
+                        <li><b>Time Step (\KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE):</b> The small interval of time between calculations.</li>
+                        <li><b>Time Index (i):</b> The counter for time steps. \KATEX_INLINE_OPEN t = i \cdot \Delta t \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Nodal Temperature Notation:</b> \KATEX_INLINE_OPEN T_m^i \KATEX_INLINE_CLOSE is the temperature at node \KATEX_INLINE_OPEN m \KATEX_INLINE_CLOSE at time step \KATEX_INLINE_OPEN i \KATEX_INLINE_CLOSE. \KATEX_INLINE_OPEN T_m^{i+1} \KATEX_INLINE_CLOSE is the unknown temperature at the next time step.</li>
+                    </ul>
+
+                    <h4>2. The General Transient Energy Balance</h4>
+                    <p>In Words: (Sum of heat transfer IN) + (Heat generation) = (Rate of change of internal energy)</p>
+                    ```math
+                    \sum Q_{in} + E_{gen} = \rho V c_p \frac{T_m^{i+1} - T_m^i}{\Delta t}
+                    ```
+
+                    <h4>3. The Two Formulations</h4>
+                    <p>The key difference is at which time step (i or i+1) you evaluate the heat transfer terms (\KATEX_INLINE_OPEN \sum Q_{in} + E_{gen} \KATEX_INLINE_CLOSE).</p>
+                    <ul>
+                        <li><b>Explicit Method:</b> Evaluate heat transfer using the <b>old, known</b> temperatures from time step i. You can directly solve for the single unknown, \KATEX_INLINE_OPEN T_m^{i+1} \KATEX_INLINE_CLOSE.</li>
+                        <li><b>Implicit Method:</b> Evaluate heat transfer using the <b>new, unknown</b> temperatures from time step i+1. The equation for \KATEX_INLINE_OPEN T_m^{i+1} \KATEX_INLINE_CLOSE contains the unknown temperatures of its neighbors, requiring a simultaneous solution.</li>
+                    </ul>
+                </div>
+            </section>
+            
+             <!-- Section 6a: 2D Steady Conduction -->
+            <section id="sec-2d-steady" class="roadmap-section">
+                <div class="section-header">
+                    <h2>6a. Two-Dimensional Steady Heat Conduction</h2>
+                </div>
+                <div class="section-content">
+                    <p>We're now extending our simple 1D model to handle more realistic 2D problems. This might seem like a big jump in complexity, but the core principle we just learned—the energy balance—doesn't change one bit. We're just applying it with a bit more bookkeeping.</p>
+                    
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>So far, we've been analyzing heat flow along a single line. But what about a flat plate where heat is flowing from inside to outside, but also from the hot center towards the cooler edges? For this, we need a 2D model. We're using the exact same "Nodal Accountant" method, but moving from a hallway to a full office floor plan laid out in a grid.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: The Cubicle Farm Accountant 🏢</b>
+                        <br><b>1D Model:</b> A single hallway of offices. Each accountant talked to neighbors on the left and right.
+                        <br><b>2D Model:</b> A grid of cubicles. An accountant for an interior cubicle (Node m,n) now has four neighbors to worry about: Left (m-1, n), Right (m+1, n), Top (m, n+1), and Bottom (m, n-1).
+                        <br>The fundamental rule remains the same for steady-state: <b>The sum of all energy flows in and out must be zero.</b>
+                        <br>The accountant's ledger: \KATEX_INLINE_OPEN Q_{left} + Q_{right} + Q_{top} + Q_{bottom} + E_{gen} = 0 \KATEX_INLINE_CLOSE.
+                        </i>
+                    </div>
+
+                    <div class="rule-of-thumb">
+                        <b>Engineer's Rule of Thumb:</b> For the simplest case (a square grid with \KATEX_INLINE_OPEN \Delta x = \Delta y \KATEX_INLINE_CLOSE and no internal heat generation \KATEX_INLINE_OPEN \dot{e} = 0 \KATEX_INLINE_CLOSE), the math simplifies perfectly. The temperature of any interior node is the simple arithmetic average of its four neighbors' temperatures. This is a powerful rule of thumb for quickly checking if a 2D simulation result "looks right."
+                    </div>
+
+                    <h3>Why does this matter to you as an engineer? 📈</h3>
+                    <p>This is the gateway to solving the vast majority of real-world steady-state problems.</p>
+                    <ul>
+                        <li><b>It Models Reality:</b> Almost no industrial component is truly 1D. A pipe flange loses heat both radially and axially. 2D analysis captures these crucial effects.</li>
+                        <li><b>Identifies Hot/Cold Spots:</b> This method allows you to find the temperature at a corner of a furnace, which will be cooler than the center of a wall because heat can escape in two directions. This is critical for predicting thermal stress points.</li>
+                        <li><b>Foundation for 3D:</b> Once you understand the bookkeeping for 2D (four neighbors), extending it to 3D (six neighbors: left, right, top, bottom, front, back) is conceptually straightforward.</li>
+                    </ul>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>1. The Nodal Network (The Grid)</h4>
+                    <ul>
+                        <li>Nodes are identified by two indices: \KATEX_INLINE_OPEN T_{m,n} \KATEX_INLINE_CLOSE, where \KATEX_INLINE_OPEN m \KATEX_INLINE_CLOSE is the position in the x-direction and \KATEX_INLINE_OPEN n \KATEX_INLINE_CLOSE is the position in the y-direction.</li>
+                        <li>Nodal spacing can be different (\KATEX_INLINE_OPEN \Delta x, \Delta y \KATEX_INLINE_CLOSE) but is often the same for simplicity (\KATEX_INLINE_OPEN \Delta x = \Delta y = l \KATEX_INLINE_CLOSE), which is called a square mesh.</li>
+                    </ul>
+                    
+                    <h4>2. The General Equation for an Interior Node (m,n)</h4>
+                    <p>This comes directly from the energy balance. It is the finite difference form of the 2D heat equation.</p>
+                    ```math
+                    \frac{T_{m-1,n} - 2T_{m,n} + T_{m+1,n}}{\Delta x^2} + \frac{T_{m,n-1} - 2T_{m,n} + T_{m,n+1}}{\Delta y^2} + \frac{\dot{e}_{m,n}}{k} = 0
+                    ```
+
+                    <h4>3. The Simplified Equation (Square Mesh, \KATEX_INLINE_OPEN \Delta x = \Delta y = l \KATEX_INLINE_CLOSE)</h4>
+                    <p>This is the more common and easier-to-remember form.</p>
+                    ```math
+                    T_{m-1,n} + T_{m+1,n} + T_{m,n+1} + T_{m,n-1} - 4T_{m,n} + \frac{\dot{e}_{m,n} l^2}{k} = 0
+                    ```
+                    <p>Or, in words: \KATEX_INLINE_OPEN T_{left} + T_{right} + T_{top} + T_{bottom} - 4T_{node} + \text{(Generation Term)} = 0 \KATEX_INLINE_CLOSE</p>
+
+                    <h4>4. The "Golden Rule" for the Simplest Case</h4>
+                    <p>Conditions: Steady-State, Square Mesh, and No Heat Generation.</p>
+                    ```math
+                    T_{m,n} = \frac{T_{m-1,n} + T_{m+1,n} + T_{m,n+1} + T_{m,n-1}}{4}
+                    ```
+
+                    <h4>5. Boundary Nodes</h4>
+                    <p>The principle is the same: perform an energy balance on the control volume. The key difference is the size and shape of the control volume changes. A node on a flat edge has a half-size control volume. A node at an external corner has a quarter-size control volume.</p>
+                </div>
+            </section>
+
+             <!-- Section 7a: Irregular Boundaries -->
+            <section id="sec-irregular-boundaries" class="roadmap-section">
+                <div class="section-header">
+                    <h2>7a. Special Case: Irregular Boundaries</h2>
+                </div>
+                <div class="section-content">
+                    <p>This is a short but very important "reality check" section. We've been working with nice, clean grids, but the real world is full of curves, odd angles, and complex shapes. This part explains the first and most basic strategy for dealing with them.</p>
+
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>What happens when your object isn't a rectangle? You can't fit a perfect grid of squares into a circle. The most basic approach is to approximate the curvy, irregular boundary with a "stair-step" boundary.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: Building a Circle in Minecraft 🎮</b>
+                        <br><b>The Real Object:</b> You want to build a large, perfectly smooth circular tower.
+                        <br><b>The Numerical Grid:</b> Your only building material is a world made of 1x1 meter blocks (your \KATEX_INLINE_OPEN \Delta x \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \Delta y \KATEX_INLINE_CLOSE).
+                        <br><b>The "Stair-Step" Approximation:</b> You can't create a truly smooth circle. Instead, you build a blocky, pixelated version of it. From a distance, it looks like a circle, but up close, you can see the jagged, stair-stepped edges.
+                        </i>
+                    </div>
+
+                    <h3>Is this even accurate?</h3>
+                    <p>It depends on the mesh:</p>
+                    <ul>
+                        <li><b>Coarse Mesh (Large Blocks):</b> If you build your "circle" with huge blocks, it's going to be a terrible, blocky approximation and your results will be poor.</li>
+                        <li><b>Fine Mesh (Small Blocks):</b> If you build your "circle" with tiny blocks, the stair-steps will be so small that your model will look almost perfectly smooth. The approximation is excellent, and your results will be very accurate.</li>
+                    </ul>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: The Accuracy vs. Cost Trade-Off ⚙️</b>
+                        <br>This introduces the single most important trade-off in all of computational analysis.
+                        <br><b>Accuracy:</b> A finer mesh (more, smaller elements) will always represent a complex shape more accurately and generally lead to a more accurate answer.
+                        <br><b>Cost:</b> A finer mesh means vastly more nodes. More nodes mean more equations, which requires more computer memory (RAM) and significantly more processing time (CPU hours) to solve.
+                        <br>As an engineer, you are constantly making this choice. Is a quick, coarse simulation good enough for a preliminary check? Or do you need to spend 12 hours running a high-fidelity simulation for final validation?
+                    </div>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <p>This is a conceptual section, so there are no new formulas. The focus is on the principle and its implications.</p>
+                    <ol>
+                        <li><b>The Problem:</b> Real-world objects often have curved or slanted boundaries that do not align with a simple rectangular (Cartesian) grid.</li>
+                        <li><b>The Basic Solution:</b> The smooth, irregular boundary is approximated by a series of rectangular control volumes from the grid. This introduces a geometric discretization error.</li>
+                        <li><b>The Accuracy vs. Cost Trade-Off:</b> To reduce the geometric error, you must use a finer mesh (smaller \KATEX_INLINE_OPEN \Delta x \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \Delta y \KATEX_INLINE_CLOSE), especially near the complex boundary. This is called mesh refinement. A finer mesh rapidly increases computational cost.</li>
+                        <li><b>Advanced Methods:</b> Commercial software uses more advanced techniques like unstructured meshes (triangles/tetrahedrons) or body-fitted coordinates to handle complex shapes with higher accuracy.</li>
+                    </ol>
+                </div>
+            </section>
+            
+            <!-- Section 6b: 1D Transient Equations -->
+            <section id="sec-1d-transient" class="roadmap-section">
+                <div class="section-header">
+                    <h2>6b. Transient Heat Conduction in a Plane Wall (Equations)</h2>
+                </div>
+                <div class="section-content">
+                    <p>We've introduced the two major philosophies—explicit and implicit. Now we're going to write down the actual equations and see how they work for a simple 1D wall. This is where the theory turns into a step-by-step calculation procedure.</p>
+
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>This section gives us the specific, usable formulas for the explicit and implicit methods. The key is to see how the general energy balance equation transforms into a recipe for calculating the future temperature at a node.</p>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: A Spreadsheet for Predicting the Future 📈</b>
+                        <br>Imagine a spreadsheet where columns are nodes (\KATEX_INLINE_OPEN m \KATEX_INLINE_CLOSE) and rows are time steps (\KATEX_INLINE_OPEN i \KATEX_INLINE_CLOSE). Your goal is to fill in the sheet, starting from row 0 (initial conditions).
+                        <br><b>The Explicit Method</b> is like a simple Excel formula. To calculate a cell in the new row (\KATEX_INLINE_OPEN T_m^{i+1} \KATEX_INLINE_CLOSE), your formula only refers to cells in the row <b>above</b> it (the old, known temperatures). You can write this formula once and just drag it down. The future is explicitly defined by the past.
+                        <br><b>The Implicit Method</b> is like a "circular reference" in Excel. To calculate a cell in the new row (\KATEX_INLINE_OPEN T_m^{i+1} \KATEX_INLINE_CLOSE), the formula refers to other <b>unknown</b> cells in the <b>same new row</b>. You can't solve one cell at a time; you have to solve a large system of equations for the entire row simultaneously. The future is implicitly defined by its relationship with itself.
+                        </i>
+                    </div>
+                    
+                    <h3>The "Marching in Time" Process</h3>
+                    <p>This is the overall solution process. It's a simple, repetitive loop:</p>
+                    <ol>
+                        <li><b>Start:</b> You know all temperatures at t=0 (row 0).</li>
+                        <li><b>Calculate Step 1:</b> Use your chosen method to calculate all temperatures at t = \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE (fill in row 1).</li>
+                        <li><b>Update:</b> The temperatures in row 1 are now your "old" temperatures.</li>
+                        <li><b>Repeat:</b> Continue this process, "marching" forward in time, until you reach your desired final time.</li>
+                    </ol>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>1. The Key Dimensionless Group</h4>
+                    <p>Numerical Fourier Number (\KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE):</p>
+                    ```math
+                    \tau = \frac{\alpha \Delta t}{\Delta x^2} \quad \text{where} \quad \alpha = \frac{k}{\rho c_p}
+                    ```
+                    <p>This number represents how much information (heat) can "diffuse" from one node to its neighbor in a single time step. It controls the behavior of the explicit solution.</p>
+                    
+                    <h4>2. Explicit Formulation (for a 1D Interior Node m)</h4>
+                    <p>The goal is to solve for the new temperature \KATEX_INLINE_OPEN T_m^{i+1} \KATEX_INLINE_CLOSE directly using only old values from time step \KATEX_INLINE_OPEN i \KATEX_INLINE_CLOSE.</p>
+                    ```math
+                    T_m^{i+1} = \tau (T_{m-1}^i + T_{m+1}^i) + (1 - 2\tau) T_m^i + \frac{\tau \dot{e}_m^i \Delta x^2}{k}
+                    ```
+
+                    <h4>3. Implicit Formulation (for a 1D Interior Node m)</h4>
+                    <p>The goal is to set up an equation with all the new unknown temperatures from time step \KATEX_INLINE_OPEN i+1 \KATEX_INLINE_CLOSE on one side.</p>
+                    ```math
+                    \tau T_{m-1}^{i+1} - (1 + 2\tau)T_m^{i+1} + \tau T_{m+1}^{i+1} + \frac{\tau\dot{e}_m^{i+1}\Delta x^2}{k} + T_m^i = 0
+                    ```
+                    <p>This is one equation in a large system that must all be solved simultaneously.</p>
+
+                    <h4>4. Explicit Convection Boundary (at Node 0)</h4>
+                    <p>The recipe to solve for the new boundary temperature \KATEX_INLINE_OPEN T_0^{i+1} \KATEX_INLINE_CLOSE using only old temperatures from time \KATEX_INLINE_OPEN i \KATEX_INLINE_CLOSE.</p>
+                    ```math
+                    T_0^{i+1} = (1 - 2\tau - 2\tau\frac{h\Delta x}{k})T_0^i + 2\tau T_1^i + 2\tau\frac{h\Delta x}{k}T_\infty + \frac{\tau\dot{e}_0^i\Delta x^2}{k}
+                    ```
+                </div>
+            </section>
+            
+            <!-- Section 7b: Stability Criterion -->
+            <section id="sec-stability" class="roadmap-section">
+                <div class="section-header">
+                    <h2>7b. Stability Criterion for Explicit Method: Limitation on \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE</h2>
+                </div>
+                <div class="section-content">
+                    <p>This is a crucial "user-beware" section for the explicit method. While the method is simple, it comes with a strict set of rules. The stability criterion is the rulebook that keeps the solution physically realistic and numerically stable.</p>
+
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>This section is all about the Achilles' heel of the explicit method: instability. If you break the rules (take too large a time step), your solution will descend into chaos.</p>
+                    
+                    <div class="insight">
+                        <i><b>Physical Insight: Steering a Go-Kart 🏎️</b>
+                        <br>Imagine your go-kart is the temperature of a node, and the track is the correct temperature path. \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE is how often you can look up and steer.
+                        <br><b>Stable Condition (Small \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE):</b> You look up and make small steering corrections every tenth of a second. You stay smoothly on the track.
+                        <br><b>Unstable Condition (Large \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE):</b> You close your eyes for 5 seconds between adjustments. You drift left, so you yank the wheel hard right. Now you've overshot and are heading for the right wall. You yank it hard left. Soon, you're spinning out of control. This is numerical instability.
+                        </i>
+                    </div>
+
+                    <h3>The Physical Reason for Instability</h3>
+                    <p>The new temperature \KATEX_INLINE_OPEN T_m^{i+1} \KATEX_INLINE_CLOSE must be a weighted average of its neighbors' old temperatures. In the explicit formula, the coefficient on its own old temperature, \KATEX_INLINE_OPEN (1-2\tau) \KATEX_INLINE_CLOSE, can become negative if \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE is too large. This would mean a hot node surrounded by cool neighbors would become even colder than them, which violates the Second Law of Thermodynamics. The stability criterion prevents this by ensuring this coefficient remains non-negative.</p>
+
+                    <div class="rule-of-thumb">
+                        <b>Design Implication: ⚠️</b> The stability criterion links your time step to your mesh size (\KATEX_INLINE_OPEN \Delta t \le C \cdot \Delta x^2 \KATEX_INLINE_CLOSE). This means if you want to double the spatial resolution (make \KATEX_INLINE_OPEN \Delta x \KATEX_INLINE_CLOSE half as big), you must make your time step <b>four times smaller</b>. Your total simulation time will increase dramatically. This is why the unconditionally stable implicit method is often preferred for complex problems.
+                    </div>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>1. The Stability Criterion</h4>
+                    <p>The Rule: The coefficient of the central node's own past temperature, \KATEX_INLINE_OPEN T_m^i \KATEX_INLINE_CLOSE, in the explicit equation for \KATEX_INLINE_OPEN T_m^{i+1} \KATEX_INLINE_CLOSE must be greater than or equal to zero.</p>
+                    
+                    <h4>2. Stability Limits for 1D Steady Conduction</h4>
+                    <ul>
+                        <li>
+                            <b>Interior Node:</b>
+                            <br>The coefficient is \KATEX_INLINE_OPEN (1 - 2\tau) \KATEX_INLINE_CLOSE. The criterion \KATEX_INLINE_OPEN 1 - 2\tau \ge 0 \KATEX_INLINE_CLOSE leads to:
+                            ```math
+                            \tau \le \frac{1}{2} \quad \implies \quad \Delta t \le \frac{\Delta x^2}{2\alpha}
+                            ```
+                        </li>
+                        <li>
+                            <b>Convection Boundary Node:</b>
+                            <br>The coefficient is \KATEX_INLINE_OPEN (1 - 2\tau - 2\tau h\Delta x/k) \KATEX_INLINE_CLOSE. The criterion leads to:
+                            ```math
+                            \tau \le \frac{1}{2(1 + h\Delta x/k)}
+                            ```
+                            This is ALWAYS more restrictive than the interior node criterion.
+                        </li>
+                    </ul>
+
+                    <h4>3. The Overall Strategy</h4>
+                    <ol>
+                        <li>Write the explicit finite difference equation for every type of node in your problem.</li>
+                        <li>For each equation, identify the coefficient of the central node's past temperature (\KATEX_INLINE_OPEN T_m^i \KATEX_INLINE_CLOSE).</li>
+                        <li>Set each coefficient to be \KATEX_INLINE_OPEN \ge 0 \KATEX_INLINE_CLOSE and solve for the constraint on \KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE (or \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE).</li>
+                        <li>Compare all the constraints. The most restrictive one (the one that gives the smallest \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE) is the maximum allowable time step for the entire simulation.</li>
+                    </ol>
+                </div>
+            </section>
+            
+            <!-- Section 8b: 2D Transient Conduction -->
+            <section id="sec-2d-transient" class="roadmap-section">
+                <div class="section-header">
+                    <h2>8b. Two-Dimensional Transient Heat Conduction</h2>
+                </div>
+                <div class="section-content">
+                    <p>This is the natural progression of everything we've learned. We're combining the 2D spatial discretization from the steady-state section with the transient time-marching methods. It might look more complex, but the underlying principles are exactly the same.</p>
+
+                    <h3>The Core Concept Breakdown</h3>
+                    <p>We are now equipped to tackle the most common type of heat transfer problem: a 2D object whose temperature changes over time. There are no new fundamental ideas here. We are simply merging two concepts we've already mastered:</p>
+                    <ul>
+                        <li><b>The 2D Energy Balance:</b> For any interior node, heat exchange is with its four neighbors.</li>
+                        <li><b>The Transient Formulation:</b> The net energy flow equals the change in the node's stored energy over \KATEX_INLINE_OPEN \Delta t \KATEX_INLINE_CLOSE.</li>
+                    </ul>
+
+                    <div class="insight">
+                        <i><b>Physical Insight: The Office Floor Plan Evacuation Drill 🏢</b>
+                        <br>We're back to our 2D office floor plan. A fire alarm goes off (t=0). We want to find the "occupancy" (temperature) of each cubicle over time as people (heat) leave the building.
+                        <br>The accountant's new rule is: <b>(People In) - (People Out) = Change in number of people in my cubicle.</b>
+                        <br>With the explicit method, the new occupancy is calculated based on the old occupancy of the four neighbors.
+                        </i>
+                    </div>
+
+                    <h3>Why does this matter to you as an engineer?</h3>
+                    <p>This is the workhorse model for a huge range of practical problems like thermal soak in electronics or cooling processes for molds.</p>
+                    <div class="rule-of-thumb">
+                        <b>Design Implication:</b> This section clearly demonstrates why high-resolution 2D (and especially 3D) transient simulations are so computationally expensive. The 2D stability criterion forces a smaller time step than 1D. To double the spatial resolution (\KATEX_INLINE_OPEN l \to l/2 \KATEX_INLINE_CLOSE), the stability criterion (\KATEX_INLINE_OPEN \Delta t \le l^2 / (4\alpha) \KATEX_INLINE_CLOSE) forces you to make your time step four times smaller. This, combined with having four times as many nodes, means the total computation time can increase by a factor of 16 or more!
+                    </div>
+
+                    <h3>Key Takeaways & Formulas</h3>
+                    <h4>1. The Key Dimensionless Group (for a square mesh)</h4>
+                    <p>Numerical Fourier Number (\KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE):</p>
+                    ```math
+                    \tau = \frac{\alpha\Delta t}{l^2} \quad (\text{Note: } l = \Delta x = \Delta y)
+                    ```
+
+                    <h4>2. The Explicit Formulation (for a 2D Interior Node m,n)</h4>
+                    <p>The recipe to directly solve for the new temperature \KATEX_INLINE_OPEN T_{m,n}^{i+1} \KATEX_INLINE_CLOSE (Square Mesh):</p>
+                    ```math
+                    T_{m,n}^{i+1} = \tau (T_{m-1,n}^i + T_{m+1,n}^i + T_{m,n+1}^i + T_{m,n-1}^i) + (1 - 4\tau) T_{m,n}^i + \frac{\tau \dot{e}_{m,n}^i l^2}{k}
+                    ```
+
+                    <h4>3. The Stability Criterion for 2D Explicit Method</h4>
+                    <p>The rule is that the coefficient of the central node's past temperature, \KATEX_INLINE_OPEN T_{m,n}^i \KATEX_INLINE_CLOSE, must be \KATEX_INLINE_OPEN \ge 0 \KATEX_INLINE_CLOSE.</p>
+                    <p>For an Interior Node (Square Mesh), the coefficient is \KATEX_INLINE_OPEN (1 - 4\tau) \KATEX_INLINE_CLOSE. The criterion \KATEX_INLINE_OPEN 1 - 4\tau \ge 0 \KATEX_INLINE_CLOSE leads to:</p>
+                    ```math
+                    \tau \le \frac{1}{4} \quad \implies \quad \Delta t \le \frac{l^2}{4\alpha}
+                    ```
+                    <p><b>IMPORTANT:</b> Compare this to the 1D case (\KATEX_INLINE_OPEN \tau \le 1/2 \KATEX_INLINE_CLOSE). The 2D criterion is twice as restrictive (requires a time step that is half as large) for the same mesh spacing.</p>
+
+                    <h4>4. Special Case (at the Stability Limit)</h4>
+                    <p>If you choose \KATEX_INLINE_OPEN \tau = 1/4 \KATEX_INLINE_CLOSE and there is no heat generation, the explicit formula simplifies beautifully:</p>
+                    ```math
+                    T_{m,n}^{i+1} = \frac{T_{m-1,n}^i + T_{m+1,n}^i + T_{m,n+1}^i + T_{m,n-1}^i}{4}
+                    ```
+                    <div class="insight">
+                        <i><b>Physical Insight:</b> At the stability limit, the new temperature of a node is simply the arithmetic average of its four neighbors' old temperatures. This is a very intuitive result.</i>
+                    </div>
+                </div>
+            </section>
+            
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const workflowNodes = document.querySelectorAll('.workflow-node');
+            const sections = document.querySelectorAll('.roadmap-section');
+            const sectionHeaders = document.querySelectorAll('.section-header');
+
+            const collapseAllSections = () => {
+                sections.forEach(section => {
+                    section.classList.remove('expanded');
+                });
+            };
+
+            workflowNodes.forEach(node => {
+                node.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+
+                    if (targetSection) {
+                        const isExpanded = targetSection.classList.contains('expanded');
+                        
+                        if (!isExpanded) {
+                            collapseAllSections();
+                        }
+
+                        targetSection.classList.toggle('expanded');
+                        
+                        setTimeout(() => {
+                           targetSection.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }, 100);
+                    }
+                });
+            });
+
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const parentSection = this.parentElement;
+                    parentSection.classList.toggle('expanded');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
