@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Workflow: Fundamentals of Thermal Radiation</title>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['\\KATEX_INLINE_OPEN', '\\KATEX_INLINE_CLOSE']],
+            displayMath: [['```math', '```']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-section: #161b22;
+            --border-color: #30363d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39c5cf;
+            --accent-magenta: #ff7b72;
+            --accent-orange: #f0883e;
+            --connector-color: #484f58;
+            --font-main: 'Exo 2', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1, h2, h3 {
+            font-weight: 500;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: var(--accent-orange);
+            margin-top: 2rem;
+        }
+
+        .workflow-map {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+            padding: 2rem 0;
+            margin-bottom: 4rem;
+        }
+
+        .workflow-node {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            position: relative;
+            z-index: 10;
+            width: 280px;
+        }
+
+        .workflow-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
+        }
+
+        .workflow-node.decision {
+            width: 220px;
+            height: 220px;
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .workflow-node.decision span {
+            transform: rotate(-45deg);
+        }
+
+        .workflow-node.decision:hover {
+            transform: rotate(45deg) translateY(-5px);
+        }
+
+        .flow-branch {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px;
+            width: 45%;
+            position: relative;
+        }
+
+        .branch-container h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top:0;
+        }
+
+        .workflow-node:not(:last-child):not(.decision):not(.no-connector)::after, 
+        .branch-container h3::before {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .decision::after { 
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .flow-branch::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .branch-container::before { 
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            width: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 20px;
+        }
+
+        .rejoin-connector::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background-color: var(--connector-color);
+        }
+
+        .rejoin-connector::after {
+            content: '↓';
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--connector-color);
+            font-size: 2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        #accordion-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roadmap-section {
+            background-color: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .roadmap-section.expanded {
+            border-color: var(--accent-blue);
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(13, 17, 23, 0.5);
+        }
+        
+        .section-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            border: none;
+            margin: 0;
+        }
+
+        .section-header::after {
+            content: '▼';
+            transition: transform 0.3s ease;
+        }
+
+        .roadmap-section.expanded .section-header::after {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+
+        .roadmap-section.expanded .section-content {
+            max-height: 15000px; /* Large enough for content */
+            padding: 1.5rem;
+            transition: max-height 1s ease-in, padding 0.5s ease-in;
+        }
+
+        .card {
+            background-color: var(--bg-dark);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .insight {
+            background-color: rgba(57, 197, 207, 0.1);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .rule-of-thumb {
+            background-color: rgba(240, 136, 62, 0.1);
+            border: 1px solid var(--accent-orange);
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(240, 136, 62, 0.2);
+        }
+
+        .rule-of-thumb b {
+            color: var(--accent-orange);
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        mjx-container {
+            margin: 1rem auto;
+            font-family: var(--font-code);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <h1>Visual Workflow: Fundamentals of Thermal Radiation</h1>
+
+    <div class="workflow-map">
+        <!-- Node 1 -->
+        <div class="workflow-node" data-target="sec-12-1">
+            <span>1. Introduction to Radiation</span>
+        </div>
+
+        <!-- Node 2 -->
+        <div class="workflow-node" data-target="sec-12-2">
+            <span>2. Defining Thermal Radiation</span>
+        </div>
+
+        <!-- Node 3 -->
+        <div class="workflow-node" data-target="sec-12-3">
+            <span>3. The Ideal Emitter: Blackbody Radiation</span>
+        </div>
+
+        <!-- Node 4 - Decision Point -->
+        <div class="workflow-node decision" data-target="sec-12-4">
+            <span>4. Directional Analysis: Radiation Intensity</span>
+        </div>
+
+        <!-- Branched Flow -->
+        <div class="flow-branch">
+            <div class="branch-container">
+                <h3>Real Surface Emission</h3>
+                <div class="workflow-node" data-target="sec-12-5a">
+                    <span>5a. Emissivity (ε)</span>
+                </div>
+            </div>
+            <div class="branch-container">
+                <h3>Real Surface Interaction</h3>
+                <div class="workflow-node" data-target="sec-12-5b">
+                    <span>5b. α, ρ, τ & Kirchhoff's Law</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rejoin Connector -->
+        <div class="rejoin-connector"></div>
+
+        <!-- Final Node -->
+        <div class="workflow-node no-connector" data-target="sec-12-6">
+            <span>6. Application: Atmospheric & Solar Radiation</span>
+        </div>
+
+    </div>
+
+    <div id="accordion-container">
+
+        <!-- Section 1: Introduction -->
+        <section class="roadmap-section" id="sec-12-1">
+            <div class="section-header">
+                <h2>12–1: Introduction to Radiation</h2>
+            </div>
+            <div class="section-content">
+                <h3>The Core Concept Breakdown</h3>
+                <p>Welcome back to the world of heat transfer. You've already covered the mechanisms that require "touching"—conduction (direct molecular contact) and convection (moving fluids). Now, we're talking about thermal radiation, which is fundamentally different.</p>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> Think of it this way: Conduction is like passing a hot potato down a line of people. Convection is like one person carrying that hot potato across the room. Radiation, however, is like feeling the warmth of a bonfire from 50 feet away. You're not touching the fire (conduction) and the wind isn't necessarily blowing hot air directly at you (convection). Instead, the fire is emitting invisible energy waves, and when those waves hit you, you feel the heat. Every single object warmer than absolute zero is constantly broadcasting these energy waves, just like a radio station. The hotter the object, the more powerful the "signal" it broadcasts.</i>
+                </div>
+
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> In a chemical plant, radiation is not just an academic concept; it's a critical design and safety parameter.
+                    <ul>
+                        <li><b>Problem Solved: High-Temperature Heat Transfer.</b> In a furnace or fired heater, the goal is to heat a process fluid flowing through tubes. While some heat gets there by convection from hot gases, the vast majority of the energy is transferred by radiation from the roaring flames and the glowing hot refractory walls. If you ignore radiation, your furnace design will fail spectacularly. ⚙️</li>
+                        <li><b>Problem Solved: Safety.</b> Ever seen a flare stack? There's a large "exclusion zone" around its base. That's not because of hot air, but because the radiant heat from the flame is so intense it can injure people or ignite materials even hundreds of feet away. We use our understanding of radiation to calculate these safe distances.</li>
+                        <li><b>Problem Solved: Non-Contact Temperature Measurement.</b> An infrared (IR) pyrometer—that "temperature gun" you point at a hot pipe or reactor wall—works by measuring the thermal radiation being emitted. It's a direct application of these principles.</li>
+                    </ul>
+                    <p>In short, understanding radiation is essential for safely and effectively managing heat in any high-temperature process.</p>
+                </div>
+
+                <h3>Key Takeaways & Formulas</h3>
+                <h4>1. Defining Characteristics of Radiation</h4>
+                <ul>
+                    <li><b>No Medium Required:</b> It's the only heat transfer mode that can occur in a perfect vacuum.</li>
+                    <li><b>Speed:</b> Energy is transferred at the speed of light (\KATEX_INLINE_OPEN c \KATEX_INLINE_CLOSE).</li>
+                    <li><b>Mechanism:</b> Occurs via electromagnetic waves (or discrete energy packets called photons).</li>
+                </ul>
+
+                <h4>2. The Source of Radiation</h4>
+                <ul>
+                    <li>All matter with a temperature above absolute zero (0 Kelvin) emits thermal radiation.</li>
+                    <li>It originates from changes in the electronic configurations of atoms or molecules within the matter.</li>
+                </ul>
+
+                <h4>3. Critical Formulas & Relationships</h4>
+                <p><b>Wavelength and Frequency:</b> The relationship between a wave's wavelength (\KATEX_INLINE_OPEN \lambda \KATEX_INLINE_CLOSE), its frequency (\KATEX_INLINE_OPEN \nu \KATEX_INLINE_CLOSE), and its speed of propagation (\KATEX_INLINE_OPEN c \KATEX_INLINE_CLOSE).</p>
+                ````math
+                \lambda = \frac{c}{\nu}
+                ````
+                <p><b>Key Point:</b> Frequency (\KATEX_INLINE_OPEN \nu \KATEX_INLINE_CLOSE) is determined by the source and is constant. Wavelength (\KATEX_INLINE_OPEN \lambda \KATEX_INLINE_CLOSE) and speed (\KATEX_INLINE_OPEN c \KATEX_INLINE_CLOSE) change depending on the medium the wave travels through.</p>
+
+                <p><b>Photon Energy:</b> The energy (\KATEX_INLINE_OPEN e \KATEX_INLINE_CLOSE) of a single photon.</p>
+                ````math
+                e = h\nu = \frac{hc}{\lambda}
+                ````
+                <p>Where \KATEX_INLINE_OPEN h \KATEX_INLINE_CLOSE is Planck's constant (\KATEX_INLINE_OPEN 6.626 \times 10^{-34} \text{ J}\cdot\text{s} \KATEX_INLINE_CLOSE).</p>
+                <div class="insight">
+                    <i><b>The Crucial Insight:</b> 📈 Photon energy is inversely proportional to wavelength. Shorter wavelengths (like UV or X-rays) carry much more energy per photon than longer wavelengths (like infrared or radio waves). This is why they can be more damaging.</i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Thermal Radiation -->
+        <section class="roadmap-section" id="sec-12-2">
+            <div class="section-header">
+                <h2>12–2: Thermal Radiation</h2>
+            </div>
+            <div class="section-content">
+                <h3>The Core Concept Breakdown</h3>
+                <p>Alright, the last section was about the entire family of electromagnetic waves—from radio waves to gamma rays. This section zooms in on one specific family member: thermal radiation. Think of the electromagnetic spectrum as a massive keyboard, with each key playing a different "note" or wavelength. While every key exists, for heat transfer, we're only interested in playing the notes in one specific section.</p>
+                <p>That section, thermal radiation, is the energy emitted by an object simply because it's hot (i.e., its molecules and atoms are vibrating). It's not being generated by a fancy nuclear reaction or a radio transmitter.</p>
+                 <div class="insight">
+                    <i><b>Physical Insight:</b> The key practical analogy here is a blacksmith's forge. When the blacksmith puts a piece of iron in the fire, it starts to heat up. At first, you can't see any change, but you can feel the heat coming off it if you put your hand nearby. That's invisible infrared radiation. As it gets hotter, it starts to glow a dull red. Now it's emitting radiation in the visible spectrum. If it gets white-hot, it's emitting radiation across the entire visible spectrum. The color and intensity of the radiation are direct clues to its temperature. This is the essence of thermal radiation.</i>
+                </div>
+
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> Distinguishing thermal radiation from the rest of the EM spectrum is crucial for selecting the right tools and materials in a plant.
+                    <ul>
+                        <li><b>Problem Solved: Material Selection.</b> You need to choose a sight glass (a window) for a high-temperature reactor. Should you use regular glass or quartz? Regular glass blocks a lot of infrared radiation (which is why a car gets hot in the sun—visible light gets in, but infrared radiation gets trapped). Quartz, however, is transparent to a wider range of IR. If you need to see the thermal energy signature inside with an IR camera, you must choose quartz. ⚙️</li>
+                        <li><b>Problem Solved: Accurate Temperature Measurement.</b> That IR temperature gun we talked about earlier? It is specifically calibrated to measure radiation in the thermal (mostly infrared) part of the spectrum. It's not measuring microwaves or X-rays. If you pointed it at a radio antenna, it would only tell you the antenna's temperature, not anything about the radio waves it's transmitting.</li>
+                        <li><b>Problem Solved: Surface Treatment and Coatings.</b> The final, crucial point in your text is that for opaque solids (like metals), radiation is a surface phenomenon. This is a huge deal. It means we can completely change how an object interacts with heat just by painting it! A coat of special high-emissivity paint on a furnace tube can dramatically improve its ability to absorb radiant heat, boosting efficiency. Conversely, putting a shiny, reflective coating on a surface can protect it from radiant heat.</li>
+                    </ul>
+                </div>
+                
+                <h3>Key Takeaways & Formulas</h3>
+                <h4>1. What is Thermal Radiation?</h4>
+                <ul>
+                    <li><b>Definition:</b> The portion of the electromagnetic spectrum emitted by matter purely as a result of its temperature.</li>
+                    <li><b>Wavelength Range:</b> Approximately 0.1 μm to 100 μm.</li>
+                    <li><b>Includes:</b> A small part of the ultraviolet (UV), all of the visible light, and a large part of the infrared (IR) spectrum.</li>
+                </ul>
+
+                <h4>2. Temperature and Wavelength Relationship</h4>
+                <ul>
+                    <li><b>Room Temperature Objects:</b> Emit primarily in the infrared (IR) range. You can't see it, but you can feel it as heat.</li>
+                    <li><b>Hot Objects (~800 K / 527°C):</b> Begin to emit noticeable radiation in the visible spectrum (glowing red).</li>
+                    <li><b>Very Hot Objects (>2000 K):</b> Emit strongly in the visible spectrum (lightbulb filament).</li>
+                    <li><b>Solar Radiation:</b> The sun's radiation is concentrated in the 0.3 μm to 3 μm range.</li>
+                </ul>
+
+                <h4>3. The Crucial Distinction: Surface vs. Volumetric Phenomenon</h4>
+                <ul>
+                    <li><b>Volumetric Phenomenon (in general):</b> Radiation is emitted and absorbed throughout the entire volume of a substance (e.g., in a hot gas or a semi-transparent liquid).</li>
+                    <li><b>Surface Phenomenon (for opaque solids):</b> For materials like metals, wood, and rock, any radiation from the interior is re-absorbed before it can escape. Therefore, all the thermal radiation we can measure is effectively coming from the surface. 📈</li>
+                </ul>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> This is why surface condition (color, roughness, coating) is supremely important for radiation in most engineering applications.</i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Blackbody Radiation -->
+        <section class="roadmap-section" id="sec-12-3">
+            <div class="section-header">
+                <h2>12-3: Blackbody Radiation</h2>
+            </div>
+            <div class="section-content">
+                <h3>The Core Concept Breakdown</h3>
+                <p>So, we know that real objects emit different amounts of radiation even at the same temperature. This is messy. Engineers need a baseline, a "perfect" standard to compare everything against. That standard is the blackbody.</p>
+                <p>A blackbody is an idealized, perfect object. It's the Michael Jordan of radiation—it's the best possible emitter and the best possible absorber of radiant energy.</p>
+                <ul>
+                    <li><b>Perfect Absorber:</b> It absorbs 100% of the radiation that hits it, at all angles and all wavelengths. Nothing is reflected.</li>
+                    <li><b>Perfect Emitter:</b> For a given temperature, it emits the maximum possible amount of thermal radiation. No real object can emit more.</li>
+                </ul>
+                <div class="insight">
+                    <i><b>Physical Insight (Analogy):</b> The "Perfect" Sponge. Imagine you have a bunch of different sponges. Some are dense, some are porous. If you pour a liter of water on them, each will soak up a different amount. A blackbody is like a theoretical "perfect sponge" that will instantly soak up every single drop of that liter of water (perfect absorber). Furthermore, if you then want to wring out the maximum amount of water a sponge could possibly hold at that size, this perfect sponge is the one you'd measure (perfect emitter).</i>
+                </div>
+                
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> We know perfect blackbodies don't exist in reality, so why bother? Because they give us an upper limit—a ceiling—for our calculations.
+                    <ul>
+                        <li><b>Problem Solved: Furnace Design.</b> When designing a furnace, we need to know the maximum possible heat flux we can get from the flames and walls to the process tubes. We start by calculating the heat transfer as if everything were a perfect blackbody. This gives us the theoretical maximum energy transfer. Then, we apply "correction factors" (emissivity, which we'll get to next) to account for the fact that our real materials aren't perfect. It's the fundamental first step in sizing the furnace. ⚙️</li>
+                        <li><b>Problem Solved: Non-Contact Temperature Measurement.</b> Remember that IR temperature gun? To get an accurate reading, you often have to input the "emissivity" of the surface you're measuring. What you're really doing is telling the gun: "I'm looking at a steel pipe, which is only, say, 80% as good an emitter as a perfect blackbody. Please correct your temperature calculation based on this." Without the blackbody concept as a reference (a value of 1.0), the measurement would be meaningless.</li>
+                        <li><b>Problem Solved: Predicting Color at Temperature.</b> Wien's Displacement Law is not just academic. It tells us that as things get hotter, their peak emission wavelength gets shorter. This is why we can visually estimate the temperature of hot steel in a mill—dull red, to bright red, to orange, to white-hot. This is a direct, practical application of blackbody radiation principles that operators and engineers use every day. 📈</li>
+                    </ul>
+                </div>
+
+                <h3>Key Takeaways & Formulas</h3>
+                <h4>1. Blackbody Definition</h4>
+                <ul>
+                    <li>An idealized body that absorbs all incident radiation and emits the maximum possible radiation at a given temperature.</li>
+                    <li>It is a diffuse emitter, meaning it emits uniformly in all directions.</li>
+                </ul>
+
+                <h4>2. The Stefan-Boltzmann Law (Total Power)</h4>
+                <p><b>Purpose:</b> Calculates the total emissive power of a blackbody across all wavelengths. It tells you the total energy blasting off the surface.</p>
+                ````math
+                E_b(T) = \sigma T^4
+                ````
+                <p>Where:</p>
+                <ul>
+                    <li>\KATEX_INLINE_OPEN E_b \KATEX_INLINE_CLOSE = Blackbody emissive power (W/m²)</li>
+                    <li>\KATEX_INLINE_OPEN \sigma \KATEX_INLINE_CLOSE = Stefan-Boltzmann constant (\KATEX_INLINE_OPEN 5.67 \times 10^{-8} \text{ W/m}^2\cdot\text{K}^4 \KATEX_INLINE_CLOSE)</li>
+                    <li>\KATEX_INLINE_OPEN T \KATEX_INLINE_CLOSE = Absolute temperature (in Kelvin!) A common exam mistake is to forget to convert from Celsius.</li>
+                </ul>
+                <div class="insight">
+                    <i><b>Physical Insight:</b> Power is proportional to \KATEX_INLINE_OPEN T^4 \KATEX_INLINE_CLOSE. Doubling the absolute temperature increases the radiant power by a factor of 16! This is why radiation is dominant at high temperatures.</i>
+                </div>
+
+                <h4>3. Planck's Law (Spectral Power)</h4>
+                <p><b>Purpose:</b> Describes the distribution of a blackbody's emissive power over different wavelengths (\KATEX_INLINE_OPEN \lambda \KATEX_INLINE_CLOSE). It gives you the shape of the curves in radiation charts.</p>
+                ````math
+                E_{b\lambda}(\lambda, T) = \frac{C_1}{\lambda^5[\exp(C_2/\lambda T) - 1]}
+                ````
+                <p><b>Key Insight:</b> You likely won't have to solve this complex formula on an exam, but you MUST understand the curves it produces and what they mean (e.g., as T increases, the peak shifts to the left and the total area under the curve increases).</p>
+
+                <h4>4. Wien's Displacement Law (Peak Wavelength)</h4>
+                <p><b>Purpose:</b> Finds the specific wavelength (\KATEX_INLINE_OPEN \lambda_{\text{max}} \KATEX_INLINE_CLOSE) at which the blackbody's emissive power is at its peak for a given temperature.</p>
+                ````math
+                (\lambda T)_{\text{max power}} = 2897.8 \, \mu\text{m}\cdot\text{K}
+                ````
+                <div class="insight">
+                    <i><b>Physical Insight:</b> Wavelength of maximum emission is inversely proportional to temperature. Hotter things glow at shorter wavelengths (blue/white), cooler things glow at longer wavelengths (red/infrared).</i>
+                </div>
+
+                <h4>5. Blackbody Radiation Functions (Fractional Power)</h4>
+                <p><b>Purpose:</b> Calculates the fraction of total radiation emitted in a specific wavelength band (from \KATEX_INLINE_OPEN \lambda_1 \KATEX_INLINE_CLOSE to \KATEX_INLINE_OPEN \lambda_2 \KATEX_INLINE_CLOSE).</p>
+                ````math
+                f_{\lambda_1 - \lambda_2} = f_{\lambda_2} - f_{\lambda_1}
+                ````
+                <p><b>How to use:</b> You'll be given a table. You calculate the \KATEX_INLINE_OPEN \lambda T \KATEX_INLINE_CLOSE product for your upper and lower wavelength bounds, look up the corresponding \KATEX_INLINE_OPEN f_\lambda \KATEX_INLINE_CLOSE values in the table, and subtract them.</p>
+            </div>
+        </section>
+        
+        <!-- Section 4: Radiation Intensity -->
+        <section class="roadmap-section" id="sec-12-4">
+            <div class="section-header">
+                <h2>12-4: Radiation Intensity (Parts a & b)</h2>
+            </div>
+            <div class="section-content">
+                <h3>Part A: Emitted Radiation Intensity</h3>
+                <h3>The Core Concept Breakdown</h3>
+                <p>So far, we've talked about the total energy leaving a surface (\KATEX_INLINE_OPEN E \KATEX_INLINE_CLOSE, the emissive power). That's like knowing the total wattage of a light bulb. But we don't know if that bulb is a bare filament sending light everywhere, or a focused spotlight concentrating all its energy in one direction. Radiation Intensity (\KATEX_INLINE_OPEN I \KATEX_INLINE_CLOSE) is what tells us this directional information. It's the "spotlight" measurement.</p>
+                <ul>
+                    <li><b>Emissive Power (E)</b> = How much total energy leaves a surface, in all directions. (Units: W/m²)</li>
+                    <li><b>Radiation Intensity (I)</b> = How much energy is concentrated in a single, specific direction. (Units: W/m²·sr)</li>
+                </ul>
+                <div class="insight">
+                    <i><b>Physical Insight (Analogy):</b> A Lawn Sprinkler.
+                    The emissive power (\KATEX_INLINE_OPEN E \KATEX_INLINE_CLOSE) is like the total flow rate of water coming out of the sprinkler head (e.g., gallons per minute).
+                    The radiation intensity (\KATEX_INLINE_OPEN I \KATEX_INLINE_CLOSE) is like the amount of water being shot in a specific direction. A simple sprinkler that just sprays a gentle mist upwards has a low intensity spread over a wide area. A powerful, rotating sprinkler that shoots a strong jet of water has a very high intensity in the direction of the jet. Both sprinklers might have the same total flow rate (\KATEX_INLINE_OPEN E \KATEX_INLINE_CLOSE), but their directional behavior (\KATEX_INLINE_OPEN I \KATEX_INLINE_CLOSE) is completely different.</i>
+                </div>
+                <p>To define intensity, we need two new ideas:</p>
+                <ul>
+                    <li><b>Solid Angle (ω):</b> This is just the 3D version of a regular angle. Think of it as how much of your field of vision an object takes up. It's measured in "steradians" (sr).</li>
+                    <li><b>Projected Area (A cos θ):</b> This is the crucial part. If you're looking at a hot plate straight on (θ=0°), you see its full area. If you look at it from a sharp angle (θ=80°), it looks like a thin sliver. Intensity is defined based on this projected area because it accounts for the "spreading out" of energy at shallow angles.</li>
+                </ul>
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> Because in the real world, heat transfer isn't happening between two infinite parallel plates. It's happening between a pipe and a furnace wall, a flame and a reactor vessel, or a hot piece of equipment and a person standing nearby. Geometry and direction matter.
+                    <ul>
+                        <li><b>Problem Solved: Sensor Placement and Accuracy.</b> When you point an IR pyrometer at a hot surface, the sensor inside the gun is only capturing the radiation that leaves the surface in one specific direction and fills the sensor's "field of view" (its solid angle). The pyrometer is fundamentally measuring intensity and then calculating a temperature from it. If the surface isn't diffuse (meaning it radiates differently in different directions), pointing the gun at it from different angles will give you different readings!</li>
+                        <li><b>Problem Solved: View Factor Calculations.</b> This is the big one. To calculate the radiant heat exchange between two specific objects (e.g., Surface 1 and Surface 2), you have to figure out what fraction of the energy leaving Surface 1 actually hits Surface 2. This calculation, which leads to "view factors," is built entirely on the concept of radiation intensity. Without it, you can't solve real-world geometry problems.</li>
+                    </ul>
+                </div>
+                <h3>Key Takeaways & Formulas (Part A)</h3>
+                <h4>1. Key Definitions</h4>
+                <ul>
+                    <li><b>Solid Angle (ω):</b> The 3D "field of view" an object occupies. A full sphere is 4π sr; a hemisphere is 2π sr.</li>
+                    <li><b>Radiation Intensity (\KATEX_INLINE_OPEN I_e \KATEX_INLINE_CLOSE):</b> The radiation energy emitted per unit projected area, per unit solid angle. It is the fundamental directional quantity.</li>
+                    <li><b>Diffuse Surface:</b> A surface whose intensity (\KATEX_INLINE_OPEN I_e \KATEX_INLINE_CLOSE) is constant and independent of direction. Blackbodies are always diffuse.</li>
+                </ul>
+                <h4>2. Critical Formulas & Relationships</h4>
+                <p><b>Intensity of Emitted Radiation (Definition):</b></p>
+                ````math
+                I_e(\theta, \phi) = \frac{d\dot{Q}_e}{(dA \cos\theta) d\omega}
+                ````
+                <p><b>Relating Emissive Power (\KATEX_INLINE_OPEN E \KATEX_INLINE_CLOSE) to Intensity (\KATEX_INLINE_OPEN I_e \KATEX_INLINE_CLOSE):</b></p>
+                <p>Emissive power is the integral of the directional intensity over the entire hemisphere.</p>
+                ````math
+                E = \int_{\text{hemisphere}} I_e(\theta, \phi) \cos\theta \, d\omega
+                ````
+                <p><b>The BIG Simplification (For a Diffuse Surface):</b></p>
+                <p>When \KATEX_INLINE_OPEN I_e \KATEX_INLINE_CLOSE is constant, the integral simplifies to a critically important relationship:</p>
+                ````math
+                E = \pi I_e
+                ````
+                <div class="insight">
+                    <i><b>Physical Insight:</b> Why π and not 2π? This is a classic exam question. It's because the \KATEX_INLINE_OPEN \cos\theta \KATEX_INLINE_CLOSE term in the integral averages out to give a factor of π, not because the solid angle of a hemisphere is 2π.</i>
+                </div>
+                <p><b>Blackbody Radiation:</b> A blackbody is a perfect diffuse emitter. Therefore, the relationship holds perfectly.</p>
+                <ul>
+                    <li>Blackbody Emissive Power: \KATEX_INLINE_OPEN E_b = \sigma T^4 \KATEX_INLINE_CLOSE</li>
+                    <li>Blackbody Intensity: 
+                        ````math
+                        I_b = \frac{E_b}{\pi} = \frac{\sigma T^4}{\pi}
+                        ````
+                    </li>
+                </ul>
+
+                <hr style="margin: 2rem 0; border-color: var(--border-color);">
+                <h3>Part B: Incident Radiation (Irradiation & Radiosity)</h3>
+                <h3>The Core Concept Breakdown</h3>
+                <p>This section introduces two new key terms—Irradiation (\KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE) and Radiosity (\KATEX_INLINE_OPEN J \KATEX_INLINE_CLOSE)—and the idea of spectral quantities. Let's keep it simple.</p>
+                <div class="insight">
+                    <i><b>Physical Insight (Analogy):</b> A Busy Airport Runway.
+                    <ul>
+                        <li><b>Emissive Power (E)</b> is the energy of the planes taking off because they are powered up and ready to go. This is energy <b>originating</b> from the surface itself.</li>
+                        <li><b>Irradiation (G)</b> is the energy of all the planes landing on the runway. This is energy coming from the surroundings and <b>arriving</b> at the surface.</li>
+                        <li><b>Radiosity (J)</b> is the energy of all planes <b>leaving</b> the runway, for any reason. This includes the planes taking off (\KATEX_INLINE_OPEN E \KATEX_INLINE_CLOSE) PLUS any planes that landed, turned around, and are now taking off again (the reflected part of \KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE).</li>
+                    </ul>
+                    So, \KATEX_INLINE_OPEN J \KATEX_INLINE_CLOSE (Total Outbound Traffic) = \KATEX_INLINE_OPEN E \KATEX_INLINE_CLOSE (Planes originating here) + Reflected planes (Planes from elsewhere that are leaving).
+                    </i>
+                </div>
+                <p>The concept of spectral quantities just adds another layer of detail. A "spectral" quantity (indicated by the \KATEX_INLINE_OPEN \lambda \KATEX_INLINE_CLOSE subscript, like \KATEX_INLINE_OPEN E_\lambda \KATEX_INLINE_CLOSE) is just the same property measured at one specific wavelength (or "color").</p>
+                
+                <div class="rule-of-thumb">
+                    <b>Engineer's Rule of Thumb:</b> This is the bookkeeping that makes real-world analysis possible. The net heat transfer from a surface is the difference between what leaves and what arrives.
+                    <p style="text-align:center; font-weight:bold; margin-top:1rem;">Net Heat Transfer (\KATEX_INLINE_OPEN Q_{net} \KATEX_INLINE_CLOSE) = Outgoing - Incoming <br> Net Heat Transfer (\KATEX_INLINE_OPEN Q_{net} \KATEX_INLINE_CLOSE) = Radiosity (\KATEX_INLINE_OPEN J \KATEX_INLINE_CLOSE) - Irradiation (\KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE)</p>
+                    This is the foundation for all multi-surface radiation problems.
+                    <ul>
+                        <li><b>Problem Solved: Designing Heat Shields.</b> A heat shield is designed to protect something cool from a hot source. Its goal is to minimize the net heat transfer. It does this by having a low emissivity (it doesn't emit much energy on its own, \KATEX_INLINE_OPEN E \KATEX_INLINE_CLOSE is low) and a high reflectivity (it reflects most of the incoming irradiation, \KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE). The combination of low \KATEX_INLINE_OPEN E \KATEX_INLINE_CLOSE and high reflection results in a low radiosity, \KATEX_INLINE_OPEN J \KATEX_INLINE_CLOSE. ⚙️</li>
+                        <li><b>Problem Solved: Understanding the Greenhouse Effect.</b> The concept of spectral properties is key here. The glass of a greenhouse is transparent to short-wavelength solar radiation (high \KATEX_INLINE_OPEN G_\lambda \KATEX_INLINE_CLOSE in the visible spectrum gets through). The stuff inside heats up and re-emits energy at longer, infrared wavelengths (\KATEX_INLINE_OPEN E_\lambda \KATEX_INLINE_CLOSE is high in the IR spectrum). But the glass is opaque to this long-wavelength IR radiation, trapping it inside.</li>
+                        <li><b>Problem Solved: Furnace and Boiler Analysis.</b> To find the net heat absorbed by the boiler tubes in a furnace, you must calculate the total radiation arriving at the tubes (irradiation, \KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE) from the flames and hot walls, and then subtract the total radiation leaving the tubes (radiosity, \KATEX_INLINE_OPEN J \KATEX_INLINE_CLOSE). This net difference is the energy that actually gets absorbed to make steam.</li>
+                    </ul>
+                </div>
+                <h3>Key Takeaways & Formulas (Part B)</h3>
+                <h4>1. Key Definitions</h4>
+                <ul>
+                    <li><b>Irradiation (G):</b> The total radiation energy incident upon (arriving at) a surface per unit area, from all directions.</li>
+                    <li><b>Radiosity (J):</b> The total radiation energy leaving a surface per unit area, from all directions. It is the sum of emitted and reflected radiation.
+                        ````math
+                        J = E + G_{\text{reflected}}
+                        ````
+                    </li>
+                    <li><b>Spectral Quantities</b> (e.g., \KATEX_INLINE_OPEN G_\lambda, J_\lambda \KATEX_INLINE_CLOSE): The same as the total quantities, but measured per unit wavelength interval at a specific wavelength \KATEX_INLINE_OPEN \lambda \KATEX_INLINE_CLOSE.</li>
+                </ul>
+                <h4>2. Critical Formulas & Relationships</h4>
+                <p><b>Irradiation for a Diffuse Source:</b> If the incoming radiation is diffuse (uniform from all directions), then:</p>
+                ````math
+                G = \pi I_i
+                ````
+                <p>(\KATEX_INLINE_OPEN I_i \KATEX_INLINE_CLOSE is the intensity of incident radiation).</p>
+                <p><b>Radiosity for a Diffuse Surface:</b> If the surface is a diffuse emitter and diffuse reflector, then:</p>
+                ````math
+                J = \pi I_{e+r}
+                ````
+                <p>(\KATEX_INLINE_OPEN I_{e+r} \KATEX_INLINE_CLOSE is the intensity of emitted + reflected radiation).</p>
+                <p><b>Relating Total and Spectral Quantities:</b> To get a total quantity, you integrate the spectral quantity over all wavelengths (from 0 to ∞).</p>
+                ````math
+                E = \int_0^\infty E_\lambda \, d\lambda, \quad G = \int_0^\infty G_\lambda \, d\lambda, \quad J = \int_0^\infty J_\lambda \, d\lambda
+                ````
+                <p><b>Special Case: Blackbody:</b> A blackbody absorbs all incident radiation, so it reflects nothing. Therefore, for a blackbody:</p>
+                ````math
+                J = E_b
+                ````
+                <p>The only radiation leaving is the radiation it emits.</p>
+            </div>
+        </section>
+
+        <!-- Section 5a: Emissivity -->
+        <section class="roadmap-section" id="sec-12-5a">
+            <div class="section-header">
+                <h2>12–5a: Radiative Properties - Emissivity</h2>
+            </div>
+            <div class="section-content">
+                <h3>The Core Concept Breakdown</h3>
+                <p>We established that a blackbody is the perfect, theoretical emitter (\KATEX_INLINE_OPEN \epsilon = 1 \KATEX_INLINE_CLOSE). Real-world materials are imperfect; they are less effective emitters. Emissivity (\KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE) is simply a grade, on a scale of 0 to 1, that tells you how good a real surface is at emitting thermal radiation compared to a perfect blackbody at the same temperature.</p>
+                <ul>
+                    <li>An \KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE of 0.9 means the surface emits 90% of the energy a blackbody would. (This is a very good emitter, like brick or paint).</li>
+                    <li>An \KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE of 0.05 means the surface emits only 5% of the energy a blackbody would. (This is a very poor emitter, like polished aluminum).</li>
+                </ul>
+                <div class="insight">
+                    <i><b>Physical Insight (Analogy):</b> The Coffee Mug.
+                    Imagine you have two identical mugs, both filled with boiling water at the same temperature. One mug is coated in matte black paint (\KATEX_INLINE_OPEN \epsilon \approx 0.95 \KATEX_INLINE_CLOSE), and the other is wrapped in shiny aluminum foil (\KATEX_INLINE_OPEN \epsilon \approx 0.05 \KATEX_INLINE_CLOSE).
+                    If you put your hands near (but not touching) both mugs, you will feel much more radiant heat coming from the black mug. Even though they are the same temperature, the black mug is a far more effective "broadcaster" of that thermal energy. The shiny foil mug is a poor broadcaster; it holds its heat in better. The emissivity is the property that quantifies this difference.</i>
+                </div>
+                <p>Now, it gets complicated because this "grade" (\KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE) can change depending on:</p>
+                <ul>
+                    <li><b>Wavelength (\KATEX_INLINE_OPEN \lambda \KATEX_INLINE_CLOSE):</b> A surface might be great at emitting red light but terrible at emitting blue light.</li>
+                    <li><b>Direction (\KATEX_INLINE_OPEN \theta \KATEX_INLINE_CLOSE):</b> A surface might emit strongly straight-out but weakly at an angle.</li>
+                    <li><b>Temperature (\KATEX_INLINE_OPEN T \KATEX_INLINE_CLOSE):</b> The emissivity of a material can change as it gets hotter.</li>
+                </ul>
+                <p>To handle this, engineers use two powerful simplifications:</p>
+                <ul>
+                    <li><b>Diffuse Surface:</b> We assume the properties are the same in all directions. \KATEX_INLINE_OPEN \epsilon_\theta \KATEX_INLINE_CLOSE is constant.</li>
+                    <li><b>Gray Surface:</b> We assume the properties are the same at all wavelengths. \KATEX_INLINE_OPEN \epsilon_\lambda \KATEX_INLINE_CLOSE is constant.</li>
+                </ul>
+                <p>A gray, diffuse surface is the engineer's best friend in radiation calculations. We assume one single value for emissivity (\KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE) works for all directions and all wavelengths. It's an approximation, but it's often a very good one.</p>
+
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> Emissivity is not just a number in a book; it's a critical design parameter that you can control.
+                    <ul>
+                        <li><b>Problem Solved: Increasing Heat Transfer.</b> You want the tubes in a furnace to absorb as much heat as possible. You would select a material or coating with a high emissivity so it behaves more like a blackbody, efficiently absorbing incoming energy. Special high-emissivity ceramic coatings are often applied for exactly this reason. 📈</li>
+                        <li><b>Problem Solved: Reducing Heat Loss (Insulation).</b> You want to prevent a hot storage tank from losing heat to the surroundings. You would cover it with a material that has a low emissivity, like polished aluminum or stainless steel cladding. This "radiation shield" is a terrible emitter, so it traps the heat inside. This is why vacuum-insulated thermoses are shiny on the inside. ⚙️</li>
+                        <li><b>Problem Solved: Getting Accurate Temperature Readings.</b> When you use an IR gun, you must set the correct emissivity value. If you point it at a shiny stainless steel pipe (\KATEX_INLINE_OPEN \epsilon \approx 0.1 \KATEX_INLINE_CLOSE) but leave the setting on the default of 0.95, the gun will see very little radiation and give you a dangerously low, incorrect temperature reading. A trained operator knows to put a piece of high-emissivity tape (\KATEX_INLINE_OPEN \epsilon \approx 0.95 \KATEX_INLINE_CLOSE) on the pipe or to use a lookup table to get an accurate measurement.</li>
+                    </ul>
+                </div>
+                <h3>Key Takeaways & Formulas</h3>
+                <h4>1. The Emissivity Hierarchy (from most detailed to most general)</h4>
+                <ul>
+                    <li><b>Spectral Directional Emissivity (\KATEX_INLINE_OPEN \epsilon_{\lambda,\theta} \KATEX_INLINE_CLOSE):</b> The most fundamental property. Emissivity at a single wavelength (\KATEX_INLINE_OPEN \lambda \KATEX_INLINE_CLOSE) and in a single direction (\KATEX_INLINE_OPEN \theta \KATEX_INLINE_CLOSE).
+                        ````math
+                        \epsilon_{\lambda,\theta} = \frac{I_{\lambda,e}}{I_{b\lambda}}
+                        ````
+                    </li>
+                    <li><b>Total Directional Emissivity (\KATEX_INLINE_OPEN \epsilon_\theta \KATEX_INLINE_CLOSE):</b> Emissivity in a single direction (\KATEX_INLINE_OPEN \theta \KATEX_INLINE_CLOSE), averaged over all wavelengths.
+                        ````math
+                        \epsilon_{\theta} = \frac{I_{e}}{I_{b}}
+                        ````
+                    </li>
+                    <li><b>Spectral Hemispherical Emissivity (\KATEX_INLINE_OPEN \epsilon_\lambda \KATEX_INLINE_CLOSE):</b> Emissivity at a single wavelength (\KATEX_INLINE_OPEN \lambda \KATEX_INLINE_CLOSE), averaged over all directions.
+                        ````math
+                        \epsilon_{\lambda} = \frac{E_{\lambda}}{E_{b\lambda}}
+                        ````
+                    </li>
+                    <li><b>Total Hemispherical Emissivity (\KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE):</b> The "grand average." Emissivity averaged over all wavelengths AND all directions. This is the value most commonly used in calculations.
+                        ````math
+                        \epsilon = \frac{E}{E_b} = \frac{E}{\sigma T^4}
+                        ````
+                        This directly leads to the formula for emissive power of a real surface: 
+                        ````math
+                        E = \epsilon \sigma T^4
+                        ````
+                    </li>
+                </ul>
+                <h4>2. Key Approximations</h4>
+                <ul>
+                    <li><b>Diffuse Surface:</b> Properties are independent of direction (\KATEX_INLINE_OPEN \theta \KATEX_INLINE_CLOSE). \KATEX_INLINE_OPEN \epsilon_\lambda \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE are the only properties needed.</li>
+                    <li><b>Gray Surface:</b> Properties are independent of wavelength (\KATEX_INLINE_OPEN \lambda \KATEX_INLINE_CLOSE). \KATEX_INLINE_OPEN \epsilon_\theta \KATEX_INLINE_CLOSE and \KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE are the only properties needed.</li>
+                    <li><b>Gray, Diffuse Surface:</b> \KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE is a single constant value. The emissive power is simply \KATEX_INLINE_OPEN E = \epsilon\sigma T^4 \KATEX_INLINE_CLOSE.</li>
+                </ul>
+                <h4>3. Practical Notes</h4>
+                <ul>
+                    <li><b>Conductors (Metals):</b> Generally have low emissivity, which increases with temperature and oxidation. A shiny pipe is a poor emitter; a rusty pipe is a much better one.</li>
+                    <li><b>Non-conductors (Ceramics, Organics, Paint):</b> Generally have high emissivity.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 5b: Absorptivity, etc. -->
+        <section class="roadmap-section" id="sec-12-5b">
+            <div class="section-header">
+                <h2>12–5b: Radiative Properties - α, ρ, τ & Kirchhoff's Law</h2>
+            </div>
+            <div class="section-content">
+                <h3>The Core Concept Breakdown</h3>
+                <p>When a wave of radiation (irradiation, \KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE) hits a surface, it's like a stream of baseballs being thrown at a screen. Three things can happen to each ball:</p>
+                <ol>
+                    <li>It gets caught by the screen <b>(Absorbed)</b>.</li>
+                    <li>It bounces off the screen <b>(Reflected)</b>.</li>
+                    <li>It goes right through a hole in the screen <b>(Transmitted)</b>.</li>
+                </ol>
+                <p>The properties \KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE, \KATEX_INLINE_OPEN \rho \KATEX_INLINE_CLOSE, and \KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE are simply the fractions of the incoming energy that do each of these things.</p>
+                <ul>
+                    <li><b>Absorptivity (\KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE):</b> The fraction of energy absorbed.</li>
+                    <li><b>Reflectivity (\KATEX_INLINE_OPEN \rho \KATEX_INLINE_CLOSE):</b> The fraction of energy reflected.</li>
+                    <li><b>Transmissivity (\KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE):</b> The fraction of energy transmitted through.</li>
+                </ul>
+                <p>Since these are the only three possibilities, their sum must equal 100% of the incoming energy: \KATEX_INLINE_OPEN \alpha + \rho + \tau = 1 \KATEX_INLINE_CLOSE. For the vast majority of engineering problems involving solids (like metal, brick, wood), nothing gets through, so we say they are opaque (\KATEX_INLINE_OPEN \tau = 0 \KATEX_INLINE_CLOSE). This simplifies the energy balance to the very common equation: \KATEX_INLINE_OPEN \alpha + \rho = 1 \KATEX_INLINE_CLOSE.</p>
+                <p>Now for the magic trick: <b>Kirchhoff's Law.</b> This law provides a profound link between a surface's ability to emit and its ability to absorb. Under specific conditions, it states that:</p>
+                ````math
+                \epsilon = \alpha
+                ````
+                <div class="insight">
+                    <i><b>Physical Insight:</b> A good emitter is also a good absorber. A poor emitter is a poor absorber (and therefore a good reflector for opaque surfaces).
+                    <br><br>
+                    <b>Practical Analogy:</b> The Black Car vs. The White Car. On a hot, sunny day, the black car's surface gets hotter. Why?
+                    <ul>
+                        <li><b>Black Paint:</b> Has a high absorptivity (\KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE) for solar radiation. It absorbs a large fraction of the incoming energy. Because it's a good absorber, Kirchhoff's Law tells us it must also have a high emissivity (\KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE). So, as it gets hot, it also becomes a very effective emitter of infrared radiation.</li>
+                        <li><b>White Paint:</b> Has a low absorptivity (\KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE) for solar radiation (and thus a high reflectivity, \KATEX_INLINE_OPEN \rho \KATEX_INLINE_CLOSE). It reflects most of the sun's energy. Because it's a poor absorber, Kirchhoff's Law tells us it must also be a poor emitter.</li>
+                    </ul>
+                    This is why a white-painted roof stays cooler than a black-painted roof. The white surface is a poor absorber (\KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE is low) of the incoming solar (\KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE).
+                    </i>
+                </div>
+                
+                <div class="rule-of-thumb">
+                    <b>Engineer's Rule of Thumb:</b> The Critical Caveat of Kirchhoff's Law. The law (\KATEX_INLINE_OPEN \epsilon = \alpha \KATEX_INLINE_CLOSE) strictly holds true when the surface and the radiation source are at the same temperature. For many real-world problems (like objects inside a furnace or a room), this is a good enough approximation. However, for something like a roof under the sun, the surface (~350 K) and the source (~5800 K) are at vastly different temperatures. In these cases, you must use the more precise form: the spectral emissivity at a given wavelength equals the spectral absorptivity at that same wavelength (\KATEX_INLINE_OPEN \epsilon_\lambda = \alpha_\lambda \KATEX_INLINE_CLOSE).
+                </div>
+                
+                <h3>Key Takeaways & Formulas</h3>
+                <h4>1. The Radiation Balance</h4>
+                <ul>
+                    <li><b>General Formula:</b> 
+                        ````math
+                        \alpha + \rho + \tau = 1
+                        ````
+                    </li>
+                    <li><b>For Opaque Surfaces (\KATEX_INLINE_OPEN \tau = 0 \KATEX_INLINE_CLOSE):</b> 
+                        ````math
+                        \alpha + \rho = 1
+                        ````
+                        This is the most common form used in solid-to-solid heat transfer. Knowing absorptivity immediately tells you reflectivity, and vice-versa.
+                    </li>
+                </ul>
+
+                <h4>2. Definitions</h4>
+                <ul>
+                    <li><b>Absorptivity (\KATEX_INLINE_OPEN \alpha \KATEX_INLINE_CLOSE):</b> Fraction of incident radiation (\KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE) that is absorbed. \KATEX_INLINE_OPEN \alpha = G_{abs} / G \KATEX_INLINE_CLOSE</li>
+                    <li><b>Reflectivity (\KATEX_INLINE_OPEN \rho \KATEX_INLINE_CLOSE):</b> Fraction of incident radiation (\KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE) that is reflected. \KATEX_INLINE_OPEN \rho = G_{ref} / G \KATEX_INLINE_CLOSE</li>
+                    <li><b>Transmissivity (\KATEX_INLINE_OPEN \tau \KATEX_INLINE_CLOSE):</b> Fraction of incident radiation (\KATEX_INLINE_OPEN G \KATEX_INLINE_CLOSE) that is transmitted. \KATEX_INLINE_OPEN \tau = G_{tr} / G \KATEX_INLINE_CLOSE</li>
+                </ul>
+
+                <h4>3. Types of Reflection</h4>
+                <ul>
+                    <li><b>Specular Reflection:</b> Mirror-like. Angle of incidence = angle of reflection. Occurs on smooth, polished surfaces.</li>
+                    <li><b>Diffuse Reflection:</b> Scatters incoming radiation uniformly in all directions. Occurs on rough surfaces. (This is the most common assumption in calculations).</li>
+                </ul>
+
+                <h4>4. Kirchhoff's Law</h4>
+                <p><b>Purpose:</b> Relates a surface's ability to emit to its ability to absorb.</p>
+                <ul>
+                    <li><b>Most Precise Form (Always True):</b> \KATEX_INLINE_OPEN \epsilon_{\lambda,\theta} = \alpha_{\lambda,\theta} \KATEX_INLINE_CLOSE. The spectral, directional emissivity is equal to the spectral, directional absorptivity.</li>
+                    <li><b>Spectral Form (Often Used):</b> \KATEX_INLINE_OPEN \epsilon_\lambda(T) = \alpha_\lambda(T) \KATEX_INLINE_CLOSE. The emissivity at a wavelength λ equals the absorptivity at that same λ.</li>
+                    <li><b>Total Form (Use with Caution!):</b> \KATEX_INLINE_OPEN \epsilon(T) = \alpha(T) \KATEX_INLINE_CLOSE. The total emissivity of a surface at temperature T is equal to its total absorptivity for radiation coming from a source also at temperature T. ⚠️</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 6: Solar Radiation -->
+        <section class="roadmap-section" id="sec-12-6">
+            <div class="section-header">
+                <h2>12–6: Atmospheric and Solar Radiation</h2>
+            </div>
+            <div class="section-content">
+                <h3>The Core Concept Breakdown</h3>
+                <p>This section is all about the energy exchange between an object on Earth, the Sun, and the sky. It recognizes a critical fact: radiation isn't a one-way street. A surface on the ground is simultaneously being hit by two different types of radiation while also emitting its own.</p>
+                <div class="insight">
+                    <i><b>Physical Insight (Analogy):</b> Standing Under a Heat Lamp in a Cold Room.
+                    Imagine you are in a large, chilly warehouse (the "sky"). Above you is a powerful, red-hot industrial heat lamp (the "sun").
+                    <ul>
+                        <li>You are being blasted by intense, short-wavelength radiation from the lamp. This is <b>Solar Irradiation (\KATEX_INLINE_OPEN G_{\text{solar}} \KATEX_INLINE_CLOSE)</b>. ☀️</li>
+                        <li>You are also receiving gentle, long-wavelength radiation from the cold walls, ceiling, and floor of the warehouse. This is <b>Atmospheric (or Sky) Irradiation (\KATEX_INLINE_OPEN G_{\text{sky}} \KATEX_INLINE_CLOSE)</b>. ☁️</li>
+                        <li>Meanwhile, your own body is emitting its own long-wavelength infrared radiation out to the surroundings. This is <b>Surface Emission (\KATEX_INLINE_OPEN E_{\text{surface}} \KATEX_INLINE_CLOSE)</b>.</li>
+                    </ul>
+                    The net heat you gain or lose is the sum of everything coming in minus everything going out.</i>
+                </div>
+                <p>The most important engineering takeaway here is the concept of <b>spectral selectivity</b>, which is a direct consequence of the Greenhouse Effect.</p>
+                <ul>
+                    <li>The <b>Sun</b> is very hot (~5800 K), so it emits high-energy, short-wavelength radiation (mostly visible light).</li>
+                    <li><b>Surfaces on Earth</b> are much cooler (~300 K), so they emit low-energy, long-wavelength radiation (infrared).</li>
+                </ul>
+                <p>Materials can be engineered to treat these two types of radiation very differently. This invalidates the "gray body" assumption (\KATEX_INLINE_OPEN \epsilon = \alpha \KATEX_INLINE_CLOSE) for solar applications, because the absorptivity to solar radiation (\KATEX_INLINE_OPEN \alpha_s \KATEX_INLINE_CLOSE) can be wildly different from the emissivity at room temperature (\KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE).</p>
+                
+                <div class="rule-of-thumb">
+                    <b>Design Implication:</b> This is the basis for all solar energy design and passive heating/cooling strategies.
+                    <ul>
+                        <li><b>Problem Solved: Designing Solar Collectors.</b> To build an efficient solar water heater, you need a collector plate that gets very hot. The goal is to maximize heat IN and minimize heat OUT. You achieve this by choosing a "spectrally selective" surface with:
+                            <ul>
+                                <li>A <b>high</b> solar absorptivity (\KATEX_INLINE_OPEN \alpha_s \KATEX_INLINE_CLOSE) to soak up the sun's energy.</li>
+                                <li>A <b>low</b> infrared emissivity (\KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE) so that once it gets hot, it doesn't radiate that heat back out.</li>
+                            </ul>
+                            This leads to a high \KATEX_INLINE_OPEN \alpha_s / \epsilon \KATEX_INLINE_CLOSE ratio, the key figure of merit for solar collectors.
+                        </li>
+                        <li><b>Problem Solved: Keeping Things Cool.</b> You're designing a large outdoor storage tank for a chemical that must be kept cool. The goal is to minimize heat IN and maximize heat OUT. You would choose a surface with:
+                             <ul>
+                                <li>A <b>low</b> solar absorptivity (\KATEX_INLINE_OPEN \alpha_s \KATEX_INLINE_CLOSE) to reflect the sun's energy. (Think white paint).</li>
+                                <li>A <b>high</b> infrared emissivity (\KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE) so that any heat it does absorb can be efficiently radiated away to the cold sky.</li>
+                            </ul>
+                            This leads to a low \KATEX_INLINE_OPEN \alpha_s / \epsilon \KATEX_INLINE_CLOSE ratio.
+                        </li>
+                        <li><b>Problem Solved: Building Energy Modeling.</b> When calculating the heat load on a building, you must account for the solar gain through windows and the heating of the roof and walls. These calculations use the principles of direct and diffuse solar radiation and the net radiation balance equation to determine the impact of the sun and sky on the building's energy consumption.</li>
+                    </ul>
+                </div>
+
+                <h3>Key Takeaways & Formulas</h3>
+                <h4>1. Key Definitions</h4>
+                <ul>
+                    <li><b>Solar Constant (\KATEX_INLINE_OPEN G_s \KATEX_INLINE_CLOSE):</b> The average solar irradiation incident on a surface outside Earth's atmosphere. \KATEX_INLINE_OPEN G_s \approx 1373 \text{ W/m}^2 \KATEX_INLINE_CLOSE.</li>
+                    <li><b>Direct Solar Radiation (\KATEX_INLINE_OPEN G_D \KATEX_INLINE_CLOSE):</b> The part of solar radiation that reaches the ground without being scattered. (Causes sharp shadows).</li>
+                    <li><b>Diffuse Solar Radiation (\KATEX_INLINE_OPEN G_d \KATEX_INLINE_CLOSE):</b> The part of solar radiation that is scattered by the atmosphere and arrives from all directions. (Causes the blue sky, exists on cloudy days).</li>
+                    <li><b>Effective Sky Temperature (\KATEX_INLINE_OPEN T_{\text{sky}} \KATEX_INLINE_CLOSE):</b> A fictitious temperature that allows us to model the radiation coming from the atmosphere as if it were a blackbody. It's colder on clear nights and warmer on cloudy nights.</li>
+                </ul>
+
+                <h4>2. The Greenhouse Effect</h4>
+                <p>The phenomenon where a material (like glass or atmospheric CO₂) is transparent to short-wavelength solar radiation but opaque to long-wavelength infrared radiation, creating a heat trap. This is the most important example of why the gray surface approximation is invalid for solar applications.</p>
+
+                <h4>3. Net Radiation Heat Transfer for a Horizontal Surface</h4>
+                <p>This is the master equation that balances all the radiation streams.</p>
+                <p style="text-align: center;">\KATEX_INLINE_OPEN \dot{q}_{\text{net}} = \text{Energy Absorbed} - \text{Energy Emitted} \KATEX_INLINE_CLOSE<br>
+                \KATEX_INLINE_OPEN \dot{q}_{\text{net}} = (\text{Solar Absorbed} + \text{Sky Absorbed}) - \text{Surface Emitted} \KATEX_INLINE_CLOSE</p>
+                ````math
+                \dot{q}_{\text{net,rad}} = \alpha_s G_{\text{solar}} + \epsilon \sigma (T_{\text{sky}}^4 - T_s^4)
+                ````
+                <ul>
+                    <li>\KATEX_INLINE_OPEN \alpha_s G_{\text{solar}} \KATEX_INLINE_CLOSE: Heat gain from the sun. Note \KATEX_INLINE_OPEN \alpha_s \KATEX_INLINE_CLOSE is the specific solar absorptivity.</li>
+                    <li>\KATEX_INLINE_OPEN \epsilon \sigma T_{\text{sky}}^4 \KATEX_INLINE_CLOSE: Heat gain from the sky. We use \KATEX_INLINE_OPEN \epsilon \KATEX_INLINE_CLOSE here because the sky radiates in the IR, and for IR radiation, \KATEX_INLINE_OPEN \alpha \approx \epsilon \KATEX_INLINE_CLOSE.</li>
+                    <li>\KATEX_INLINE_OPEN \epsilon \sigma T_s^4 \KATEX_INLINE_CLOSE: Heat loss from the surface itself.</li>
+                </ul>
+
+                <h4>4. The Critical Design Ratio: \KATEX_INLINE_OPEN \alpha_s / \epsilon \KATEX_INLINE_CLOSE</h4>
+                <ul>
+                    <li>For <b>Heat Collection</b> (Solar Heaters): You want a <b>HIGH</b> \KATEX_INLINE_OPEN \alpha_s / \epsilon \KATEX_INLINE_CLOSE ratio.</li>
+                    <li>For <b>Heat Rejection</b> (Keeping Cool): You want a <b>LOW</b> \KATEX_INLINE_OPEN \alpha_s / \epsilon \KATEX_INLINE_CLOSE ratio.</li>
+                </ul>
+            </div>
+        </section>
+
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const workflowNodes = document.querySelectorAll('.workflow-node');
+        const sections = document.querySelectorAll('.roadmap-section');
+        const sectionHeaders = document.querySelectorAll('.section-header');
+
+        const collapseAllSections = () => {
+            sections.forEach(section => {
+                section.classList.remove('expanded');
+            });
+        };
+
+        workflowNodes.forEach(node => {
+            node.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const targetSection = document.getElementById(targetId);
+
+                if (targetSection) {
+                    const isExpanded = targetSection.classList.contains('expanded');
+                    
+                    if (!isExpanded) {
+                        collapseAllSections();
+                    }
+
+                    targetSection.classList.toggle('expanded');
+                    
+                    setTimeout(() => {
+                       targetSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 100);
+                }
+            });
+        });
+
+        sectionHeaders.forEach(header => {
+            header.addEventListener('click', function () {
+                const parentSection = this.parentElement;
+                parentSection.classList.toggle('expanded');
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
